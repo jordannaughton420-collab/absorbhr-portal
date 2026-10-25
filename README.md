@@ -1,36 +1,52 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# AbsorbHR Portal
 
-## Getting Started
+Secure, multi-tenant HR software that AbsorbHR provides to its client businesses.
+Each client company's data is completely separated from every other client's.
 
-First, run the development server:
+The full architecture and build plan is in [`docs/PLAN.md`](docs/PLAN.md).
+GDPR documentation will live in `docs/GDPR.md` (built up phase by phase).
 
-```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
-```
+## Status
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+| Phase | What | Status |
+|---|---|---|
+| 0 | Project setup, brand theme | In progress |
+| 1 | Login, MFA, companies, employees, org chart, audit log | Not started |
+| 2 | Holiday & sickness | Not started |
+| 3 | Documents & policies | Not started |
+| 4 | Onboarding, reviews, cases, self-service | Not started |
+| 5 | Reports, emails, GDPR tools | Not started |
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+## Running it on your own computer (non-developer guide)
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+You only need this if you want to run the portal yourself. Steps will be expanded as
+features are added.
 
-## Learn More
+1. Install **Node.js 22 LTS** from <https://nodejs.org> (choose the "LTS" download).
+2. Install **Docker Desktop** from <https://www.docker.com/products/docker-desktop> and start it.
+   (It runs a private copy of the database on your machine.)
+3. Download this project from GitHub (green **Code** button → **Download ZIP**, then unzip),
+   or ask me for the `git clone` command.
+4. Open a terminal in the project folder and run, one at a time:
+   ```
+   npm install
+   npm run db:start
+   ```
+   The second command prints some keys. Copy `.env.example` to a new file called `.env.local`
+   and paste the `API URL`, `anon key` and `service_role key` values into it.
+5. Run `npm run dev` and open <http://localhost:3000>.
 
-To learn more about Next.js, take a look at the following resources:
+## Branding
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+- Logo: replace `public/brand/absorbhr-logo.svg` with the real logo (keep the same filename).
+- Colours: all defined in one place at the top of `app/globals.css` (`--brand-*` variables).
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+## Useful commands
 
-## Deploy on Vercel
-
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+| Command | What it does |
+|---|---|
+| `npm run dev` | Start the website locally |
+| `npm run db:start` / `db:stop` | Start / stop the local database |
+| `npm run db:reset` | Rebuild the local database from migrations + fake seed data |
+| `npm test` | Run calculation tests |
+| `npm run test:rls` | Run the database security (tenant isolation) tests |
