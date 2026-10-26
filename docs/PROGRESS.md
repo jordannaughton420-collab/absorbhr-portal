@@ -34,7 +34,7 @@ All environment variables verified correct on 26 Oct 2026 (rate limiting and inv
   - Bugs caught by tests and fixed: NULL access checks let support sessions read special-category data
     (migration 0004); idle timer reset itself while the warning was showing
   - Browser walkthrough passed for every role; axe-core WCAG 2.1 AA checks pass on all pages
-- [x] Phase 2 — absence & leave: built and tested; awaiting user sign-off
+- [x] Phase 2 — absence & leave: **approved by AbsorbHR on 26 Oct 2026** (commit `706fbb9`)
   - Decisions (26 Oct): bank holidays included in allowance by default; carry-over has no default — each company must
     confirm its holiday rules before holiday can be booked; irregular-hours 12.07% accrual deferred; sickness reasons
     visible to HR + direct line manager (not AbsorbHR support)
@@ -43,7 +43,7 @@ All environment variables verified correct on 26 Oct 2026 (rate limiting and inv
   - Demo absence data: `supabase/seed_absence.sql` (Brightwater configured; Northgate deliberately unconfigured)
   - QA login `qa.admin@example.com` (Client Admin, no employee record) for browser tests; TOTP secret in the
     session scratchpad only
-- [ ] Phase 3 — documents & policies (next)
+- [ ] Phase 3 — documents & policies (in progress)
 
 ## Follow-ups noted for later phases
 - Irregular-hours/part-year 12.07% accrual (deferred by AbsorbHR); first-year monthly accrual rule (decision needed).

@@ -13,8 +13,8 @@ Each client company's data is completely separated from every other client's, an
 |---|---|---|
 | 0 | Project setup, brand theme | ✅ Done |
 | 1 | Sign-in, MFA, companies, employees, org chart, audit log | ✅ Approved 26 Oct 2026 |
-| 2 | Holiday & sickness | ✅ Built and tested — awaiting your sign-off |
-| 3 | Documents & policies | Not started |
+| 2 | Holiday & sickness | ✅ Approved 26 Oct 2026 |
+| 3 | Documents & policies | In progress |
 | 4 | Onboarding, reviews, cases, self-service | Not started |
 | 5 | Reports, emails, GDPR tools | Not started |
 
