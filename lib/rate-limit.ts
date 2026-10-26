@@ -31,7 +31,9 @@ export async function rateLimit(action: keyof typeof LIMITS, ...identity: string
   if (!hasAdminClient()) {
     // Fail closed in production; in development allow but warn (Supabase Auth still rate-limits itself).
     if (process.env.NODE_ENV === "production") return false;
-    console.warn(JSON.stringify({ level: "warn", context: "rate-limit", msg: "service key missing, skipped" }));
+    console.warn(
+      JSON.stringify({ level: "warn", context: "rate-limit", msg: "service key missing, skipped" }),
+    );
     return true;
   }
   const bucket = hashKey(action, await clientIp(), ...identity.map((s) => s.toLowerCase()));

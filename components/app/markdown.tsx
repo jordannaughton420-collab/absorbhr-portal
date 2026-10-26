@@ -5,9 +5,15 @@ import * as React from "react";
 // no HTML from the database can ever be injected into the page.
 
 function inline(text: string): React.ReactNode[] {
-  return text.split(/(\*\*[^*]+\*\*)/g).map((part, i) =>
-    part.startsWith("**") && part.endsWith("**") ? <strong key={i}>{part.slice(2, -2)}</strong> : part,
-  );
+  return text
+    .split(/(\*\*[^*]+\*\*)/g)
+    .map((part, i) =>
+      part.startsWith("**") && part.endsWith("**") ? (
+        <strong key={i}>{part.slice(2, -2)}</strong>
+      ) : (
+        part
+      ),
+    );
 }
 
 export function Markdown({ source }: { source: string }) {

@@ -16,8 +16,10 @@ export async function createTenantWithAdmin(formData: FormData): Promise<ActionR
   const parsed = parseForm(newTenantSchema, formData);
   if (!parsed.success) return { ok: false, error: INVALID, fieldErrors: fieldErrors(parsed.error) };
   const ctx = await getContext();
-  if (!ctx?.isPlatformAdmin || ctx.aal !== "aal2") return { ok: false, error: "Only AbsorbHR admins can onboard clients." };
-  if (!hasAdminClient()) return { ok: false, error: "Inviting users isn't configured yet (server key missing)." };
+  if (!ctx?.isPlatformAdmin || ctx.aal !== "aal2")
+    return { ok: false, error: "Only AbsorbHR admins can onboard clients." };
+  if (!hasAdminClient())
+    return { ok: false, error: "Inviting users isn't configured yet (server key missing)." };
 
   // The tenant is created by the database function, which re-checks platform-admin status.
   const supabase = await createClient();
@@ -28,9 +30,12 @@ export async function createTenantWithAdmin(formData: FormData): Promise<ActionR
   if (error || !tenantId) return safeError(error, "admin.createTenant");
 
   const admin = createAdminClient();
-  const { data: invited, error: inviteError } = await admin.auth.admin.inviteUserByEmail(parsed.data.admin_email, {
-    redirectTo: `${SITE_URL}/auth/confirm?next=/auth/reset-password`,
-  });
+  const { data: invited, error: inviteError } = await admin.auth.admin.inviteUserByEmail(
+    parsed.data.admin_email,
+    {
+      redirectTo: `${SITE_URL}/auth/confirm?next=/auth/reset-password`,
+    },
+  );
   if (inviteError || !invited.user) return safeError(inviteError, "admin.inviteClientAdmin");
 
   const { error: memberError } = await admin

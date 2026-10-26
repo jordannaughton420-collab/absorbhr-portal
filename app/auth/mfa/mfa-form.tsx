@@ -38,7 +38,12 @@ export function MfaForm({ enrolled }: { enrolled: boolean }) {
             <div className="mt-2 flex justify-center rounded-lg border bg-white p-3">
               {enrolment ? (
                 // eslint-disable-next-line @next/next/no-img-element -- data URL from Supabase
-                <img src={enrolment.qrCode} alt="QR code to add AbsorbHR Portal to your authenticator app" width={180} height={180} />
+                <img
+                  src={enrolment.qrCode}
+                  alt="QR code to add AbsorbHR Portal to your authenticator app"
+                  width={180}
+                  height={180}
+                />
               ) : (
                 <p className="py-16 text-muted-foreground" aria-live="polite">
                   {loading ? "Preparing your QR code…" : " "}
@@ -47,8 +52,12 @@ export function MfaForm({ enrolled }: { enrolled: boolean }) {
             </div>
             {enrolment && (
               <details className="mt-2">
-                <summary className="cursor-pointer text-primary">Can&apos;t scan? Enter a setup key instead</summary>
-                <code className="mt-1 block break-all rounded bg-muted p-2 text-xs">{enrolment.secret}</code>
+                <summary className="cursor-pointer text-primary">
+                  Can&apos;t scan? Enter a setup key instead
+                </summary>
+                <code className="mt-1 block break-all rounded bg-muted p-2 text-xs">
+                  {enrolment.secret}
+                </code>
               </details>
             )}
           </li>
@@ -57,7 +66,13 @@ export function MfaForm({ enrolled }: { enrolled: boolean }) {
       )}
 
       {(enrolled || enrolment) && (
-        <ZodForm schema={mfaCodeSchema} action={verifyMfa} submitLabel="Verify" pendingLabel="Checking…" submitClassName="w-full">
+        <ZodForm
+          schema={mfaCodeSchema}
+          action={verifyMfa}
+          submitLabel="Verify"
+          pendingLabel="Checking…"
+          submitClassName="w-full"
+        >
           {({ errors }) => (
             <>
               {enrolment && <input type="hidden" name="factorId" value={enrolment.factorId} />}

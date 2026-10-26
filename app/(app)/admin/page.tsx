@@ -13,20 +13,25 @@ export const metadata: Metadata = { title: "AbsorbHR admin · AbsorbHR Portal" }
 export default async function AdminPage() {
   const ctx = await requirePlatformAdmin();
   const supabase = await createClient();
-  const { data: tenants } = await supabase.from("tenants").select("id, name, status, bank_holiday_region, created_at").order("name");
+  const { data: tenants } = await supabase
+    .from("tenants")
+    .select("id, name, status, bank_holiday_region, created_at")
+    .order("name");
 
   return (
     <div className="space-y-6">
       <div>
         <h1 className="text-2xl font-semibold tracking-tight">AbsorbHR admin</h1>
         <p className="text-sm text-muted-foreground">
-          You have no access to client data by default. Open a support session to help a client — it is time-limited,
-          logged, and shown to the client.
+          You have no access to client data by default. Open a support session to help a client — it
+          is time-limited, logged, and shown to the client.
         </p>
       </div>
 
       {ctx.supportSession && (
-        <Alert variant="warning">You have an open support session for {ctx.supportSession.tenantName}.</Alert>
+        <Alert variant="warning">
+          You have an open support session for {ctx.supportSession.tenantName}.
+        </Alert>
       )}
 
       <Card>
@@ -63,7 +68,9 @@ export default async function AdminPage() {
         <Card>
           <CardHeader>
             <CardTitle>Open a support session</CardTitle>
-            <CardDescription>Gives HR-level access to one company. Special-category data stays hidden.</CardDescription>
+            <CardDescription>
+              Gives HR-level access to one company. Special-category data stays hidden.
+            </CardDescription>
           </CardHeader>
           <CardContent>
             <SupportSessionForm tenants={(tenants ?? []).filter((t) => t.status === "active")} />
@@ -72,7 +79,9 @@ export default async function AdminPage() {
         <Card>
           <CardHeader>
             <CardTitle>Onboard a new client</CardTitle>
-            <CardDescription>Creates the company and emails its first Client Admin an invitation.</CardDescription>
+            <CardDescription>
+              Creates the company and emails its first Client Admin an invitation.
+            </CardDescription>
           </CardHeader>
           <CardContent>
             <NewTenantForm />

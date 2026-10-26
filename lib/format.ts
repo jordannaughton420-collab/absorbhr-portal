@@ -3,7 +3,12 @@
 export function formatDate(value: string | null | undefined) {
   if (!value) return "";
   const d = new Date(value.length === 10 ? `${value}T12:00:00Z` : value);
-  return d.toLocaleDateString("en-GB", { day: "numeric", month: "short", year: "numeric", timeZone: "Europe/London" });
+  return d.toLocaleDateString("en-GB", {
+    day: "numeric",
+    month: "short",
+    year: "numeric",
+    timeZone: "Europe/London",
+  });
 }
 
 export function formatDateTime(value: string | null | undefined) {
@@ -19,7 +24,9 @@ export function formatDateTime(value: string | null | undefined) {
 }
 
 export function formatMoney(amount: number, basis: "annual" | "hourly") {
-  const money = new Intl.NumberFormat("en-GB", { style: "currency", currency: "GBP" }).format(amount);
+  const money = new Intl.NumberFormat("en-GB", { style: "currency", currency: "GBP" }).format(
+    amount,
+  );
   return basis === "hourly" ? `${money} per hour` : `${money} per year`;
 }
 

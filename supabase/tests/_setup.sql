@@ -143,15 +143,15 @@ insert into public.employees (id, tenant_id, user_id, first_name, last_name, sta
   (tests.id('b_emp'),   tests.id('tenant_b'), tests.id('b_emp'),   'Ben', 'Emp',   '2021-01-01', tests.id('b_admin'));
 
 insert into public.employee_personal (employee_id, tenant_id, postcode)
-select id, tenant_id, 'ZZ1 1ZZ' from public.employees;
+select id, tenant_id, 'ZZ1 1ZZ' from public.employees where tenant_id in (tests.id('tenant_a'), tests.id('tenant_b'));
 
 insert into public.emergency_contacts (tenant_id, employee_id, name, phone)
-select tenant_id, id, 'Contact of ' || first_name, '07700900000' from public.employees;
+select tenant_id, id, 'Contact of ' || first_name, '07700900000' from public.employees where tenant_id in (tests.id('tenant_a'), tests.id('tenant_b'));
 
 insert into public.salary_history (tenant_id, employee_id, effective_date, amount)
-select tenant_id, id, '2024-04-01', 30000 from public.employees;
+select tenant_id, id, '2024-04-01', 30000 from public.employees where tenant_id in (tests.id('tenant_a'), tests.id('tenant_b'));
 
 insert into public.right_to_work_checks (tenant_id, employee_id, check_type, checked_on, status)
-select tenant_id, id, 'manual_document', start_date, 'verified' from public.employees;
+select tenant_id, id, 'manual_document', start_date, 'verified' from public.employees where tenant_id in (tests.id('tenant_a'), tests.id('tenant_b'));
 
-update public.tenant_settings set diversity_monitoring_enabled = true;
+update public.tenant_settings set diversity_monitoring_enabled = true where tenant_id in (tests.id('tenant_a'), tests.id('tenant_b'));

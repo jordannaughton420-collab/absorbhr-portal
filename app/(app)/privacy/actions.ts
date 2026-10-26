@@ -9,7 +9,9 @@ export async function acknowledgePrivacyNotice(formData: FormData) {
   const parsed = z.object({ noticeId: z.uuid() }).safeParse({ noticeId: formData.get("noticeId") });
   if (!parsed.success) return;
   const supabase = await createClient();
-  const { error } = await supabase.rpc("acknowledge_privacy_notice", { p_notice: parsed.data.noticeId });
+  const { error } = await supabase.rpc("acknowledge_privacy_notice", {
+    p_notice: parsed.data.noticeId,
+  });
   if (error) safeError(error, "privacy.acknowledge");
   revalidatePath("/", "layout");
 }

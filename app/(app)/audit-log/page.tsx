@@ -26,15 +26,16 @@ const ENTITY_LABELS: Record<string, string> = {
   auth: "Sign-in",
 };
 
-const ACTION_VARIANT: Record<string, "default" | "muted" | "warning" | "destructive" | "success"> = {
-  create: "success",
-  update: "default",
-  delete: "destructive",
-  view: "muted",
-  export: "warning",
-  support_start: "warning",
-  support_end: "warning",
-};
+const ACTION_VARIANT: Record<string, "default" | "muted" | "warning" | "destructive" | "success"> =
+  {
+    create: "success",
+    update: "default",
+    delete: "destructive",
+    view: "muted",
+    export: "warning",
+    support_start: "warning",
+    support_end: "warning",
+  };
 
 export default async function AuditLogPage() {
   await requireClientAdmin();
@@ -42,26 +43,37 @@ export default async function AuditLogPage() {
   const [{ data: entries }, { data: people }] = await Promise.all([
     supabase
       .from("audit_log")
-      .select("id, occurred_at, actor_user_id, actor_kind, action, entity, subject_employee_id, changed_fields")
+      .select(
+        "id, occurred_at, actor_user_id, actor_kind, action, entity, subject_employee_id, changed_fields",
+      )
       .order("occurred_at", { ascending: false })
       .limit(300),
     supabase.from("employees").select("id, user_id, first_name, preferred_name, last_name"),
   ]);
-  const byUser = new Map((people ?? []).filter((p) => p.user_id).map((p) => [p.user_id!, `${p.preferred_name || p.first_name} ${p.last_name}`]));
-  const byEmployee = new Map((people ?? []).map((p) => [p.id, `${p.preferred_name || p.first_name} ${p.last_name}`]));
+  const byUser = new Map(
+    (people ?? [])
+      .filter((p) => p.user_id)
+      .map((p) => [p.user_id!, `${p.preferred_name || p.first_name} ${p.last_name}`]),
+  );
+  const byEmployee = new Map(
+    (people ?? []).map((p) => [p.id, `${p.preferred_name || p.first_name} ${p.last_name}`]),
+  );
 
   return (
     <div className="space-y-6">
       <div>
         <h1 className="text-2xl font-semibold tracking-tight">Audit log</h1>
         <p className="text-sm text-muted-foreground">
-          Every view, change and export of personal data in your company. Entries can never be edited or deleted.
+          Every view, change and export of personal data in your company. Entries can never be
+          edited or deleted.
         </p>
       </div>
       <Card>
         <CardHeader>
           <CardTitle>Latest 300 entries</CardTitle>
-          <CardDescription>Changed field names are recorded, never the values themselves.</CardDescription>
+          <CardDescription>
+            Changed field names are recorded, never the values themselves.
+          </CardDescription>
         </CardHeader>
         <CardContent>
           <Table>
@@ -87,11 +99,19 @@ export default async function AuditLogPage() {
                         : (byUser.get(e.actor_user_id ?? "") ?? "AbsorbHR / removed user")}
                   </Td>
                   <Td>
-                    <Badge variant={ACTION_VARIANT[e.action] ?? "muted"}>{e.action.replace("_", " ")}</Badge>
+                    <Badge variant={ACTION_VARIANT[e.action] ?? "muted"}>
+                      {e.action.replace("_", " ")}
+                    </Badge>
                   </Td>
                   <Td>{ENTITY_LABELS[e.entity] ?? e.entity}</Td>
-                  <Td className="hidden md:table-cell">{e.subject_employee_id ? (byEmployee.get(e.subject_employee_id) ?? "Removed person") : ""}</Td>
-                  <Td className="hidden max-w-64 truncate text-muted-foreground lg:table-cell">{e.changed_fields?.join(", ")}</Td>
+                  <Td className="hidden md:table-cell">
+                    {e.subject_employee_id
+                      ? (byEmployee.get(e.subject_employee_id) ?? "Removed person")
+                      : ""}
+                  </Td>
+                  <Td className="hidden max-w-64 truncate text-muted-foreground lg:table-cell">
+                    {e.changed_fields?.join(", ")}
+                  </Td>
                 </tr>
               ))}
             </tbody>

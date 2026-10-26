@@ -39,11 +39,15 @@ export async function sendMagicLink(formData: FormData): Promise<ActionResult> {
   const supabase = await createClient();
   await supabase.auth.signInWithOtp({
     email: parsed.data.email,
-    options: { shouldCreateUser: false, emailRedirectTo: `${SITE_URL}/auth/confirm?next=/dashboard` },
+    options: {
+      shouldCreateUser: false,
+      emailRedirectTo: `${SITE_URL}/auth/confirm?next=/dashboard`,
+    },
   });
   return {
     ok: true,
-    message: "If that email belongs to an account, a sign-in link is on its way. It expires in 15 minutes.",
+    message:
+      "If that email belongs to an account, a sign-in link is on its way. It expires in 15 minutes.",
   };
 }
 
@@ -67,7 +71,11 @@ export async function updatePassword(formData: FormData): Promise<ActionResult> 
   const { error } = await supabase.auth.updateUser({ password: parsed.data.password });
   if (error) {
     if (error.code === "weak_password" || error.code === "same_password") {
-      return { ok: false, error: "Please choose a different, stronger password.", fieldErrors: { password: "Choose a different password" } };
+      return {
+        ok: false,
+        error: "Please choose a different, stronger password.",
+        fieldErrors: { password: "Choose a different password" },
+      };
     }
     return safeError(error, "auth.updatePassword");
   }
@@ -98,7 +106,10 @@ export async function startMfaEnrolment(): Promise<
     issuer: "AbsorbHR Portal",
   });
   if (error || !data) return safeError(error, "auth.mfaEnroll");
-  return { ok: true, data: { factorId: data.id, qrCode: data.totp.qr_code, secret: data.totp.secret } };
+  return {
+    ok: true,
+    data: { factorId: data.id, qrCode: data.totp.qr_code, secret: data.totp.secret },
+  };
 }
 
 export async function verifyMfa(formData: FormData): Promise<ActionResult> {
@@ -114,8 +125,16 @@ export async function verifyMfa(formData: FormData): Promise<ActionResult> {
     factors?.totp.find((f) => f.status === "verified");
   if (!factor) return { ok: false, error: "No authenticator app is set up. Please start again." };
 
-  const { error } = await supabase.auth.mfa.challengeAndVerify({ factorId: factor.id, code: parsed.data.code });
-  if (error) return { ok: false, error: "That code didn't work. Codes change every 30 seconds — try the latest one.", fieldErrors: { code: "Incorrect code" } };
+  const { error } = await supabase.auth.mfa.challengeAndVerify({
+    factorId: factor.id,
+    code: parsed.data.code,
+  });
+  if (error)
+    return {
+      ok: false,
+      error: "That code didn't work. Codes change every 30 seconds — try the latest one.",
+      fieldErrors: { code: "Incorrect code" },
+    };
 
   await logEvent(factor.status === "verified" ? "mfa_verified" : "mfa_enrolled", "auth");
   redirect("/dashboard");

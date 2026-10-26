@@ -6,7 +6,12 @@ import { createClient } from "@/lib/supabase/server";
 import { getLookups } from "@/lib/data/lookups";
 import { logEvent } from "@/lib/audit";
 import { daysUntil, formatDate, formatMoney } from "@/lib/format";
-import { CONTRACT_TYPES, EMPLOYMENT_STATUSES, RTW_CHECK_TYPES, RTW_STATUSES } from "@/lib/validation/employee";
+import {
+  CONTRACT_TYPES,
+  EMPLOYMENT_STATUSES,
+  RTW_CHECK_TYPES,
+  RTW_STATUSES,
+} from "@/lib/validation/employee";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/feedback";
 import { Button } from "@/components/ui/button";
@@ -27,13 +32,17 @@ function Detail({ label, value }: { label: string; value: React.ReactNode }) {
   return (
     <div>
       <dt className="text-xs font-medium uppercase tracking-wide text-muted-foreground">{label}</dt>
-      <dd className="mt-0.5 text-sm">{value || <span className="text-muted-foreground">—</span>}</dd>
+      <dd className="mt-0.5 text-sm">
+        {value || <span className="text-muted-foreground">—</span>}
+      </dd>
     </div>
   );
 }
 
 // Only the plain columns the edit form needs (drops joined objects).
-function employeeFormValues<T extends { id: string; departments?: unknown; locations?: unknown }>(emp: T) {
+function employeeFormValues<T extends { id: string; departments?: unknown; locations?: unknown }>(
+  emp: T,
+) {
   const { departments: _d, locations: _l, ...rest } = emp; // eslint-disable-line @typescript-eslint/no-unused-vars
   return rest as unknown as Record<string, string | number | null> & { id: string };
 }
@@ -64,17 +73,39 @@ export default async function EmployeePage({ params }: { params: Promise<{ id: s
   const canEditCore = ctx.isHr;
   const canEditPersonal = ctx.isHr || isSelf;
 
-  const [{ data: personal }, { data: contacts }, { data: salaries }, { data: rtw }, { data: history }, { data: manager }] =
-    await Promise.all([
-      supabase.from("employee_personal").select("*").eq("employee_id", id).maybeSingle(),
-      supabase.from("emergency_contacts").select("*").eq("employee_id", id).order("created_at"),
-      supabase.from("salary_history").select("*").eq("employee_id", id).order("effective_date", { ascending: false }),
-      supabase.from("right_to_work_checks").select("*").eq("employee_id", id).order("checked_on", { ascending: false }),
-      supabase.from("employment_history").select("*").eq("employee_id", id).order("effective_date", { ascending: false }),
-      emp.manager_id
-        ? supabase.from("employee_directory").select("first_name, preferred_name, last_name").eq("id", emp.manager_id).maybeSingle()
-        : Promise.resolve({ data: null }),
-    ]);
+  const [
+    { data: personal },
+    { data: contacts },
+    { data: salaries },
+    { data: rtw },
+    { data: history },
+    { data: manager },
+  ] = await Promise.all([
+    supabase.from("employee_personal").select("*").eq("employee_id", id).maybeSingle(),
+    supabase.from("emergency_contacts").select("*").eq("employee_id", id).order("created_at"),
+    supabase
+      .from("salary_history")
+      .select("*")
+      .eq("employee_id", id)
+      .order("effective_date", { ascending: false }),
+    supabase
+      .from("right_to_work_checks")
+      .select("*")
+      .eq("employee_id", id)
+      .order("checked_on", { ascending: false }),
+    supabase
+      .from("employment_history")
+      .select("*")
+      .eq("employee_id", id)
+      .order("effective_date", { ascending: false }),
+    emp.manager_id
+      ? supabase
+          .from("employee_directory")
+          .select("first_name, preferred_name, last_name")
+          .eq("id", emp.manager_id)
+          .maybeSingle()
+      : Promise.resolve({ data: null }),
+  ]);
 
   if (!isSelf) await logEvent("view", "employees", { entityId: id, subjectEmployeeId: id });
   const lookups = canEditCore ? await getLookups() : null;
@@ -89,15 +120,24 @@ export default async function EmployeePage({ params }: { params: Promise<{ id: s
         <div>
           <h1 className="text-2xl font-semibold tracking-tight">{isSelf ? "My profile" : name}</h1>
           <p className="text-muted-foreground">
-            {[emp.job_title, emp.departments?.name].filter(Boolean).join(" · ") || "No job title recorded"}
+            {[emp.job_title, emp.departments?.name].filter(Boolean).join(" · ") ||
+              "No job title recorded"}
           </p>
           <div className="mt-2 flex flex-wrap gap-2">
-            <Badge variant={emp.status === "active" ? "success" : "muted"}>{EMPLOYMENT_STATUSES[emp.status]}</Badge>
+            <Badge variant={emp.status === "active" ? "success" : "muted"}>
+              {EMPLOYMENT_STATUSES[emp.status]}
+            </Badge>
             <Badge variant="muted">{CONTRACT_TYPES[emp.contract_type]}</Badge>
-            {emp.user_id ? <Badge>Has portal access</Badge> : <Badge variant="muted">No portal access</Badge>}
+            {emp.user_id ? (
+              <Badge>Has portal access</Badge>
+            ) : (
+              <Badge variant="muted">No portal access</Badge>
+            )}
           </div>
         </div>
-        {ctx.isClientAdmin && !emp.user_id && emp.status !== "leaver" && <InviteButton employeeId={id} />}
+        {ctx.isClientAdmin && !emp.user_id && emp.status !== "leaver" && (
+          <InviteButton employeeId={id} />
+        )}
       </div>
 
       {/* Employment details */}
@@ -110,13 +150,33 @@ export default async function EmployeePage({ params }: { params: Promise<{ id: s
             <Detail label="Full name" value={`${emp.first_name} ${emp.last_name}`} />
             <Detail label="Work email" value={emp.work_email} />
             <Detail label="Employee number" value={emp.employee_number} />
-            <Detail label="Line manager" value={manager ? `${manager.preferred_name || manager.first_name} ${manager.last_name}` : null} />
+            <Detail
+              label="Line manager"
+              value={
+                manager
+                  ? `${manager.preferred_name || manager.first_name} ${manager.last_name}`
+                  : null
+              }
+            />
             <Detail label="Location" value={emp.locations?.name} />
             <Detail label="Start date" value={formatDate(emp.start_date)} />
-            <Detail label="Continuous service from" value={formatDate(emp.continuous_service_date)} />
+            <Detail
+              label="Continuous service from"
+              value={formatDate(emp.continuous_service_date)}
+            />
             <Detail label="Probation ends" value={formatDate(emp.probation_end_date)} />
-            {emp.fixed_term_end_date && <Detail label="Fixed term ends" value={formatDate(emp.fixed_term_end_date)} />}
-            <Detail label="Working pattern" value={[emp.weekly_hours && `${emp.weekly_hours} hours`, emp.days_per_week && `${emp.days_per_week} days`].filter(Boolean).join(" over ")} />
+            {emp.fixed_term_end_date && (
+              <Detail label="Fixed term ends" value={formatDate(emp.fixed_term_end_date)} />
+            )}
+            <Detail
+              label="Working pattern"
+              value={[
+                emp.weekly_hours && `${emp.weekly_hours} hours`,
+                emp.days_per_week && `${emp.days_per_week} days`,
+              ]
+                .filter(Boolean)
+                .join(" over ")}
+            />
             {emp.end_date && <Detail label="Leaving date" value={formatDate(emp.end_date)} />}
           </dl>
           {canEditCore && lookups && (
@@ -132,13 +192,25 @@ export default async function EmployeePage({ params }: { params: Promise<{ id: s
         <Card>
           <CardHeader>
             <CardTitle>Personal details</CardTitle>
-            <CardDescription>Visible only to {isSelf ? "you" : "this person"} and HR.</CardDescription>
+            <CardDescription>
+              Visible only to {isSelf ? "you" : "this person"} and HR.
+            </CardDescription>
           </CardHeader>
           <CardContent>
             <dl className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
               <Detail label="Personal email" value={personal?.personal_email} />
               <Detail label="Personal phone" value={personal?.personal_phone} />
-              <Detail label="Address" value={[personal?.address_line1, personal?.address_line2, personal?.town, personal?.postcode].filter(Boolean).join(", ")} />
+              <Detail
+                label="Address"
+                value={[
+                  personal?.address_line1,
+                  personal?.address_line2,
+                  personal?.town,
+                  personal?.postcode,
+                ]
+                  .filter(Boolean)
+                  .join(", ")}
+              />
               <Detail label="Date of birth" value={formatDate(personal?.date_of_birth)} />
             </dl>
             <EditPanel label="Edit personal details">
@@ -157,17 +229,28 @@ export default async function EmployeePage({ params }: { params: Promise<{ id: s
           {contacts?.length ? (
             <ul className="divide-y">
               {contacts.map((c) => (
-                <li key={c.id} className="flex flex-wrap items-center justify-between gap-2 py-2 text-sm">
+                <li
+                  key={c.id}
+                  className="flex flex-wrap items-center justify-between gap-2 py-2 text-sm"
+                >
                   <span>
                     <span className="font-medium">{c.name}</span>
-                    {c.relationship && <span className="text-muted-foreground"> ({c.relationship})</span>} · {c.phone}
+                    {c.relationship && (
+                      <span className="text-muted-foreground"> ({c.relationship})</span>
+                    )}{" "}
+                    · {c.phone}
                     {c.alt_phone && ` · ${c.alt_phone}`}
                   </span>
                   {canEditPersonal && (
                     <form action={deleteEmergencyContact}>
                       <input type="hidden" name="id" value={c.id} />
                       <input type="hidden" name="employee_id" value={id} />
-                      <Button type="submit" variant="ghost" size="sm" aria-label={`Remove emergency contact ${c.name}`}>
+                      <Button
+                        type="submit"
+                        variant="ghost"
+                        size="sm"
+                        aria-label={`Remove emergency contact ${c.name}`}
+                      >
                         <Trash2 aria-hidden="true" /> Remove
                       </Button>
                     </form>
@@ -193,7 +276,9 @@ export default async function EmployeePage({ params }: { params: Promise<{ id: s
             <CardTitle>Right to work</CardTitle>
             {rtwDays !== null && rtwDays <= 60 && (
               <p className="text-sm font-medium text-warning">
-                {rtwDays < 0 ? "Permission has expired — a follow-up check is overdue." : `Permission expires in ${rtwDays} days.`}
+                {rtwDays < 0
+                  ? "Permission has expired — a follow-up check is overdue."
+                  : `Permission expires in ${rtwDays} days.`}
               </p>
             )}
           </CardHeader>
@@ -236,7 +321,10 @@ export default async function EmployeePage({ params }: { params: Promise<{ id: s
         <Card>
           <CardHeader>
             <CardTitle>Salary history</CardTitle>
-            <CardDescription>Restricted to HR{ctx.settings?.employees_can_view_own_salary ? " and the employee" : ""}.</CardDescription>
+            <CardDescription>
+              Restricted to HR
+              {ctx.settings?.employees_can_view_own_salary ? " and the employee" : ""}.
+            </CardDescription>
           </CardHeader>
           <CardContent>
             {salaries?.length ? (
@@ -279,7 +367,8 @@ export default async function EmployeePage({ params }: { params: Promise<{ id: s
             <ul className="space-y-2 text-sm">
               {history.map((h) => (
                 <li key={h.id}>
-                  <span className="font-medium">{formatDate(h.effective_date)}</span> — {h.job_title ?? "Role change"}
+                  <span className="font-medium">{formatDate(h.effective_date)}</span> —{" "}
+                  {h.job_title ?? "Role change"}
                   {h.note && <span className="text-muted-foreground"> ({h.note})</span>}
                 </li>
               ))}

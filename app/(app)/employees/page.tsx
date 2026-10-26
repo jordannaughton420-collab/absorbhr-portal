@@ -18,11 +18,15 @@ export default async function EmployeesPage() {
   const [{ data }, { data: directory }] = await Promise.all([
     supabase
       .from("employees")
-      .select("id, first_name, last_name, preferred_name, job_title, start_date, status, manager_id, departments(name)")
+      .select(
+        "id, first_name, last_name, preferred_name, job_title, start_date, status, manager_id, departments(name)",
+      )
       .order("last_name"),
     supabase.from("employee_directory").select("id, first_name, preferred_name, last_name"),
   ]);
-  const names = new Map((directory ?? []).map((d) => [d.id, `${d.preferred_name || d.first_name} ${d.last_name}`]));
+  const names = new Map(
+    (directory ?? []).map((d) => [d.id, `${d.preferred_name || d.first_name} ${d.last_name}`]),
+  );
 
   const rows = (data ?? [])
     .filter((e) => ctx.isHr || e.id !== ctx.employeeId)
@@ -40,7 +44,9 @@ export default async function EmployeesPage() {
     <div className="space-y-6">
       <div className="flex flex-wrap items-center justify-between gap-3">
         <div>
-          <h1 className="text-2xl font-semibold tracking-tight">{ctx.isHr ? "Employees" : "My team"}</h1>
+          <h1 className="text-2xl font-semibold tracking-tight">
+            {ctx.isHr ? "Employees" : "My team"}
+          </h1>
           <p className="text-sm text-muted-foreground">
             {ctx.isHr ? `${rows.length} people` : `${rows.length} direct reports`}
           </p>

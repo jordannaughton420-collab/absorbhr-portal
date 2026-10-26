@@ -15,11 +15,18 @@ function navFor(ctx: SessionContext): NavItem[] {
   const inTenant = Boolean(ctx.tenantId || ctx.supportSession);
   const isManager = ctx.role === "line_manager";
   const items: NavItem[] = [{ href: "/dashboard", label: "Dashboard", icon: "dashboard" }];
-  if (ctx.employeeId && !ctx.supportSession) items.push({ href: `/employees/${ctx.employeeId}`, label: "My profile", icon: "profile" });
-  if (ctx.isHr || isManager) items.push({ href: "/employees", label: ctx.isHr ? "Employees" : "My team", icon: "employees" });
+  if (ctx.employeeId && !ctx.supportSession)
+    items.push({ href: `/employees/${ctx.employeeId}`, label: "My profile", icon: "profile" });
+  if (ctx.isHr || isManager)
+    items.push({
+      href: "/employees",
+      label: ctx.isHr ? "Employees" : "My team",
+      icon: "employees",
+    });
   if (inTenant) items.push({ href: "/org-chart", label: "Org chart", icon: "org" });
   if (ctx.isHr) items.push({ href: "/settings", label: "Company settings", icon: "settings" });
-  if (ctx.isClientAdmin && !ctx.supportSession) items.push({ href: "/audit-log", label: "Audit log", icon: "audit" });
+  if (ctx.isClientAdmin && !ctx.supportSession)
+    items.push({ href: "/audit-log", label: "Audit log", icon: "audit" });
   if (ctx.tenantId) items.push({ href: "/privacy", label: "Privacy notice", icon: "privacy" });
   if (ctx.isPlatformAdmin) items.push({ href: "/admin", label: "AbsorbHR admin", icon: "admin" });
   return items;
@@ -44,8 +51,16 @@ export default async function AppLayout({ children }: { children: React.ReactNod
       <Nav items={items} />
       <div className="mt-6 border-t pt-4 text-sm">
         <p className="font-medium">{ctx.displayName}</p>
-        <p className="text-muted-foreground">{ctx.supportSession?.tenantName ?? ctx.tenantName ?? "AbsorbHR"}</p>
-        <form action={async () => { "use server"; await signOut(); }} className="mt-3">
+        <p className="text-muted-foreground">
+          {ctx.supportSession?.tenantName ?? ctx.tenantName ?? "AbsorbHR"}
+        </p>
+        <form
+          action={async () => {
+            "use server";
+            await signOut();
+          }}
+          className="mt-3"
+        >
           <Button type="submit" variant="outline" size="sm" className="w-full">
             Sign out
           </Button>
@@ -77,11 +92,19 @@ export default async function AppLayout({ children }: { children: React.ReactNod
         </details>
 
         {ctx.supportSession && (
-          <div role="status" className="flex flex-wrap items-center justify-between gap-2 bg-warning px-4 py-2 text-sm text-white">
+          <div
+            role="status"
+            className="flex flex-wrap items-center justify-between gap-2 bg-warning px-4 py-2 text-sm text-white"
+          >
             <span>
-              <strong>AbsorbHR support session</strong> — you are viewing {ctx.supportSession.tenantName}. Every action is
-              logged and visible to the client. Ends{" "}
-              {new Date(ctx.supportSession.expiresAt).toLocaleTimeString("en-GB", { hour: "2-digit", minute: "2-digit" })}.
+              <strong>AbsorbHR support session</strong> — you are viewing{" "}
+              {ctx.supportSession.tenantName}. Every action is logged and visible to the client.
+              Ends{" "}
+              {new Date(ctx.supportSession.expiresAt).toLocaleTimeString("en-GB", {
+                hour: "2-digit",
+                minute: "2-digit",
+              })}
+              .
             </span>
             <form action={endSupportSession}>
               <Button type="submit" size="sm" variant="outline" className="bg-white text-warning">

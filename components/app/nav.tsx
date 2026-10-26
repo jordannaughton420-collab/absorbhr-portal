@@ -34,7 +34,9 @@ export function Nav({ items }: { items: NavItem[] }) {
       <ul className="space-y-1">
         {items.map((item) => {
           const Icon = ICONS[item.icon];
-          const active = pathname === item.href || (item.href !== "/dashboard" && pathname.startsWith(item.href + "/"));
+          const active =
+            pathname === item.href ||
+            (item.href !== "/dashboard" && pathname.startsWith(item.href + "/"));
           return (
             <li key={item.href}>
               <Link

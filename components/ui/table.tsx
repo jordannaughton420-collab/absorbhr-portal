@@ -13,7 +13,10 @@ export function Th({ className, ...props }: React.ThHTMLAttributes<HTMLTableCell
   return (
     <th
       scope="col"
-      className={cn("h-10 border-b px-3 text-left align-middle font-medium text-muted-foreground", className)}
+      className={cn(
+        "h-10 border-b px-3 text-left align-middle font-medium text-muted-foreground",
+        className,
+      )}
       {...props}
     />
   );

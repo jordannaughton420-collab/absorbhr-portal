@@ -32,17 +32,19 @@ export function IdleTimer({ idleMinutes }: { idleMinutes: number }) {
   const [secondsLeft, setSecondsLeft] = React.useState<number | null>(null);
   const stayButton = React.useRef<HTMLButtonElement>(null);
   const signingOut = React.useRef(false);
+  const warning = React.useRef(false);
 
   const markActive = React.useCallback(() => {
     lastActivity.current = Date.now();
     writeShared(lastActivity.current);
   }, []);
 
+  // Activity listeners: set up once. While the warning shows, only "Stay signed in" counts.
   React.useEffect(() => {
     markActive();
     let throttle = 0;
     const onActivity = () => {
-      if (secondsLeft !== null) return; // while warning shows, only the button keeps the session
+      if (warning.current) return;
       const now = Date.now();
       if (now - throttle > 5000) {
         throttle = now;
@@ -50,25 +52,29 @@ export function IdleTimer({ idleMinutes }: { idleMinutes: number }) {
       }
     };
     EVENTS.forEach((e) => window.addEventListener(e, onActivity, { passive: true }));
+    return () => EVENTS.forEach((e) => window.removeEventListener(e, onActivity));
+  }, [markActive]);
 
+  // Countdown: must not depend on secondsLeft, or each re-render would restart it.
+  React.useEffect(() => {
     const tick = window.setInterval(() => {
       const last = Math.max(lastActivity.current, readShared());
       const remaining = idleMs - (Date.now() - last);
-      if (remaining <= 0 && !signingOut.current) {
-        signingOut.current = true;
-        void signOut("timeout");
+      if (remaining <= 0) {
+        if (!signingOut.current) {
+          signingOut.current = true;
+          void signOut("timeout");
+        }
       } else if (remaining <= WARNING_MS) {
+        warning.current = true;
         setSecondsLeft(Math.ceil(remaining / 1000));
       } else {
+        warning.current = false;
         setSecondsLeft(null);
       }
     }, 1000);
-
-    return () => {
-      EVENTS.forEach((e) => window.removeEventListener(e, onActivity));
-      window.clearInterval(tick);
-    };
-  }, [idleMs, markActive, secondsLeft]);
+    return () => window.clearInterval(tick);
+  }, [idleMs]);
 
   React.useEffect(() => {
     if (secondsLeft !== null) stayButton.current?.focus();
@@ -102,6 +108,7 @@ export function IdleTimer({ idleMinutes }: { idleMinutes: number }) {
             ref={stayButton}
             onClick={() => {
               markActive();
+              warning.current = false;
               setSecondsLeft(null);
             }}
           >

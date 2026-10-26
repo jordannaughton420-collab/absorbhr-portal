@@ -5,7 +5,11 @@ import { LoginForms } from "./login-forms";
 
 export const metadata: Metadata = { title: "Sign in · AbsorbHR Portal" };
 
-export default async function LoginPage({ searchParams }: { searchParams: Promise<{ reason?: string }> }) {
+export default async function LoginPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ reason?: string }>;
+}) {
   const { reason } = await searchParams;
   return (
     <AuthShell title="Sign in" intro="Use the email address your employer registered for you.">

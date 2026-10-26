@@ -50,7 +50,12 @@ export function EmployeeTable({ rows }: { rows: Row[] }) {
           />
         </div>
         <label className="flex items-center gap-2 text-sm">
-          <input type="checkbox" checked={showLeavers} onChange={(e) => setShowLeavers(e.target.checked)} className="size-4 accent-primary" />
+          <input
+            type="checkbox"
+            checked={showLeavers}
+            onChange={(e) => setShowLeavers(e.target.checked)}
+            className="size-4 accent-primary"
+          />
           Show leavers
         </label>
       </div>
@@ -72,7 +77,10 @@ export function EmployeeTable({ rows }: { rows: Row[] }) {
           {visible.map((r) => (
             <tr key={r.id} className="hover:bg-muted/50">
               <Td>
-                <Link href={`/employees/${r.id}`} className="font-medium text-primary underline-offset-4 hover:underline">
+                <Link
+                  href={`/employees/${r.id}`}
+                  className="font-medium text-primary underline-offset-4 hover:underline"
+                >
                   {r.name}
                 </Link>
               </Td>

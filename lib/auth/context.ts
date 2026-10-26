@@ -33,14 +33,27 @@ export const getContext = cache(async (): Promise<SessionContext | null> => {
   } = await supabase.auth.getUser();
   if (!user) return null;
 
-  const [{ data: aalData }, { data: factors }, { data: membership }, { data: platform }, { data: employee }] =
-    await Promise.all([
-      supabase.auth.mfa.getAuthenticatorAssuranceLevel(),
-      supabase.auth.mfa.listFactors(),
-      supabase.from("memberships").select("tenant_id, role, is_active, tenants(name)").eq("user_id", user.id).maybeSingle(),
-      supabase.from("platform_admins").select("user_id").eq("user_id", user.id).maybeSingle(),
-      supabase.from("employees").select("id, first_name, preferred_name, last_name").eq("user_id", user.id).maybeSingle(),
-    ]);
+  const [
+    { data: aalData },
+    { data: factors },
+    { data: membership },
+    { data: platform },
+    { data: employee },
+  ] = await Promise.all([
+    supabase.auth.mfa.getAuthenticatorAssuranceLevel(),
+    supabase.auth.mfa.listFactors(),
+    supabase
+      .from("memberships")
+      .select("tenant_id, role, is_active, tenants(name)")
+      .eq("user_id", user.id)
+      .maybeSingle(),
+    supabase.from("platform_admins").select("user_id").eq("user_id", user.id).maybeSingle(),
+    supabase
+      .from("employees")
+      .select("id, first_name, preferred_name, last_name")
+      .eq("user_id", user.id)
+      .maybeSingle(),
+  ]);
 
   const aal = aalData?.currentLevel === "aal2" ? "aal2" : "aal1";
   const tenantId = membership?.is_active ? membership.tenant_id : null;
@@ -61,7 +74,13 @@ export const getContext = cache(async (): Promise<SessionContext | null> => {
       .order("started_at", { ascending: false })
       .limit(1)
       .maybeSingle();
-    if (s) supportSession = { id: s.id, tenantId: s.tenant_id, tenantName: s.tenants?.name ?? "", expiresAt: s.expires_at };
+    if (s)
+      supportSession = {
+        id: s.id,
+        tenantId: s.tenant_id,
+        tenantName: s.tenants?.name ?? "",
+        expiresAt: s.expires_at,
+      };
   }
 
   const adminRole = role === "client_admin" || role === "hr_manager";
@@ -76,7 +95,9 @@ export const getContext = cache(async (): Promise<SessionContext | null> => {
     tenantName: membership?.tenants?.name ?? null,
     role,
     employeeId: employee?.id ?? null,
-    displayName: employee ? `${employee.preferred_name || employee.first_name} ${employee.last_name}` : "AbsorbHR admin",
+    displayName: employee
+      ? `${employee.preferred_name || employee.first_name} ${employee.last_name}`
+      : "AbsorbHR admin",
     settings: settings ?? null,
     supportSession,
     mfaRequired,

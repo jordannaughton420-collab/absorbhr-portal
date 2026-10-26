@@ -9,7 +9,12 @@ import { updatePassword } from "@/app/auth/actions";
 export default function ResetPasswordPage() {
   return (
     <AuthShell title="Choose a new password">
-      <ZodForm schema={resetPasswordSchema} action={updatePassword} submitLabel="Save password" submitClassName="w-full">
+      <ZodForm
+        schema={resetPasswordSchema}
+        action={updatePassword}
+        submitLabel="Save password"
+        submitClassName="w-full"
+      >
         {({ errors }) => (
           <>
             <Field

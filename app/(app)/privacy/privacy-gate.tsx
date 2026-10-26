@@ -3,9 +3,21 @@ import { Button } from "@/components/ui/button";
 import { Markdown } from "@/components/app/markdown";
 import { acknowledgePrivacyNotice } from "./actions";
 
-type Notice = { id: string; version: number; title: string; body: string; acknowledged_at: string | null };
+type Notice = {
+  id: string;
+  version: number;
+  title: string;
+  body: string;
+  acknowledged_at: string | null;
+};
 
-export function PrivacyGate({ notice, standalone = false }: { notice: Notice; standalone?: boolean }) {
+export function PrivacyGate({
+  notice,
+  standalone = false,
+}: {
+  notice: Notice;
+  standalone?: boolean;
+}) {
   return (
     <Card className="mx-auto max-w-3xl">
       <CardHeader>
@@ -20,7 +32,11 @@ export function PrivacyGate({ notice, standalone = false }: { notice: Notice; st
         </CardDescription>
       </CardHeader>
       <CardContent>
-        <div className="max-h-[60vh] overflow-y-auto rounded-lg border bg-muted/40 p-4" tabIndex={0} aria-label="Privacy notice text">
+        <div
+          className="max-h-[60vh] overflow-y-auto rounded-lg border bg-muted/40 p-4"
+          tabIndex={0}
+          aria-label="Privacy notice text"
+        >
           <Markdown source={notice.body} />
         </div>
         {!notice.acknowledged_at && (

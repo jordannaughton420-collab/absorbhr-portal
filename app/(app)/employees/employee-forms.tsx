@@ -43,7 +43,9 @@ export function EmployeeForm({
   locations: Option[];
   managers: Option[];
 }) {
-  const [contract, setContract] = React.useState(String(v(employee, "contract_type") || "permanent"));
+  const [contract, setContract] = React.useState(
+    String(v(employee, "contract_type") || "permanent"),
+  );
   const [status, setStatus] = React.useState(String(v(employee, "status") || "active"));
 
   return (
@@ -63,7 +65,12 @@ export function EmployeeForm({
             <Field name="last_name" label="Last name" error={errors.last_name}>
               {(p) => <Input {...p} defaultValue={v(employee, "last_name")} autoComplete="off" />}
             </Field>
-            <Field name="preferred_name" label="Preferred name" optional error={errors.preferred_name}>
+            <Field
+              name="preferred_name"
+              label="Preferred name"
+              optional
+              error={errors.preferred_name}
+            >
               {(p) => <Input {...p} defaultValue={v(employee, "preferred_name")} />}
             </Field>
             <Field
@@ -82,7 +89,12 @@ export function EmployeeForm({
             <Field name="job_title" label="Job title" optional error={errors.job_title}>
               {(p) => <Input {...p} defaultValue={v(employee, "job_title")} />}
             </Field>
-            <Field name="employee_number" label="Employee number" optional error={errors.employee_number}>
+            <Field
+              name="employee_number"
+              label="Employee number"
+              optional
+              error={errors.employee_number}
+            >
               {(p) => <Input {...p} defaultValue={v(employee, "employee_number")} />}
             </Field>
             <Field name="department_id" label="Department" optional error={errors.department_id}>
@@ -137,7 +149,9 @@ export function EmployeeForm({
               error={errors.continuous_service_date}
               hint="Only if different from the start date (e.g. TUPE transfer)."
             >
-              {(p) => <Input {...p} type="date" defaultValue={v(employee, "continuous_service_date")} />}
+              {(p) => (
+                <Input {...p} type="date" defaultValue={v(employee, "continuous_service_date")} />
+              )}
             </Field>
             <Field name="contract_type" label="Contract type" error={errors.contract_type}>
               {(p) => (
@@ -151,15 +165,40 @@ export function EmployeeForm({
               )}
             </Field>
             {contract === "fixed_term" && (
-              <Field name="fixed_term_end_date" label="Fixed-term end date" error={errors.fixed_term_end_date}>
-                {(p) => <Input {...p} type="date" defaultValue={v(employee, "fixed_term_end_date")} />}
+              <Field
+                name="fixed_term_end_date"
+                label="Fixed-term end date"
+                error={errors.fixed_term_end_date}
+              >
+                {(p) => (
+                  <Input {...p} type="date" defaultValue={v(employee, "fixed_term_end_date")} />
+                )}
               </Field>
             )}
-            <Field name="probation_end_date" label="Probation end date" optional error={errors.probation_end_date}>
+            <Field
+              name="probation_end_date"
+              label="Probation end date"
+              optional
+              error={errors.probation_end_date}
+            >
               {(p) => <Input {...p} type="date" defaultValue={v(employee, "probation_end_date")} />}
             </Field>
-            <Field name="weekly_hours" label="Contracted hours per week" optional error={errors.weekly_hours}>
-              {(p) => <Input {...p} type="number" step="0.25" min="0" max="100" defaultValue={v(employee, "weekly_hours")} />}
+            <Field
+              name="weekly_hours"
+              label="Contracted hours per week"
+              optional
+              error={errors.weekly_hours}
+            >
+              {(p) => (
+                <Input
+                  {...p}
+                  type="number"
+                  step="0.25"
+                  min="0"
+                  max="100"
+                  defaultValue={v(employee, "weekly_hours")}
+                />
+              )}
             </Field>
             <Field
               name="days_per_week"
@@ -168,7 +207,16 @@ export function EmployeeForm({
               error={errors.days_per_week}
               hint="Used to pro-rata holiday in Phase 2."
             >
-              {(p) => <Input {...p} type="number" step="0.5" min="0" max="7" defaultValue={v(employee, "days_per_week")} />}
+              {(p) => (
+                <Input
+                  {...p}
+                  type="number"
+                  step="0.5"
+                  min="0"
+                  max="7"
+                  defaultValue={v(employee, "days_per_week")}
+                />
+              )}
             </Field>
             <Field name="status" label="Status" error={errors.status}>
               {(p) => (
@@ -199,25 +247,77 @@ export function PersonalForm({ employeeId, values }: { employeeId: string; value
       {({ errors }) => (
         <>
           <input type="hidden" name="employee_id" value={employeeId} />
-          <p className="text-sm text-muted-foreground">All fields are optional. Only HR and you can see these details.</p>
+          <p className="text-sm text-muted-foreground">
+            All fields are optional. Only HR and you can see these details.
+          </p>
           <div className={grid}>
-            <Field name="personal_email" label="Personal email" optional error={errors.personal_email}>
-              {(p) => <Input {...p} type="email" autoComplete="email" defaultValue={v(values, "personal_email")} />}
+            <Field
+              name="personal_email"
+              label="Personal email"
+              optional
+              error={errors.personal_email}
+            >
+              {(p) => (
+                <Input
+                  {...p}
+                  type="email"
+                  autoComplete="email"
+                  defaultValue={v(values, "personal_email")}
+                />
+              )}
             </Field>
-            <Field name="personal_phone" label="Personal phone" optional error={errors.personal_phone}>
-              {(p) => <Input {...p} type="tel" autoComplete="tel" defaultValue={v(values, "personal_phone")} />}
+            <Field
+              name="personal_phone"
+              label="Personal phone"
+              optional
+              error={errors.personal_phone}
+            >
+              {(p) => (
+                <Input
+                  {...p}
+                  type="tel"
+                  autoComplete="tel"
+                  defaultValue={v(values, "personal_phone")}
+                />
+              )}
             </Field>
-            <Field name="address_line1" label="Address line 1" optional error={errors.address_line1}>
-              {(p) => <Input {...p} autoComplete="address-line1" defaultValue={v(values, "address_line1")} />}
+            <Field
+              name="address_line1"
+              label="Address line 1"
+              optional
+              error={errors.address_line1}
+            >
+              {(p) => (
+                <Input
+                  {...p}
+                  autoComplete="address-line1"
+                  defaultValue={v(values, "address_line1")}
+                />
+              )}
             </Field>
-            <Field name="address_line2" label="Address line 2" optional error={errors.address_line2}>
-              {(p) => <Input {...p} autoComplete="address-line2" defaultValue={v(values, "address_line2")} />}
+            <Field
+              name="address_line2"
+              label="Address line 2"
+              optional
+              error={errors.address_line2}
+            >
+              {(p) => (
+                <Input
+                  {...p}
+                  autoComplete="address-line2"
+                  defaultValue={v(values, "address_line2")}
+                />
+              )}
             </Field>
             <Field name="town" label="Town or city" optional error={errors.town}>
-              {(p) => <Input {...p} autoComplete="address-level2" defaultValue={v(values, "town")} />}
+              {(p) => (
+                <Input {...p} autoComplete="address-level2" defaultValue={v(values, "town")} />
+              )}
             </Field>
             <Field name="postcode" label="Postcode" optional error={errors.postcode}>
-              {(p) => <Input {...p} autoComplete="postal-code" defaultValue={v(values, "postcode")} />}
+              {(p) => (
+                <Input {...p} autoComplete="postal-code" defaultValue={v(values, "postcode")} />
+              )}
             </Field>
             <Field
               name="date_of_birth"
@@ -226,7 +326,14 @@ export function PersonalForm({ employeeId, values }: { employeeId: string; value
               error={errors.date_of_birth}
               hint="Used only for age-related legal rights, such as minimum wage rates."
             >
-              {(p) => <Input {...p} type="date" autoComplete="bday" defaultValue={v(values, "date_of_birth")} />}
+              {(p) => (
+                <Input
+                  {...p}
+                  type="date"
+                  autoComplete="bday"
+                  defaultValue={v(values, "date_of_birth")}
+                />
+              )}
             </Field>
           </div>
         </>
@@ -237,7 +344,12 @@ export function PersonalForm({ employeeId, values }: { employeeId: string; value
 
 export function EmergencyContactForm({ employeeId }: { employeeId: string }) {
   return (
-    <ZodForm schema={emergencyContactSchema} action={addEmergencyContact} submitLabel="Add contact" resetOnSuccess>
+    <ZodForm
+      schema={emergencyContactSchema}
+      action={addEmergencyContact}
+      submitLabel="Add contact"
+      resetOnSuccess
+    >
       {({ errors }) => (
         <>
           <input type="hidden" name="employee_id" value={employeeId} />
@@ -263,7 +375,12 @@ export function EmergencyContactForm({ employeeId }: { employeeId: string }) {
 
 export function SalaryForm({ employeeId }: { employeeId: string }) {
   return (
-    <ZodForm schema={salarySchema} action={addSalary} submitLabel="Record salary change" resetOnSuccess>
+    <ZodForm
+      schema={salarySchema}
+      action={addSalary}
+      submitLabel="Record salary change"
+      resetOnSuccess
+    >
       {({ errors }) => (
         <>
           <input type="hidden" name="employee_id" value={employeeId} />
@@ -367,7 +484,11 @@ export function InviteButton({ employeeId }: { employeeId: string }) {
             const fd = new FormData();
             fd.set("employee_id", employeeId);
             const res = await inviteToPortal(fd);
-            setResult(res.ok ? { ok: true, text: res.message ?? "Invitation sent." } : { ok: false, text: res.error });
+            setResult(
+              res.ok
+                ? { ok: true, text: res.message ?? "Invitation sent." }
+                : { ok: false, text: res.error },
+            );
           })
         }
       >

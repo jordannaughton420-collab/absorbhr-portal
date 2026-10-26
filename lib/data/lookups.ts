@@ -7,11 +7,17 @@ export async function getLookups() {
   const [{ data: departments }, { data: locations }, { data: people }] = await Promise.all([
     supabase.from("departments").select("id, name").order("name"),
     supabase.from("locations").select("id, name").order("name"),
-    supabase.from("employee_directory").select("id, first_name, preferred_name, last_name").order("last_name"),
+    supabase
+      .from("employee_directory")
+      .select("id, first_name, preferred_name, last_name")
+      .order("last_name"),
   ]);
   return {
     departments: departments ?? [],
     locations: locations ?? [],
-    managers: (people ?? []).map((p) => ({ id: p.id!, name: `${p.preferred_name || p.first_name} ${p.last_name}` })),
+    managers: (people ?? []).map((p) => ({
+      id: p.id!,
+      name: `${p.preferred_name || p.first_name} ${p.last_name}`,
+    })),
   };
 }

@@ -61,13 +61,10 @@ export async function updateEmployee(formData: FormData): Promise<ActionResult> 
   // These inputs are hidden unless relevant, so clear them explicitly when they no longer apply.
   if (values.contract_type !== "fixed_term") values.fixed_term_end_date = null as never;
   if (values.status !== "leaver") values.end_date = null as never;
-  const { data, error } = await supabase
-    .from("employees")
-    .update(values)
-    .eq("id", id)
-    .select("id");
+  const { data, error } = await supabase.from("employees").update(values).eq("id", id).select("id");
   if (error) return safeError(error, "employees.update");
-  if (!data?.length) return { ok: false, error: "You don't have permission to change this record." };
+  if (!data?.length)
+    return { ok: false, error: "You don't have permission to change this record." };
   revalidatePath(`/employees/${id}`);
   return { ok: true, message: "Employment details saved." };
 }
@@ -80,11 +77,19 @@ export async function savePersonal(formData: FormData): Promise<ActionResult> {
   if (!employeeId) return { ok: false, error: "Missing record." };
   if (!parsed.success) return { ok: false, error: INVALID, fieldErrors: fieldErrors(parsed.error) };
   const supabase = await createClient();
-  const { data: emp } = await supabase.from("employees").select("tenant_id").eq("id", employeeId).maybeSingle();
+  const { data: emp } = await supabase
+    .from("employees")
+    .select("tenant_id")
+    .eq("id", employeeId)
+    .maybeSingle();
   if (!emp) return { ok: false, error: "You don't have permission to change this record." };
   const { error } = await supabase
     .from("employee_personal")
-    .upsert({ employee_id: employeeId, tenant_id: emp.tenant_id, ...withNulls(parsed.data, formData) });
+    .upsert({
+      employee_id: employeeId,
+      tenant_id: emp.tenant_id,
+      ...withNulls(parsed.data, formData),
+    });
   if (error) return safeError(error, "employees.personal");
   revalidatePath(`/employees/${employeeId}`);
   return { ok: true, message: "Personal details saved." };
@@ -96,7 +101,11 @@ export async function addEmergencyContact(formData: FormData): Promise<ActionRes
   if (!employeeId) return { ok: false, error: "Missing record." };
   if (!parsed.success) return { ok: false, error: INVALID, fieldErrors: fieldErrors(parsed.error) };
   const supabase = await createClient();
-  const { data: emp } = await supabase.from("employees").select("tenant_id").eq("id", employeeId).maybeSingle();
+  const { data: emp } = await supabase
+    .from("employees")
+    .select("tenant_id")
+    .eq("id", employeeId)
+    .maybeSingle();
   if (!emp) return { ok: false, error: "You don't have permission to change this record." };
   const { error } = await supabase
     .from("emergency_contacts")
@@ -124,7 +133,11 @@ export async function addSalary(formData: FormData): Promise<ActionResult> {
   if (!employeeId) return { ok: false, error: "Missing record." };
   if (!parsed.success) return { ok: false, error: INVALID, fieldErrors: fieldErrors(parsed.error) };
   const supabase = await createClient();
-  const { data: emp } = await supabase.from("employees").select("tenant_id").eq("id", employeeId).maybeSingle();
+  const { data: emp } = await supabase
+    .from("employees")
+    .select("tenant_id")
+    .eq("id", employeeId)
+    .maybeSingle();
   if (!emp) return { ok: false, error: "You don't have permission to change this record." };
   const { error } = await supabase
     .from("salary_history")
@@ -140,7 +153,11 @@ export async function addRtwCheck(formData: FormData): Promise<ActionResult> {
   if (!employeeId) return { ok: false, error: "Missing record." };
   if (!parsed.success) return { ok: false, error: INVALID, fieldErrors: fieldErrors(parsed.error) };
   const supabase = await createClient();
-  const { data: emp } = await supabase.from("employees").select("tenant_id").eq("id", employeeId).maybeSingle();
+  const { data: emp } = await supabase
+    .from("employees")
+    .select("tenant_id")
+    .eq("id", employeeId)
+    .maybeSingle();
   if (!emp) return { ok: false, error: "You don't have permission to change this record." };
   const { error } = await supabase
     .from("right_to_work_checks")
@@ -156,8 +173,10 @@ export async function inviteToPortal(formData: FormData): Promise<ActionResult> 
   const employeeId = idFrom(formData, "employee_id");
   if (!employeeId) return { ok: false, error: "Missing record." };
   const ctx = await getContext();
-  if (!ctx?.isClientAdmin) return { ok: false, error: "Only Client Admins can give people portal access." };
-  if (!hasAdminClient()) return { ok: false, error: "Inviting users isn't configured yet (server key missing)." };
+  if (!ctx?.isClientAdmin)
+    return { ok: false, error: "Only Client Admins can give people portal access." };
+  if (!hasAdminClient())
+    return { ok: false, error: "Inviting users isn't configured yet (server key missing)." };
 
   const supabase = await createClient();
   const { data: emp } = await supabase
@@ -170,9 +189,12 @@ export async function inviteToPortal(formData: FormData): Promise<ActionResult> 
   if (!emp.work_email) return { ok: false, error: "Add a work email address first." };
 
   const admin = createAdminClient();
-  const { data: invited, error: inviteError } = await admin.auth.admin.inviteUserByEmail(emp.work_email, {
-    redirectTo: `${SITE_URL}/auth/confirm?next=/auth/reset-password`,
-  });
+  const { data: invited, error: inviteError } = await admin.auth.admin.inviteUserByEmail(
+    emp.work_email,
+    {
+      redirectTo: `${SITE_URL}/auth/confirm?next=/auth/reset-password`,
+    },
+  );
   if (inviteError || !invited.user) return safeError(inviteError, "employees.invite");
 
   // Membership is created with the caller's own client, so RLS re-checks they are a Client Admin.
@@ -183,7 +205,10 @@ export async function inviteToPortal(formData: FormData): Promise<ActionResult> 
     await admin.auth.admin.deleteUser(invited.user.id);
     return safeError(memberError, "employees.inviteMembership");
   }
-  const { error: linkError } = await supabase.from("employees").update({ user_id: invited.user.id }).eq("id", employeeId);
+  const { error: linkError } = await supabase
+    .from("employees")
+    .update({ user_id: invited.user.id })
+    .eq("id", employeeId);
   if (linkError) return safeError(linkError, "employees.inviteLink");
 
   revalidatePath(`/employees/${employeeId}`);

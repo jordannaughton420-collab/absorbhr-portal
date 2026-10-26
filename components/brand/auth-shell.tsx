@@ -1,7 +1,15 @@
 import { Logo } from "@/components/brand/logo";
 import { DoodleSparkle, DoodleSquiggle } from "@/components/brand/doodle";
 
-export function AuthShell({ title, intro, children }: { title: string; intro?: string; children: React.ReactNode }) {
+export function AuthShell({
+  title,
+  intro,
+  children,
+}: {
+  title: string;
+  intro?: string;
+  children: React.ReactNode;
+}) {
   return (
     <main id="main" className="flex min-h-screen items-center justify-center bg-accent px-4 py-12">
       <div className="relative w-full max-w-md rounded-xl border bg-card p-6 shadow-sm sm:p-8">

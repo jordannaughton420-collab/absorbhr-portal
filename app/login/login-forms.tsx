@@ -13,7 +13,11 @@ export function LoginForms() {
 
   return (
     <div>
-      <div role="tablist" aria-label="Sign-in method" className="mb-5 grid grid-cols-2 rounded-lg bg-muted p-1 text-sm">
+      <div
+        role="tablist"
+        aria-label="Sign-in method"
+        className="mb-5 grid grid-cols-2 rounded-lg bg-muted p-1 text-sm"
+      >
         {(
           [
             ["password", "Password"],
@@ -37,7 +41,13 @@ export function LoginForms() {
       </div>
 
       {mode === "password" ? (
-        <ZodForm schema={loginSchema} action={signInWithPassword} submitLabel="Sign in" pendingLabel="Signing in…" submitClassName="w-full">
+        <ZodForm
+          schema={loginSchema}
+          action={signInWithPassword}
+          submitLabel="Sign in"
+          pendingLabel="Signing in…"
+          submitClassName="w-full"
+        >
           {({ errors }) => (
             <>
               <Field name="email" label="Email" error={errors.email}>
@@ -47,7 +57,10 @@ export function LoginForms() {
                 {(p) => <Input {...p} type="password" autoComplete="current-password" />}
               </Field>
               <p className="text-right text-sm">
-                <Link href="/forgot-password" className="text-primary underline underline-offset-4 hover:no-underline">
+                <Link
+                  href="/forgot-password"
+                  className="text-primary underline underline-offset-4 hover:no-underline"
+                >
                   Forgotten your password?
                 </Link>
               </p>

@@ -17,14 +17,24 @@ export const CONTRACT_TYPES = {
   contractor: "Contractor",
 } as const;
 
-export const EMPLOYMENT_STATUSES = { pre_start: "Not started yet", active: "Active", leaver: "Leaver" } as const;
+export const EMPLOYMENT_STATUSES = {
+  pre_start: "Not started yet",
+  active: "Active",
+  leaver: "Leaver",
+} as const;
 
 export const employeeSchema = z
   .object({
     first_name: text(100, "First name").min(1, "Enter a first name"),
     last_name: text(100, "Last name").min(1, "Enter a last name"),
     preferred_name: optionalText(100, "Preferred name"),
-    work_email: z.string().trim().toLowerCase().email("Enter a valid email address").max(254).optional(),
+    work_email: z
+      .string()
+      .trim()
+      .toLowerCase()
+      .email("Enter a valid email address")
+      .max(254)
+      .optional(),
     employee_number: optionalText(30, "Employee number"),
     job_title: optionalText(150, "Job title"),
     department_id: optionalUuid,
@@ -35,9 +45,19 @@ export const employeeSchema = z
     probation_end_date: optionalDate,
     contract_type: z.enum(Object.keys(CONTRACT_TYPES) as [keyof typeof CONTRACT_TYPES]),
     fixed_term_end_date: optionalDate,
-    weekly_hours: z.coerce.number().min(0, "Must be 0 or more").max(100, "Must be 100 or less").optional(),
-    days_per_week: z.coerce.number().min(0, "Must be 0 or more").max(7, "Must be 7 or less").optional(),
-    status: z.enum(Object.keys(EMPLOYMENT_STATUSES) as [keyof typeof EMPLOYMENT_STATUSES]).default("active"),
+    weekly_hours: z.coerce
+      .number()
+      .min(0, "Must be 0 or more")
+      .max(100, "Must be 100 or less")
+      .optional(),
+    days_per_week: z.coerce
+      .number()
+      .min(0, "Must be 0 or more")
+      .max(7, "Must be 7 or less")
+      .optional(),
+    status: z
+      .enum(Object.keys(EMPLOYMENT_STATUSES) as [keyof typeof EMPLOYMENT_STATUSES])
+      .default("active"),
     end_date: optionalDate,
   })
   .refine((v) => v.contract_type === "fixed_term" || !v.fixed_term_end_date, {
@@ -54,7 +74,13 @@ export const employeeSchema = z
   });
 
 export const personalSchema = z.object({
-  personal_email: z.string().trim().toLowerCase().email("Enter a valid email address").max(254).optional(),
+  personal_email: z
+    .string()
+    .trim()
+    .toLowerCase()
+    .email("Enter a valid email address")
+    .max(254)
+    .optional(),
   personal_phone: z
     .string()
     .trim()

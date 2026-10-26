@@ -15,7 +15,13 @@ function Stat({ label, value, href }: { label: string; value: number; href?: str
       <p className="mt-1 text-3xl font-semibold text-primary">{value}</p>
     </Card>
   );
-  return href ? <Link href={href} className="rounded-xl">{body}</Link> : body;
+  return href ? (
+    <Link href={href} className="rounded-xl">
+      {body}
+    </Link>
+  ) : (
+    body
+  );
 }
 
 export default async function DashboardPage() {
@@ -35,7 +41,9 @@ export default async function DashboardPage() {
     const in30 = new Date(Date.now() + 30 * 86_400_000).toISOString().slice(0, 10);
     const today = new Date().toISOString().slice(0, 10);
     const [{ data: people }, { data: rtw }] = await Promise.all([
-      supabase.from("employees").select("id, first_name, preferred_name, last_name, status, probation_end_date"),
+      supabase
+        .from("employees")
+        .select("id, first_name, preferred_name, last_name, status, probation_end_date"),
       supabase
         .from("right_to_work_checks")
         .select("id, employee_id, expiry_date")
@@ -44,10 +52,13 @@ export default async function DashboardPage() {
         .order("expiry_date"),
     ]);
     const all = people ?? [];
-    const nameOf = new Map(all.map((p) => [p.id, `${p.preferred_name || p.first_name} ${p.last_name}`]));
+    const nameOf = new Map(
+      all.map((p) => [p.id, `${p.preferred_name || p.first_name} ${p.last_name}`]),
+    );
     // Only the most recent check per person matters.
     const latest = new Map<string, { id: string; employee_id: string; expiry_date: string }>();
-    for (const r of rtw ?? []) if (!latest.has(r.employee_id)) latest.set(r.employee_id, r as never);
+    for (const r of rtw ?? [])
+      if (!latest.has(r.employee_id)) latest.set(r.employee_id, r as never);
     hr = {
       active: all.filter((p) => p.status === "active").length,
       starting: all.filter((p) => p.status === "pre_start").length,
@@ -55,7 +66,13 @@ export default async function DashboardPage() {
         .filter((r) => all.find((p) => p.id === r.employee_id)?.status !== "leaver")
         .map((r) => ({ ...r, name: nameOf.get(r.employee_id) ?? "" })),
       probation: all
-        .filter((p) => p.status !== "leaver" && p.probation_end_date && p.probation_end_date >= today && p.probation_end_date <= in30)
+        .filter(
+          (p) =>
+            p.status !== "leaver" &&
+            p.probation_end_date &&
+            p.probation_end_date >= today &&
+            p.probation_end_date <= in30,
+        )
         .map((p) => ({ id: p.id, name: nameOf.get(p.id) ?? "", date: p.probation_end_date! })),
     };
   }
@@ -82,7 +99,9 @@ export default async function DashboardPage() {
             <Card>
               <CardHeader>
                 <CardTitle>Right-to-work expiries</CardTitle>
-                <CardDescription>Time-limited permissions expiring in the next 60 days.</CardDescription>
+                <CardDescription>
+                  Time-limited permissions expiring in the next 60 days.
+                </CardDescription>
               </CardHeader>
               <CardContent>
                 {hr.rtw.length ? (
@@ -91,10 +110,17 @@ export default async function DashboardPage() {
                       const d = daysUntil(r.expiry_date);
                       return (
                         <li key={r.id} className="flex justify-between gap-2 py-2">
-                          <Link href={`/employees/${r.employee_id}`} className="text-primary underline-offset-4 hover:underline">
+                          <Link
+                            href={`/employees/${r.employee_id}`}
+                            className="text-primary underline-offset-4 hover:underline"
+                          >
                             {r.name}
                           </Link>
-                          <span className={d < 14 ? "font-medium text-destructive" : "text-muted-foreground"}>
+                          <span
+                            className={
+                              d < 14 ? "font-medium text-destructive" : "text-muted-foreground"
+                            }
+                          >
                             {d < 0 ? "Expired" : `${formatDate(r.expiry_date)} (${d} days)`}
                           </span>
                         </li>
@@ -116,7 +142,10 @@ export default async function DashboardPage() {
                   <ul className="divide-y text-sm">
                     {hr.probation.map((p) => (
                       <li key={p.id} className="flex justify-between gap-2 py-2">
-                        <Link href={`/employees/${p.id}`} className="text-primary underline-offset-4 hover:underline">
+                        <Link
+                          href={`/employees/${p.id}`}
+                          className="text-primary underline-offset-4 hover:underline"
+                        >
                           {p.name}
                         </Link>
                         <span className="text-muted-foreground">{formatDate(p.date)}</span>
@@ -138,7 +167,9 @@ export default async function DashboardPage() {
             <Link href={`/employees/${ctx.employeeId}`} className="rounded-xl">
               <Card className="h-full p-5 hover:border-primary">
                 <h2 className="font-semibold">My profile</h2>
-                <p className="mt-1 text-sm text-muted-foreground">Check and update your personal details and emergency contacts.</p>
+                <p className="mt-1 text-sm text-muted-foreground">
+                  Check and update your personal details and emergency contacts.
+                </p>
               </Card>
             </Link>
           )}
@@ -162,7 +193,9 @@ export default async function DashboardPage() {
             <Link href="/admin" className="rounded-xl">
               <Card className="h-full p-5 hover:border-primary">
                 <h2 className="font-semibold">Client companies</h2>
-                <p className="mt-1 text-sm text-muted-foreground">Onboard clients and open support sessions.</p>
+                <p className="mt-1 text-sm text-muted-foreground">
+                  Onboard clients and open support sessions.
+                </p>
               </Card>
             </Link>
           )}

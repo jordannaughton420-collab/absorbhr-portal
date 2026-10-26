@@ -7,13 +7,22 @@ import { createTenantWithAdmin, startSupportSession } from "./actions";
 
 export function NewTenantForm() {
   return (
-    <ZodForm schema={newTenantSchema} action={createTenantWithAdmin} submitLabel="Create client and invite admin" resetOnSuccess>
+    <ZodForm
+      schema={newTenantSchema}
+      action={createTenantWithAdmin}
+      submitLabel="Create client and invite admin"
+      resetOnSuccess
+    >
       {({ errors }) => (
         <div className="grid gap-4 sm:grid-cols-2">
           <Field name="name" label="Company name" error={errors.name}>
             {(p) => <Input {...p} />}
           </Field>
-          <Field name="bank_holiday_region" label="Bank holidays" error={errors.bank_holiday_region}>
+          <Field
+            name="bank_holiday_region"
+            label="Bank holidays"
+            error={errors.bank_holiday_region}
+          >
             {(p) => (
               <Select {...p} defaultValue="england-and-wales">
                 {Object.entries(REGIONS).map(([v, l]) => (
@@ -24,13 +33,26 @@ export function NewTenantForm() {
               </Select>
             )}
           </Field>
-          <Field name="admin_first_name" label="Client Admin first name" error={errors.admin_first_name}>
+          <Field
+            name="admin_first_name"
+            label="Client Admin first name"
+            error={errors.admin_first_name}
+          >
             {(p) => <Input {...p} />}
           </Field>
-          <Field name="admin_last_name" label="Client Admin last name" error={errors.admin_last_name}>
+          <Field
+            name="admin_last_name"
+            label="Client Admin last name"
+            error={errors.admin_last_name}
+          >
             {(p) => <Input {...p} />}
           </Field>
-          <Field name="admin_email" label="Client Admin work email" error={errors.admin_email} className="sm:col-span-2">
+          <Field
+            name="admin_email"
+            label="Client Admin work email"
+            error={errors.admin_email}
+            className="sm:col-span-2"
+          >
             {(p) => <Input {...p} type="email" />}
           </Field>
         </div>
@@ -41,7 +63,12 @@ export function NewTenantForm() {
 
 export function SupportSessionForm({ tenants }: { tenants: { id: string; name: string }[] }) {
   return (
-    <ZodForm schema={supportSessionSchema} action={startSupportSession} submitLabel="Open support session" pendingLabel="Opening…">
+    <ZodForm
+      schema={supportSessionSchema}
+      action={startSupportSession}
+      submitLabel="Open support session"
+      pendingLabel="Opening…"
+    >
       {({ errors }) => (
         <>
           <div className="grid gap-4 sm:grid-cols-2">
@@ -76,7 +103,13 @@ export function SupportSessionForm({ tenants }: { tenants: { id: string; name: s
             error={errors.reason}
             hint="The client can see this reason. Do not include personal data."
           >
-            {(p) => <Textarea {...p} rows={2} placeholder="e.g. Helping the HR manager set up departments (ticket 1234)" />}
+            {(p) => (
+              <Textarea
+                {...p}
+                rows={2}
+                placeholder="e.g. Helping the HR manager set up departments (ticket 1234)"
+              />
+            )}
           </Field>
         </>
       )}

@@ -8,7 +8,10 @@ export function Input({ className, ...props }: React.InputHTMLAttributes<HTMLInp
   return <input className={cn(control, "h-10", className)} {...props} />;
 }
 
-export function Textarea({ className, ...props }: React.TextareaHTMLAttributes<HTMLTextAreaElement>) {
+export function Textarea({
+  className,
+  ...props
+}: React.TextareaHTMLAttributes<HTMLTextAreaElement>) {
   return <textarea className={cn(control, "min-h-24 py-2", className)} {...props} />;
 }
 
@@ -38,16 +41,31 @@ type FieldProps = {
 };
 
 // Label + control + hint + error, wired up for screen readers.
-export function Field({ name, id: idProp, label, error, hint, optional, children, className }: FieldProps) {
+export function Field({
+  name,
+  id: idProp,
+  label,
+  error,
+  hint,
+  optional,
+  children,
+  className,
+}: FieldProps) {
   const id = idProp ?? `f-${name}`;
-  const describedBy = [hint && `${id}-hint`, error && `${id}-error`].filter(Boolean).join(" ") || undefined;
+  const describedBy =
+    [hint && `${id}-hint`, error && `${id}-error`].filter(Boolean).join(" ") || undefined;
   return (
     <div className={cn("space-y-1.5", className)}>
       <Label htmlFor={id}>
         {label}
         {optional && <span className="ml-1 font-normal text-muted-foreground">(optional)</span>}
       </Label>
-      {children({ id, name, "aria-invalid": error ? true : undefined, "aria-describedby": describedBy })}
+      {children({
+        id,
+        name,
+        "aria-invalid": error ? true : undefined,
+        "aria-describedby": describedBy,
+      })}
       {hint && (
         <p id={`${id}-hint`} className="text-xs text-muted-foreground">
           {hint}

@@ -11,7 +11,13 @@ import {
   roleSchema,
   securitySettingsSchema,
 } from "@/lib/validation/settings";
-import { addDepartment, addLocation, updateCompany, updateRole, updateSecuritySettings } from "./actions";
+import {
+  addDepartment,
+  addLocation,
+  updateCompany,
+  updateRole,
+  updateSecuritySettings,
+} from "./actions";
 
 function RegionSelect(props: React.ComponentProps<typeof Select> & { allowNone?: boolean }) {
   const { allowNone, ...rest } = props;
@@ -35,7 +41,12 @@ export function CompanyForm({ name, region }: { name: string; region: string }) 
           <Field name="name" label="Company name" error={errors.name}>
             {(p) => <Input {...p} defaultValue={name} />}
           </Field>
-          <Field name="bank_holiday_region" label="Bank holidays" error={errors.bank_holiday_region} hint="Used for holiday calculations in Phase 2.">
+          <Field
+            name="bank_holiday_region"
+            label="Bank holidays"
+            error={errors.bank_holiday_region}
+            hint="Used for holiday calculations in Phase 2."
+          >
             {(p) => <RegionSelect {...p} defaultValue={region} />}
           </Field>
         </div>
@@ -44,10 +55,27 @@ export function CompanyForm({ name, region }: { name: string; region: string }) 
   );
 }
 
-function Toggle({ name, label, hint, defaultChecked }: { name: string; label: string; hint: string; defaultChecked: boolean }) {
+function Toggle({
+  name,
+  label,
+  hint,
+  defaultChecked,
+}: {
+  name: string;
+  label: string;
+  hint: string;
+  defaultChecked: boolean;
+}) {
   return (
     <div className="flex gap-3">
-      <input id={`f-${name}`} name={name} type="checkbox" defaultChecked={defaultChecked} className="mt-0.5 size-4 accent-primary" aria-describedby={`f-${name}-hint`} />
+      <input
+        id={`f-${name}`}
+        name={name}
+        type="checkbox"
+        defaultChecked={defaultChecked}
+        className="mt-0.5 size-4 accent-primary"
+        aria-describedby={`f-${name}-hint`}
+      />
       <div>
         <label htmlFor={`f-${name}`} className="text-sm font-medium">
           {label}
@@ -63,10 +91,19 @@ function Toggle({ name, label, hint, defaultChecked }: { name: string; label: st
 export function SecurityForm({
   values,
 }: {
-  values: { session_idle_minutes: number; require_mfa_for_all: boolean; employees_can_view_own_salary: boolean; diversity_monitoring_enabled: boolean };
+  values: {
+    session_idle_minutes: number;
+    require_mfa_for_all: boolean;
+    employees_can_view_own_salary: boolean;
+    diversity_monitoring_enabled: boolean;
+  };
 }) {
   return (
-    <ZodForm schema={securitySettingsSchema} action={updateSecuritySettings} submitLabel="Save settings">
+    <ZodForm
+      schema={securitySettingsSchema}
+      action={updateSecuritySettings}
+      submitLabel="Save settings"
+    >
       {({ errors }) => (
         <>
           <Field
@@ -75,7 +112,15 @@ export function SecurityForm({
             error={errors.session_idle_minutes}
             className="max-w-xs"
           >
-            {(p) => <Input {...p} type="number" min={5} max={480} defaultValue={values.session_idle_minutes} />}
+            {(p) => (
+              <Input
+                {...p}
+                type="number"
+                min={5}
+                max={480}
+                defaultValue={values.session_idle_minutes}
+              />
+            )}
           </Field>
           <Toggle
             name="require_mfa_for_all"
@@ -124,7 +169,12 @@ export function AddLocationForm() {
           <Field name="address" label="Business address" optional error={errors.address}>
             {(p) => <Input {...p} />}
           </Field>
-          <Field name="bank_holiday_region" label="Bank holidays" optional error={errors.bank_holiday_region}>
+          <Field
+            name="bank_holiday_region"
+            label="Bank holidays"
+            optional
+            error={errors.bank_holiday_region}
+          >
             {(p) => <RegionSelect {...p} allowNone defaultValue="" />}
           </Field>
         </>
@@ -133,13 +183,29 @@ export function AddLocationForm() {
   );
 }
 
-export function RoleForm({ membershipId, role, isActive, label }: { membershipId: string; role: string; isActive: boolean; label: string }) {
+export function RoleForm({
+  membershipId,
+  role,
+  isActive,
+  label,
+}: {
+  membershipId: string;
+  role: string;
+  isActive: boolean;
+  label: string;
+}) {
   return (
     <ZodForm schema={roleSchema} action={updateRole} submitLabel="Save" submitClassName="h-9 px-3">
       {({ errors }) => (
         <div className="flex flex-wrap items-end gap-3">
           <input type="hidden" name="membership_id" value={membershipId} />
-          <Field name="role" id={`role-${membershipId}`} label={`Role for ${label}`} error={errors.role} className="min-w-44">
+          <Field
+            name="role"
+            id={`role-${membershipId}`}
+            label={`Role for ${label}`}
+            error={errors.role}
+            className="min-w-44"
+          >
             {(p) => (
               <Select {...p} defaultValue={role}>
                 {Object.entries(ROLES).map(([value, l]) => (
@@ -151,7 +217,12 @@ export function RoleForm({ membershipId, role, isActive, label }: { membershipId
             )}
           </Field>
           <label className="flex h-10 items-center gap-2 text-sm">
-            <input name="is_active" type="checkbox" defaultChecked={isActive} className="size-4 accent-primary" />
+            <input
+              name="is_active"
+              type="checkbox"
+              defaultChecked={isActive}
+              className="size-4 accent-primary"
+            />
             Can sign in
           </label>
         </div>

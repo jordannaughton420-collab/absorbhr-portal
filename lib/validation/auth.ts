@@ -28,7 +28,10 @@ export const magicLinkSchema = z.object({ email: emailSchema });
 
 export const resetPasswordSchema = z
   .object({ password: newPasswordSchema, confirm: z.string() })
-  .refine((v) => v.password === v.confirm, { message: "Passwords do not match", path: ["confirm"] });
+  .refine((v) => v.password === v.confirm, {
+    message: "Passwords do not match",
+    path: ["confirm"],
+  });
 
 export const mfaCodeSchema = z.object({
   code: z

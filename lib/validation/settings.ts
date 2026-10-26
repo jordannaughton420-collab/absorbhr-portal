@@ -21,13 +21,19 @@ export const companySchema = z.object({
 });
 
 export const securitySettingsSchema = z.object({
-  session_idle_minutes: z.coerce.number().int().min(5, "At least 5 minutes").max(480, "At most 8 hours"),
+  session_idle_minutes: z.coerce
+    .number()
+    .int()
+    .min(5, "At least 5 minutes")
+    .max(480, "At most 8 hours"),
   require_mfa_for_all: checkbox,
   employees_can_view_own_salary: checkbox,
   diversity_monitoring_enabled: checkbox,
 });
 
-export const nameSchema = z.object({ name: z.string().trim().min(1, "Enter a name").max(120, "Too long") });
+export const nameSchema = z.object({
+  name: z.string().trim().min(1, "Enter a name").max(120, "Too long"),
+});
 
 export const locationSchema = nameSchema.extend({
   address: z.string().trim().max(500).optional(),

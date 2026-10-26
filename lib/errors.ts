@@ -21,7 +21,9 @@ const FRIENDLY: Record<string, string> = {
 export function safeError(error: unknown, context: string): { ok: false; error: string } {
   const ref = randomUUID().slice(0, 8).toUpperCase();
   const code =
-    typeof error === "object" && error && "code" in error ? String((error as { code: unknown }).code) : "unknown";
+    typeof error === "object" && error && "code" in error
+      ? String((error as { code: unknown }).code)
+      : "unknown";
   console.error(JSON.stringify({ level: "error", ref, context, code }));
   return { ok: false, error: `${FRIENDLY[code] ?? "Something went wrong."} (Ref ${ref})` };
 }
