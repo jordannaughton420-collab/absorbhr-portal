@@ -21,8 +21,7 @@ Read this first when resuming work in a new session.
 `NEXT_PUBLIC_SUPABASE_URL` (should be `https://djdjrrziukllerhhnrix.supabase.co`), `NEXT_PUBLIC_SUPABASE_ANON_KEY`,
 `SUPABASE_SERVICE_ROLE_KEY` (must be a secret key **from the London project**), `SUPABASE_ACCESS_TOKEN`,
 `SUPABASE_PROJECT_REF=djdjrrziukllerhhnrix`, `IP_HASH_SECRET`.
-As of 26 Oct the environment still held the old project URL and an old secret key — `.env.local` overrides are used
-locally, but process env wins over `.env.local` in Next.js, so run dev with `NEXT_PUBLIC_SUPABASE_URL=… npm run dev`.
+All environment variables verified correct on 26 Oct 2026 (rate limiting and invitations tested working).
 
 ## Status
 - [x] Phase 0 — scaffold, brand theme, security headers, Supabase auth config
