@@ -29,7 +29,7 @@ All environment variables verified correct on 26 Oct 2026 (rate limiting and inv
 
 ## Status
 - [x] Phase 0 — scaffold, brand theme, security headers, Supabase auth config
-- [x] Phase 1 — built, tested and **approved by AbsorbHR on 26 Oct 2026** (git tag `phase-1`)
+- [x] Phase 1 — built, tested and **approved by AbsorbHR on 26 Oct 2026** (commit `a514560` — restore with `git checkout a514560`)
   - 4 migrations, 17 tables, RLS on all; 49 pgTAP tests passing
   - Bugs caught by tests and fixed: NULL access checks let support sessions read special-category data
     (migration 0004); idle timer reset itself while the warning was showing
