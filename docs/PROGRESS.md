@@ -44,7 +44,7 @@ All environment variables verified correct on 26 Oct 2026 (rate limiting and inv
   - Demo absence data: `supabase/seed_absence.sql` (Brightwater configured; Northgate deliberately unconfigured)
   - QA login `qa.admin@example.com` (Client Admin, no employee record) for browser tests; TOTP secret in the
     session scratchpad only
-- [x] Phase 3 — documents & policies: built and tested; awaiting user sign-off
+- [x] Phase 3 — documents & policies: **approved by AbsorbHR on 26 Oct 2026** (commit `57ee921`)
   - Decisions (26 Oct): uploads by HR, employee and direct line manager; HR chooses re-acknowledgement per version;
     PDF/DOCX/JPEG/PNG/HEIC up to 10 MB; AbsorbHR template library that clients copy
   - Migrations 0008–0011; buckets `employee-documents`, `policy-documents` (private, no storage policies);
@@ -53,7 +53,7 @@ All environment variables verified correct on 26 Oct 2026 (rate limiting and inv
     read/delete another tenant's policy file (validated before storage access); native GET form submission could put
     passwords in URLs (forms now POST and stay disabled until hydrated)
   - Demo: `supabase/seed_policies.sql` (3 AbsorbHR templates + Brightwater policies), `scripts/seed-documents.mjs`
-- [ ] Phase 4 — people processes (next)
+- [ ] Phase 4 — people processes (in progress)
 
 ## Follow-ups noted for later phases
 - Scheduled clean-up of abandoned uploads (`documents.status = 'uploading'` older than a day) and orphaned files.
