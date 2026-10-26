@@ -12,11 +12,13 @@ Each client company's data is completely separated from every other client's, an
 | Phase | What | Status |
 |---|---|---|
 | 0 | Project setup, brand theme | ✅ Done |
-| 1 | Sign-in, MFA, companies, employees, org chart, audit log | ✅ Built and tested — awaiting your sign-off |
-| 2 | Holiday & sickness | Not started |
+| 1 | Sign-in, MFA, companies, employees, org chart, audit log | ✅ Approved 26 Oct 2026 |
+| 2 | Holiday & sickness | In progress |
 | 3 | Documents & policies | Not started |
 | 4 | Onboarding, reviews, cases, self-service | Not started |
 | 5 | Reports, emails, GDPR tools | Not started |
+
+Test site: <https://absorbhr-portal.vercel.app>
 
 ## Demo accounts (development project only — all fake)
 
