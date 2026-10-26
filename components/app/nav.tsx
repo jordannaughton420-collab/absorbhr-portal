@@ -10,6 +10,10 @@ import {
   Plane,
   Thermometer,
   FileClock,
+  FilePen,
+  Gavel,
+  ListChecks,
+  Target,
   LayoutDashboard,
   Network,
   Settings,
@@ -33,6 +37,10 @@ const ICONS = {
   calendar: CalendarDays,
   sickness: Thermometer,
   policies: BookOpen,
+  checklists: ListChecks,
+  reviews: Target,
+  cases: Gavel,
+  requests: FilePen,
 };
 
 export type NavItem = { href: string; label: string; icon: keyof typeof ICONS };

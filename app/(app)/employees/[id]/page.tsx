@@ -19,6 +19,9 @@ import { Table, Td, Th } from "@/components/ui/table";
 import { deleteEmergencyContact } from "../actions";
 import { AbsenceSection } from "./absence-section";
 import { DocumentsSection } from "./documents-section";
+import { NotesSection } from "./notes-section";
+import { DiversityForm } from "@/app/(app)/requests/request-forms";
+import Link from "next/link";
 import {
   EmergencyContactForm,
   EmployeeForm,
@@ -111,6 +114,16 @@ export default async function EmployeePage({ params }: { params: Promise<{ id: s
   ]);
 
   if (!isSelf) await logEvent("view", "employees", { entityId: id, subjectEmployeeId: id });
+  const isDirectManager = Boolean(ctx.employeeId) && emp.manager_id === ctx.employeeId;
+  // Voluntary diversity answers: shown only to the employee themselves (the RPC audits the read).
+  const showDiversity =
+    isSelf && !ctx.supportSession && Boolean(ctx.settings?.diversity_monitoring_enabled);
+  const diversity = showDiversity
+    ? ((await supabase.rpc("get_employee_sensitive", { p_employee: id })).data as Record<
+        string,
+        string
+      > | null)
+    : null;
   const lookups = canEditCore ? await getLookups() : null;
 
   const name = `${emp.preferred_name || emp.first_name} ${emp.last_name}`;
@@ -138,9 +151,19 @@ export default async function EmployeePage({ params }: { params: Promise<{ id: s
             )}
           </div>
         </div>
-        {ctx.isClientAdmin && !emp.user_id && emp.status !== "leaver" && (
-          <InviteButton employeeId={id} />
-        )}
+        <div className="flex flex-wrap gap-2">
+          {ctx.isHr && !ctx.supportSession && !isSelf && (
+            <Link
+              href={`/cases?employee=${id}`}
+              className="inline-flex h-9 items-center rounded-md border px-3 text-sm font-medium hover:bg-muted"
+            >
+              Cases
+            </Link>
+          )}
+          {ctx.isClientAdmin && !emp.user_id && emp.status !== "leaver" && (
+            <InviteButton employeeId={id} />
+          )}
+        </div>
       </div>
 
       {/* Employment details */}
@@ -194,19 +217,18 @@ export default async function EmployeePage({ params }: { params: Promise<{ id: s
         </CardContent>
       </Card>
 
-      <AbsenceSection
-        employeeId={id}
-        ctx={ctx}
-        isSelf={isSelf}
-        isDirectManager={Boolean(ctx.employeeId) && emp.manager_id === ctx.employeeId}
-      />
+      <AbsenceSection employeeId={id} ctx={ctx} isSelf={isSelf} isDirectManager={isDirectManager} />
 
       <DocumentsSection
         employeeId={id}
         ctx={ctx}
         isSelf={isSelf}
-        isDirectManager={Boolean(ctx.employeeId) && emp.manager_id === ctx.employeeId}
+        isDirectManager={isDirectManager}
       />
+
+      {!ctx.supportSession && (
+        <NotesSection employeeId={id} ctx={ctx} isSelf={isSelf} isDirectManager={isDirectManager} />
+      )}
 
       {/* Personal details: self + HR only (RLS) */}
       {canEditPersonal && (
@@ -375,6 +397,17 @@ export default async function EmployeePage({ params }: { params: Promise<{ id: s
                 <SalaryForm employeeId={id} />
               </EditPanel>
             )}
+          </CardContent>
+        </Card>
+      )}
+
+      {showDiversity && (
+        <Card>
+          <CardHeader>
+            <CardTitle>Equality monitoring (optional)</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <DiversityForm values={diversity ?? {}} />
           </CardContent>
         </Card>
       )}

@@ -12,6 +12,7 @@ import { deleteOrgUnit } from "./actions";
 import { getHolidayPolicy } from "@/lib/data/leave";
 import { Alert } from "@/components/ui/feedback";
 import { CarryOverForm, HolidayPolicyForm } from "./holiday-forms";
+import { ReviewSettingsForm } from "@/app/(app)/reviews/review-forms";
 import {
   AddDepartmentForm,
   AddLocationForm,
@@ -179,6 +180,22 @@ export default async function SettingsPage() {
               )}
             </CardContent>
           </Card>
+          {ctx.isClientAdmin && settings && (
+            <Card>
+              <CardHeader>
+                <CardTitle>Performance reviews</CardTitle>
+                <CardDescription>
+                  Choose whether managers give a numerical rating as well as written feedback.
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                <ReviewSettingsForm
+                  scale={settings.review_rating_scale}
+                  labels={settings.review_rating_labels ?? []}
+                />
+              </CardContent>
+            </Card>
+          )}
         </div>
       )}
 

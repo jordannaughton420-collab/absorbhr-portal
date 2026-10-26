@@ -6,6 +6,7 @@ import { daysUntil, formatDate } from "@/lib/format";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { DoodleSquiggle } from "@/components/brand/doodle";
 import { AbsenceToday } from "./absence-today";
+import { MyWork } from "./my-work";
 
 export const metadata: Metadata = { title: "Dashboard · AbsorbHR Portal" };
 
@@ -87,6 +88,8 @@ export default async function DashboardPage() {
           {ctx.supportSession?.tenantName ?? ctx.tenantName ?? "AbsorbHR platform administration"}
         </p>
       </div>
+
+      <MyWork ctx={ctx} />
 
       <AbsenceToday ctx={ctx} />
 

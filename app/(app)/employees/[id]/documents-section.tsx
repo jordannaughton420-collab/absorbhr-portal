@@ -26,7 +26,9 @@ function formatSize(bytes: number | null) {
 // Who may upload what (mirrors the database rule app.document_upload_allowed).
 function uploadRights(ctx: SessionContext, isSelf: boolean, isDirectManager: boolean) {
   if (ctx.isHr) {
-    const all = Object.keys(DOCUMENT_CATEGORIES) as Category[];
+    const all = (Object.keys(DOCUMENT_CATEGORIES) as Category[]).filter(
+      (c) => c !== "case_document",
+    );
     return {
       categories: ctx.supportSession ? all.filter((c) => c !== "fit_note") : all,
       visibilities: Object.keys(DOCUMENT_VISIBILITY) as Visibility[],
@@ -68,10 +70,11 @@ export async function DocumentsSection({
     .select("id, category, title, file_name, size_bytes, visibility, created_at")
     .eq("employee_id", employeeId)
     .eq("status", "available")
+    .neq("category", "case_document") // case documents live only on the case
     .order("created_at", { ascending: false });
 
   return (
-    <Card>
+    <Card id="documents" className="scroll-mt-6">
       <CardHeader>
         <CardTitle>Documents</CardTitle>
         <CardDescription>

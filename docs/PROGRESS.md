@@ -16,7 +16,7 @@ Read this first when resuming work in a new session.
 - UI components are hand-written in shadcn/ui style (the shadcn registry isn't reachable from the session).
 - Line managers = direct reports only. Emergency contacts visible to direct line manager (read only) — confirm.
 - Employees can't see their own salary unless the company setting is on (default off) — confirm.
-- Diversity monitoring is off by default per company; database functions built, UI deferred to Phase 4.
+- Diversity monitoring is off by default per company; self-service form on the employee's own profile (Phase 4).
 
 ## Environment variables expected in the cloud session
 `NEXT_PUBLIC_SUPABASE_URL` (should be `https://djdjrrziukllerhhnrix.supabase.co`), `NEXT_PUBLIC_SUPABASE_ANON_KEY`,
@@ -53,7 +53,16 @@ All environment variables verified correct on 26 Oct 2026 (rate limiting and inv
     read/delete another tenant's policy file (validated before storage access); native GET form submission could put
     passwords in URLs (forms now POST and stay disabled until hydrated)
   - Demo: `supabase/seed_policies.sql` (3 AbsorbHR templates + Brightwater policies), `scripts/seed-documents.mjs`
-- [ ] Phase 4 — people processes (in progress)
+- [ ] Phase 4 — people processes: **built and tested, awaiting AbsorbHR approval**
+  - Decisions (26 Oct): disciplinary/grievance cases **HR only** (no assigned managers); review scoring chosen per
+    company (written only, or 1–5 with company labels); 1-to-1 notes shared by default with optional private notes
+    (author + HR) and a SAR warning
+  - Migrations 0012–0013; 40 tables, RLS on all; 191 pgTAP tests passing (50 for Phase 4)
+  - Pages: /checklists (+ templates), /reviews, /cases (HR only, not support), /requests; profile gains 1-to-1 notes,
+    diversity form (self only, when enabled) and a Cases link for HR; dashboard "My to-do list" + holiday summary;
+    review settings in /settings
+  - Demo: `supabase/seed_people.sql` (onboarding checklist, review cycle with 3 reviews, notes, 1 grievance case,
+    1 correction request)
 
 ## Follow-ups noted for later phases
 - Scheduled clean-up of abandoned uploads (`documents.status = 'uploading'` older than a day) and orphaned files.
@@ -64,5 +73,8 @@ All environment variables verified correct on 26 Oct 2026 (rate limiting and inv
 - Email notifications for leave decisions (Phase 5).
 - Convert the Playwright walkthrough / accessibility / idle-timeout scripts into a committed `npm run test:e2e` suite
   (needs a test-only seed password + TOTP handling).
-- Audit log viewer: add filters and paging (currently latest 300 entries).
+- Audit log viewer: add filters and paging (currently latest 300 entries). People without an employee record
+  (e.g. the QA login) show as "removed user" — show their email instead.
+- Email reminders for checklist tasks, review deadlines and correction requests (Phase 5).
+- SAR export must include private 1-to-1 notes and flag case records for HR redaction review (Phase 5).
 - Invitations need the correct service key and, for reliable delivery, Resend SMTP (Phase 5).

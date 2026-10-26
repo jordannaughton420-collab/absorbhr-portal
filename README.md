@@ -15,7 +15,7 @@ Each client company's data is completely separated from every other client's, an
 | 1 | Sign-in, MFA, companies, employees, org chart, audit log | ✅ Approved 26 Oct 2026 |
 | 2 | Holiday & sickness | ✅ Approved 26 Oct 2026 |
 | 3 | Documents & policies | ✅ Approved 26 Oct 2026 |
-| 4 | Onboarding, reviews, cases, self-service | In progress |
+| 4 | Onboarding, reviews, cases, self-service | Ready for your review |
 | 5 | Reports, emails, GDPR tools | Not started |
 
 Test site: <https://absorbhr-portal.vercel.app>
@@ -62,8 +62,9 @@ These talk to the Supabase project through its Management API, using `SUPABASE_A
 | `SEED_PASSWORD='…' npm run db:seed` | Reset **all** fake demo data incl. accounts (never run against production; resets everyone's two-step setup) |
 | `node scripts/db.mjs file supabase/seed_absence.sql` | Reset only the demo holiday/sickness data (keeps accounts) |
 | `node scripts/db.mjs file supabase/seed_policies.sql` | Reset demo policies and the AbsorbHR template library |
+| `node scripts/db.mjs file supabase/seed_people.sql` | Reset demo checklists, reviews, 1-to-1 notes, cases and correction requests |
 | `node scripts/seed-documents.mjs` | Re-upload the fake demo documents (needs the secret key) |
-| `npm run test:rls` | Run the 141 database tests (tenant isolation, roles, MFA, encryption, audit log, holiday maths, sickness, documents, policies) |
+| `npm run test:rls` | Run the 191 database tests (tenant isolation, roles, MFA, encryption, audit log, holiday maths, sickness, documents, policies, checklists, reviews, notes, cases) |
 | `npm run db:types` | Regenerate TypeScript types from the database |
 | `npm test` | Run validation unit tests |
 | `npm run lint` / `npm run typecheck` | Code quality checks |

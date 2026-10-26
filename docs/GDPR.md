@@ -27,7 +27,7 @@ the platform role and the consultancy role should be separated in contracts. **[
   browser storage used is a timestamp of the user's last activity (for the idle timeout) — no personal data.
 - **No analytics, tracking or advertising** tools are used. The Inter font is self-hosted (no Google requests).
 
-## 3. Data inventory (Phases 1–3)
+## 3. Data inventory (Phases 1–4)
 
 "HR" means Client Admin or HR Manager with two-step verification (MFA). "Support" means an AbsorbHR staff member during a
 time-limited, logged support session. Lawful bases are suggestions for the controller to confirm. **[LEGAL]**
@@ -58,6 +58,11 @@ time-limited, logged support session. Lawful bases are suggestions for the contr
 | Policies | Title, text, attached file, versions, audience, who published | `policies`, `policy_versions`, bucket `policy-documents` | Informing staff of rules and procedures | 6(1)(b), 6(1)(f) | Everyone in the audience (published only); HR manage | While in force + 6 years for superseded versions **[DECISION]** |
 | Policy acknowledgements | Employee, version, date/time | `policy_acknowledgements` | Evidence staff were told about policies (relevant in disciplinary and tribunal cases) | 6(1)(f) | HR; the employee (their own) | Employment + 6 years |
 | AbsorbHR policy templates | Template text — no personal data | `policies` (no company) | Consultancy service to clients | — | AbsorbHR admins; client HR (published templates) | Kept |
+| Onboarding/offboarding checklists | Checklist name, start or leaving date, tasks, who each task is for (HR/manager/employee), due dates, who ticked it off and when | `checklists`, `checklist_items` (templates: `checklist_templates`, `checklist_template_items`) | Organising joiners and leavers (e.g. right-to-work check before day one, returning equipment) | 6(1)(b), 6(1)(c), 6(1)(f) | HR, the employee, their direct line manager. Each person can tick only their own tasks | Employment + 6 years |
+| Performance reviews | Review title/cycle, self-assessment, manager assessment, *rating 1–5* (only if the company turns ratings on), objectives, *employee comments*, sign-off dates | `review_cycles`, `performance_reviews` | Performance management and development | 6(1)(b), 6(1)(f) | HR, the direct line manager (reviewer), the employee. The employee can't see the manager's draft until it is shared | Employment + 6 years |
+| 1-to-1 notes | Meeting date, notes, *agreed actions*, private flag, author | `one_to_one_notes` | Regular check-ins, support and development | 6(1)(f) | Author, HR, direct line manager; the employee sees notes **unless** marked private. Private notes are still disclosable in a Subject Access Request | Employment + 6 years |
+| Disciplinary & grievance cases | Reference, type, stage, outcome, dates, summary and timeline — **summary and timeline encrypted**; case documents (letters, statements, notes) | `cases`, `case_events` (**encrypted**), `documents` (category *case document*, HR only) | Following fair procedures (ACAS Code of Practice), defending tribunal claims | 6(1)(b), 6(1)(c), 6(1)(f); Art. 10 / DPA 2018 Sch. 1 para 1 if criminal allegations are involved **[LEGAL]** | **HR only** (decided by AbsorbHR 26 Oct 2026), with MFA. Never line managers, never the employee in the portal, never AbsorbHR Support. HR never sees a case about themselves. Every view is logged | Case closed + 6 years **[DECISION]** |
+| Correction requests | Area (personal details, job, pay, absence, documents, other), what's wrong, status, HR reply, who resolved it and when | `rectification_requests` | Handling the right to rectification (Art. 16) | 6(1)(c) legal obligation | The employee (their own); HR | 6 years after the request is closed |
 
 **Phase 2 minimisation choices:** sickness reasons are optional categories rather than free-text diagnoses; the request note field warns staff not to include health details; health details stay hidden until someone chooses to view them (and that view is logged); fit notes themselves are not uploaded until Phase 3's secure document storage.
 
@@ -136,6 +141,27 @@ later phases. **[DECISION]** if clients need any of them.
   loaded. During testing, a sign-in clicked before the page was ready put the email and password into the web
   address; this is now impossible.
 
+### People processes (Phase 4)
+- **Cases are HR only.** A separate database check allows a case to be read only by HR in the same company, signed in
+  with MFA, not in an AbsorbHR support session, and never by the person the case is about (so an HR manager can't
+  read a grievance raised about them). The summary and timeline are encrypted with the same Vault key as health
+  data, and are decrypted only by a database function that writes the view to the audit log in the same step.
+  Opening the case list is logged too.
+- **Case documents** are stored as HR-only documents linked to the case and are excluded from the employee's
+  normal document list, so they can't be accidentally shown to the employee or manager.
+- **1-to-1 notes** are shared with the employee by default. A manager can mark a note private (author and HR only);
+  the form warns that private notes can still be disclosed in a Subject Access Request.
+- **Reviews:** the employee sees their manager's assessment only once it's shared; submitted sections are locked.
+  Ratings are off unless a Client Admin turns them on, with the company's own labels.
+- **Checklists:** each task is for HR, the manager or the employee, and the database only lets that person (or HR)
+  tick it off.
+- **Diversity monitoring:** a voluntary, self-service form appears on the employee's own profile only when the
+  company turns it on. Answers are encrypted, are never shown to managers or AbsorbHR Support, and saving with every
+  answer blank deletes them.
+- **Correction requests:** employees can ask HR to correct anything; HR replies through the portal, and if HR
+  declines it must give a reason (the employee can complain to the ICO).
+- 50 automated tests cover Phase 4 access rules (191 in total).
+
 ### Encryption
 - **In transit:** HTTPS only; `Strict-Transport-Security` header with preload.
 - **At rest:** Supabase encrypts all database storage (AES-256) and backups.
@@ -168,10 +194,10 @@ later phases. **[DECISION]** if clients need any of them.
 |---|---|
 | Be informed (Art. 13) | ✅ Privacy notice gate with recorded acknowledgement. Wording is a **draft placeholder**. **[LEGAL]** |
 | Access (Art. 15) | Phase 5: one-click SAR export (ZIP: JSON + PDF). Until then, HR can view all data on the employee page. |
-| Rectification (Art. 16) | ✅ Employees can correct their own contact details and emergency contacts. A formal "request a correction" workflow for HR-held data arrives in Phase 4/5. |
+| Rectification (Art. 16) | ✅ Employees can correct their own contact details and emergency contacts, and use **Correction requests** to ask HR to fix anything else. HR replies in the portal; requests and replies are kept and audited. Reply within one month. |
 | Erasure / anonymisation (Art. 17) | Phase 5: erasure tool and automatic anonymisation via retention schedule. Employee records cannot be deleted in the app meanwhile (no delete permission exists). |
 | Restriction / objection | Handled manually by HR for now. **[DECISION]** whether to build a workflow. |
-| Withdraw consent (diversity data) | Database support built and tested (clearing the answers deletes the record). The employee-facing form arrives with the self-service dashboard in Phase 4; diversity collection is off by default. |
+| Withdraw consent (diversity data) | ✅ The employee clears their answers on their profile, which deletes the record. Diversity collection is off by default per company. |
 
 ## 6. Retention
 
@@ -185,6 +211,9 @@ will use 6 years as the floor. Companies may set longer periods but not shorter 
 | Holiday and leave records | 6 years after leaving | Covers Working Time Regulations record-keeping (2 years minimum) |
 | Sickness records, reasons, return-to-work forms, fit notes | 6 years after leaving | Statutory Sick Pay, personal injury and discrimination claims |
 | Employee documents (contracts, letters, certificates, notes) | 6 years after leaving | |
+| Checklists, performance reviews, 1-to-1 notes | 6 years after leaving | |
+| Disciplinary and grievance cases (incl. case documents) | 6 years after the case closes, or after leaving if later | Tribunal and contract claim time limits **[LEGAL]** confirm, especially for unfounded allegations |
+| Correction requests | 6 years after closure | Evidence the right was handled |
 | Policy versions and acknowledgements | 6 years after the version is replaced or the employee leaves | Evidence staff were informed |
 | Emergency contacts | 6 years after leaving | See note below |
 | Diversity monitoring | 6 years after leaving, or immediately on withdrawal | Withdrawal by the employee always deletes it |
@@ -221,5 +250,7 @@ lawyer to confirm, and record the reasoning in your DPIA and retention policy.
 | Statutory carry-over | Carry-over required by law (e.g. after long sickness or family leave) is added manually by HR | **[LEGAL]** confirm the process |
 | Virus scanning | Uploaded files are type-checked but not virus-scanned | **Deferred by AbsorbHR (26 Oct 2026).** Revisit before go-live; consider in the DPIA risk register |
 | Abandoned uploads | An upload started but never finished leaves an unused record and file until cleaned up | Add a scheduled clean-up job (Phase 5) |
+| Private 1-to-1 notes and SARs | Private notes are hidden from the employee in the portal but are personal data they are entitled to in a Subject Access Request | Train managers to write every note as if the employee will read it **[LEGAL]** |
+| Case records and SARs | Case records can be requested in a SAR; some content (e.g. witness identities) may need redacting under DPA 2018 Sch. 2 | Phase 5 SAR export will flag case records for HR review before release **[LEGAL]** |
 | QA test login | `qa.admin@example.com` (Client Admin, no employee record) exists in the development project for automated browser testing | Remove before any real use; never create in production |
-| Automated accessibility checks | All Phase 1–3 pages pass axe-core WCAG 2.1 AA checks; automated tools catch only part of the issues | Manual screen-reader test before go-live |
+| Automated accessibility checks | All Phase 1–4 pages pass axe-core WCAG 2.1 AA checks; automated tools catch only part of the issues | Manual screen-reader test before go-live |

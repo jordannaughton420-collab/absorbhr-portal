@@ -31,6 +31,20 @@ const ENTITY_LABELS: Record<string, string> = {
   sickness_absences: "Sickness record",
   sickness_details: "Sickness reason (health data)",
   return_to_work_forms: "Return-to-work form (health data)",
+  documents: "Document",
+  policies: "Policy",
+  policy_versions: "Policy version",
+  policy_acknowledgements: "Policy acknowledgement",
+  checklist_templates: "Checklist template",
+  checklist_template_items: "Checklist template task",
+  checklists: "Checklist",
+  checklist_items: "Checklist task",
+  review_cycles: "Review cycle",
+  performance_reviews: "Performance review",
+  one_to_one_notes: "1-to-1 notes",
+  cases: "Disciplinary/grievance case",
+  case_events: "Case timeline entry",
+  rectification_requests: "Correction request",
 };
 
 const ACTION_VARIANT: Record<string, "default" | "muted" | "warning" | "destructive" | "success"> =

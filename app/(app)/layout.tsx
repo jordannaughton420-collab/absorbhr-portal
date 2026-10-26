@@ -28,6 +28,11 @@ function navFor(ctx: SessionContext, pendingApprovals: number): NavItem[] {
   if (inTenant) items.push({ href: "/calendar", label: "Team calendar", icon: "calendar" });
   if (ownRecord || ((ctx.isHr || isManager) && !ctx.supportSession))
     items.push({ href: "/sickness", label: "Sickness", icon: "sickness" });
+  if (inTenant) items.push({ href: "/checklists", label: "Checklists", icon: "checklists" });
+  if (!ctx.supportSession && (ownRecord || ctx.isHr || isManager))
+    items.push({ href: "/reviews", label: "Reviews", icon: "reviews" });
+  if (ctx.isHr && !ctx.supportSession)
+    items.push({ href: "/cases", label: "Cases", icon: "cases" });
   if (ctx.isHr || isManager)
     items.push({
       href: "/employees",
@@ -40,6 +45,8 @@ function navFor(ctx: SessionContext, pendingApprovals: number): NavItem[] {
   if (ctx.isHr) items.push({ href: "/settings", label: "Company settings", icon: "settings" });
   if (ctx.isClientAdmin && !ctx.supportSession)
     items.push({ href: "/audit-log", label: "Audit log", icon: "audit" });
+  if (!ctx.supportSession && (ownRecord || ctx.isHr))
+    items.push({ href: "/requests", label: "Correction requests", icon: "requests" });
   if (ctx.tenantId) items.push({ href: "/privacy", label: "Privacy notice", icon: "privacy" });
   if (ctx.isPlatformAdmin) items.push({ href: "/admin", label: "AbsorbHR admin", icon: "admin" });
   return items;

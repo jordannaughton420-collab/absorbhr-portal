@@ -50,6 +50,7 @@ export async function startDocumentUpload(
     mime_type: v.mime_type,
     visibility: v.visibility,
     storage_path: path,
+    case_id: v.case_id ?? null,
   });
   if (error) {
     if (error.code === "42501")

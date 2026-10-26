@@ -8,6 +8,7 @@ export const DOCUMENT_CATEGORIES = {
   fit_note: "Fit note (health)",
   meeting_notes: "Meeting notes",
   other: "Other",
+  case_document: "Case document (HR only)",
 } as const;
 
 export const DOCUMENT_VISIBILITY = {
@@ -39,6 +40,7 @@ export function mimeFor(name: string, reported: string) {
 
 export const startUploadSchema = z.object({
   employee_id: z.uuid(),
+  case_id: z.uuid().optional(),
   category: z.enum(
     Object.keys(DOCUMENT_CATEGORIES) as [keyof typeof DOCUMENT_CATEGORIES],
     "Choose a category",

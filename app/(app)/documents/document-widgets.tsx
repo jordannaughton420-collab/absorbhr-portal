@@ -28,11 +28,13 @@ type Visibility = keyof typeof DOCUMENT_VISIBILITY;
 
 export function DocumentUpload({
   employeeId,
+  caseId,
   categories,
   visibilities,
   defaultVisibility,
 }: {
   employeeId: string;
+  caseId?: string;
   categories: Category[];
   visibilities: Visibility[];
   defaultVisibility: Visibility;
@@ -56,6 +58,7 @@ export function DocumentUpload({
     }
     const input = {
       employee_id: employeeId,
+      ...(caseId ? { case_id: caseId } : {}),
       category: String(fd.get("category") ?? ""),
       visibility: String(fd.get("visibility") ?? defaultVisibility),
       title: String(fd.get("title") ?? "").trim() || file.name.replace(/\.[^.]+$/, ""),
@@ -123,7 +126,7 @@ export function DocumentUpload({
         </Field>
         <Field name="category" label="Type of document" error={errors.category}>
           {(p) => (
-            <Select {...p} defaultValue="">
+            <Select {...p} defaultValue={categories.length === 1 ? categories[0] : ""}>
               <option value="" disabled>
                 Choose
               </option>
