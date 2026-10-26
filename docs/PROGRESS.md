@@ -64,7 +64,8 @@ All environment variables verified correct on 26 Oct 2026 (rate limiting and inv
   - Demo: `supabase/seed_people.sql` (onboarding checklist, review cycle with 3 reviews, notes, 1 grievance case,
     1 correction request)
 
-- [ ] Phase 5 — reports, emails, GDPR tools: **built and tested, awaiting AbsorbHR approval**
+- [x] Phase 5 — reports, emails, GDPR tools: **approved by AbsorbHR on 26 Oct 2026** (commit `33a4a22`)
+- [ ] Go-live — follow docs/GO-LIVE.md (production Supabase/Vercel Pro, Resend, CRON_SECRET + Vault)
   - Decisions (26 Oct): retention — nightly job lists records due after 6 years, **HR confirms** before anonymising
     (can hold back for live claims); SAR export run by **HR/Client Admin only**, with case records and private notes
     flagged for review before release; **AbsorbHR admins can see every client's breach log** (summary only);

@@ -17,7 +17,7 @@ Each client company's data is completely separated from every other client's, an
 | 2 | Holiday & sickness | ✅ Approved 26 Oct 2026 |
 | 3 | Documents & policies | ✅ Approved 26 Oct 2026 |
 | 4 | Onboarding, reviews, cases, self-service | ✅ Approved 26 Oct 2026 |
-| 5 | Reports, emails, GDPR tools | Ready for your review |
+| 5 | Reports, emails, GDPR tools | ✅ Approved 26 Oct 2026 |
 
 Test site: <https://absorbhr-portal.vercel.app>
 
