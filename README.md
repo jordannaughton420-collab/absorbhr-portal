@@ -14,7 +14,7 @@ Each client company's data is completely separated from every other client's, an
 | 0 | Project setup, brand theme | ✅ Done |
 | 1 | Sign-in, MFA, companies, employees, org chart, audit log | ✅ Approved 26 Oct 2026 |
 | 2 | Holiday & sickness | ✅ Approved 26 Oct 2026 |
-| 3 | Documents & policies | In progress |
+| 3 | Documents & policies | ✅ Built and tested — awaiting your sign-off |
 | 4 | Onboarding, reviews, cases, self-service | Not started |
 | 5 | Reports, emails, GDPR tools | Not started |
 
@@ -61,7 +61,9 @@ These talk to the Supabase project through its Management API, using `SUPABASE_A
 | `npm run db:migrate` | Apply any new files in `supabase/migrations` |
 | `SEED_PASSWORD='…' npm run db:seed` | Reset **all** fake demo data incl. accounts (never run against production; resets everyone's two-step setup) |
 | `node scripts/db.mjs file supabase/seed_absence.sql` | Reset only the demo holiday/sickness data (keeps accounts) |
-| `npm run test:rls` | Run the 106 database tests (tenant isolation, roles, MFA, encryption, audit log, holiday maths, sickness privacy) |
+| `node scripts/db.mjs file supabase/seed_policies.sql` | Reset demo policies and the AbsorbHR template library |
+| `node scripts/seed-documents.mjs` | Re-upload the fake demo documents (needs the secret key) |
+| `npm run test:rls` | Run the 141 database tests (tenant isolation, roles, MFA, encryption, audit log, holiday maths, sickness, documents, policies) |
 | `npm run db:types` | Regenerate TypeScript types from the database |
 | `npm test` | Run validation unit tests |
 | `npm run lint` / `npm run typecheck` | Code quality checks |

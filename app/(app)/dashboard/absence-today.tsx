@@ -12,20 +12,28 @@ export async function AbsenceToday({ ctx }: { ctx: SessionContext }) {
   const canApprove = ctx.isHr || ctx.role === "line_manager";
   const ownRecord = ctx.employeeId && !ctx.supportSession;
 
-  const [balance, policy, { count: pending }, { data: away }, { data: directory }] =
-    await Promise.all([
-      ownRecord ? getBalance(ctx.employeeId!) : Promise.resolve(null),
-      getHolidayPolicy(),
-      canApprove
-        ? supabase
-            .from("leave_requests")
-            .select("id", { count: "exact", head: true })
-            .eq("status", "pending")
-            .neq("employee_id", ctx.employeeId ?? "00000000-0000-0000-0000-000000000000")
-        : Promise.resolve({ count: null }),
-      supabase.rpc("absence_calendar", { p_from: today, p_to: today }),
-      supabase.from("employee_directory").select("id, first_name, preferred_name, last_name"),
-    ]);
+  const [
+    balance,
+    policy,
+    { count: pending },
+    { data: away },
+    { data: directory },
+    { data: policies },
+  ] = await Promise.all([
+    ownRecord ? getBalance(ctx.employeeId!) : Promise.resolve(null),
+    getHolidayPolicy(),
+    canApprove
+      ? supabase
+          .from("leave_requests")
+          .select("id", { count: "exact", head: true })
+          .eq("status", "pending")
+          .neq("employee_id", ctx.employeeId ?? "00000000-0000-0000-0000-000000000000")
+      : Promise.resolve({ count: null }),
+    supabase.rpc("absence_calendar", { p_from: today, p_to: today }),
+    supabase.from("employee_directory").select("id, first_name, preferred_name, last_name"),
+    ownRecord ? supabase.rpc("my_policies") : Promise.resolve({ data: null }),
+  ]);
+  const toRead = (policies ?? []).filter((p) => !p.acknowledged).length;
   const names = new Map(
     (directory ?? []).map((d) => [d.id!, `${d.preferred_name || d.first_name} ${d.last_name}`]),
   );
@@ -52,6 +60,15 @@ export async function AbsenceToday({ ctx }: { ctx: SessionContext }) {
             <p className="text-sm text-muted-foreground">Requests waiting for you</p>
             <p className="mt-1 text-3xl font-semibold text-primary">{pending ?? 0}</p>
             <p className="text-xs text-muted-foreground">leave requests to approve</p>
+          </Card>
+        </Link>
+      )}
+      {ownRecord && toRead > 0 && (
+        <Link href="/policies" className="rounded-xl">
+          <Card className="h-full border-warning/50 p-5 hover:border-primary">
+            <p className="text-sm text-muted-foreground">Policies to read</p>
+            <p className="mt-1 text-3xl font-semibold text-warning">{toRead}</p>
+            <p className="text-xs text-muted-foreground">please read and confirm</p>
           </Card>
         </Link>
       )}

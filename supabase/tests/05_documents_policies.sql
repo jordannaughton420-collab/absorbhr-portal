@@ -81,11 +81,11 @@ create temp table pv as select v.id, p.k, v.version from policy_versions v join 
 grant select on pv to authenticated;
 
 insert into tests.results (line) select unnest(array[
-  is(tests.count_as(tests.id('a_emp2'), 'aal1', 'select 1 from policies'), 1::bigint,
+  is(tests.count_as(tests.id('a_emp2'), 'aal1', format('select 1 from policies where id in (select id from pol)')), 1::bigint,
      'Employee sees only published policies meant for them (not another department''s, not drafts, not templates)'),
-  is(tests.count_as(tests.id('a_emp1'), 'aal1', 'select 1 from policies'), 2::bigint,
+  is(tests.count_as(tests.id('a_emp1'), 'aal1', format('select 1 from policies where id in (select id from pol)')), 2::bigint,
      'Employee in the Operations department also sees the Operations policy'),
-  is(tests.count_as(tests.id('a_hr'), 'aal2', 'select 1 from policies where tenant_id is null'), 1::bigint,
+  is(tests.count_as(tests.id('a_hr'), 'aal2', format('select 1 from policies where tenant_id is null and id = %L', (select id from pol where k='tpl'))), 1::bigint,
      'HR can browse AbsorbHR''s template library'),
   is(tests.count_as(tests.id('b_admin'), 'aal2', format('select 1 from policies where tenant_id = %L', tests.id('tenant_a'))), 0::bigint,
      'Another company cannot see this company''s policies'),

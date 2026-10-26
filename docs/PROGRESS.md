@@ -43,9 +43,21 @@ All environment variables verified correct on 26 Oct 2026 (rate limiting and inv
   - Demo absence data: `supabase/seed_absence.sql` (Brightwater configured; Northgate deliberately unconfigured)
   - QA login `qa.admin@example.com` (Client Admin, no employee record) for browser tests; TOTP secret in the
     session scratchpad only
-- [ ] Phase 3 — documents & policies (in progress)
+- [x] Phase 3 — documents & policies: built and tested; awaiting user sign-off
+  - Decisions (26 Oct): uploads by HR, employee and direct line manager; HR chooses re-acknowledgement per version;
+    PDF/DOCX/JPEG/PNG/HEIC up to 10 MB; AbsorbHR template library that clients copy
+  - Migrations 0008–0011; buckets `employee-documents`, `policy-documents` (private, no storage policies);
+    29 tables, RLS on all; 141 pgTAP tests passing
+  - Fixes found during the build: uploader exception bypassed MFA (0011); forged file path could make server
+    read/delete another tenant's policy file (validated before storage access); native GET form submission could put
+    passwords in URLs (forms now POST and stay disabled until hydrated)
+  - Demo: `supabase/seed_policies.sql` (3 AbsorbHR templates + Brightwater policies), `scripts/seed-documents.mjs`
+- [ ] Phase 4 — people processes (next)
 
 ## Follow-ups noted for later phases
+- Scheduled clean-up of abandoned uploads (`documents.status = 'uploading'` older than a day) and orphaned files.
+- Virus scanning for uploads (decision needed).
+- Template management screens were only tested at database level (AbsorbHR admin's 2FA is on the user's phone).
 - Irregular-hours/part-year 12.07% accrual (deferred by AbsorbHR); first-year monthly accrual rule (decision needed).
 - Email notifications for leave decisions (Phase 5).
 - Convert the Playwright walkthrough / accessibility / idle-timeout scripts into a committed `npm run test:e2e` suite

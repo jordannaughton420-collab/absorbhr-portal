@@ -49,7 +49,9 @@ async function migrate() {
     ),
   );
   const dir = "supabase/migrations";
-  const files = readdirSync(dir).filter((f) => f.endsWith(".sql")).sort();
+  const files = readdirSync(dir)
+    .filter((f) => f.endsWith(".sql"))
+    .sort();
   for (const f of files) {
     const [version, ...rest] = basename(f, ".sql").split("_");
     if (applied.has(version)) continue;
@@ -82,6 +84,7 @@ async function seed() {
   );
   await runSql(sql);
   await runSql(readFileSync("supabase/seed_absence.sql", "utf8"));
+  await runSql(readFileSync("supabase/seed_policies.sql", "utf8"));
   console.log("seeded fake demo data");
 }
 
@@ -89,12 +92,16 @@ async function test() {
   const dir = "supabase/tests";
   const setup = readFileSync(join(dir, "_setup.sql"), "utf8");
   let failed = 0;
-  for (const f of readdirSync(dir).filter((f) => f.endsWith(".sql") && !f.startsWith("_")).sort()) {
+  for (const f of readdirSync(dir)
+    .filter((f) => f.endsWith(".sql") && !f.startsWith("_"))
+    .sort()) {
     const rows = await runSql(`${setup}\n${readFileSync(join(dir, f), "utf8")}`);
     const lines = rows.flatMap((r) => Object.values(r)).map(String);
     const bad = lines.filter((l) => l.startsWith("not ok") || l.startsWith("# Looks like"));
     failed += bad.length ? 1 : 0;
-    console.log(`${bad.length ? "FAIL" : "ok  "} ${f} (${lines.filter((l) => /^ok /.test(l)).length} passed)`);
+    console.log(
+      `${bad.length ? "FAIL" : "ok  "} ${f} (${lines.filter((l) => /^ok /.test(l)).length} passed)`,
+    );
     for (const l of bad) console.log("     " + l);
   }
   if (failed) process.exit(1);
@@ -103,7 +110,8 @@ async function test() {
 const [cmd, arg] = process.argv.slice(2);
 try {
   if (cmd === "query") console.log(JSON.stringify(await runSql(arg), null, 2));
-  else if (cmd === "file") console.log(JSON.stringify(await runSql(readFileSync(arg, "utf8")), null, 2));
+  else if (cmd === "file")
+    console.log(JSON.stringify(await runSql(readFileSync(arg, "utf8")), null, 2));
   else if (cmd === "migrate") await migrate();
   else if (cmd === "seed") await seed();
   else if (cmd === "test") await test();

@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import {
+  BookOpen,
   Building2,
   CalendarDays,
   ClipboardCheck,
@@ -31,6 +32,7 @@ const ICONS = {
   approvals: ClipboardCheck,
   calendar: CalendarDays,
   sickness: Thermometer,
+  policies: BookOpen,
 };
 
 export type NavItem = { href: string; label: string; icon: keyof typeof ICONS };

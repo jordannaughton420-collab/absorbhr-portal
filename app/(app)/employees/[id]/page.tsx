@@ -18,6 +18,7 @@ import { Button } from "@/components/ui/button";
 import { Table, Td, Th } from "@/components/ui/table";
 import { deleteEmergencyContact } from "../actions";
 import { AbsenceSection } from "./absence-section";
+import { DocumentsSection } from "./documents-section";
 import {
   EmergencyContactForm,
   EmployeeForm,
@@ -194,6 +195,13 @@ export default async function EmployeePage({ params }: { params: Promise<{ id: s
       </Card>
 
       <AbsenceSection
+        employeeId={id}
+        ctx={ctx}
+        isSelf={isSelf}
+        isDirectManager={Boolean(ctx.employeeId) && emp.manager_id === ctx.employeeId}
+      />
+
+      <DocumentsSection
         employeeId={id}
         ctx={ctx}
         isSelf={isSelf}

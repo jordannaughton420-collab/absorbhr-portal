@@ -1,6 +1,6 @@
 # AbsorbHR Portal — Data Protection Documentation
 
-**Status:** Living document, updated at the end of each build phase. **Current coverage: Phases 1–2 (foundations; absence and leave).**
+**Status:** Living document, updated at the end of each build phase. **Current coverage: Phases 1–3 (foundations; absence and leave; documents and policies).**
 Use it as technical input to a Data Protection Impact Assessment (DPIA). Items marked **[DECISION]** need a
 business or legal decision; items marked **[LEGAL]** need review by a qualified data protection lawyer.
 
@@ -27,7 +27,7 @@ the platform role and the consultancy role should be separated in contracts. **[
   browser storage used is a timestamp of the user's last activity (for the idle timeout) — no personal data.
 - **No analytics, tracking or advertising** tools are used. The Inter font is self-hosted (no Google requests).
 
-## 3. Data inventory (Phases 1–2)
+## 3. Data inventory (Phases 1–3)
 
 "HR" means Client Admin or HR Manager with two-step verification (MFA). "Support" means an AbsorbHR staff member during a
 time-limited, logged support session. Lawful bases are suggestions for the controller to confirm. **[LEGAL]**
@@ -54,6 +54,10 @@ time-limited, logged support session. Lawful bases are suggestions for the contr
 | Return-to-work form | Meeting date, fit to return, *GP seen*, *fit note received*, *adjustments*, *support offered*, *notes* — **encrypted**; employee confirmation date | `return_to_work_forms` | Supporting a safe return; reasonable adjustments (Equality Act 2010) | Art. 9(2)(b) + Sch. 1 para 1 | As sickness reason. Completed by manager/HR only; the employee confirms it | Employment + 6 years **[DECISION]** |
 | Bradford Factor | Calculated on demand (spells² × days, 52 weeks); not stored | — | Prompt for supportive absence conversations | 6(1)(f) / Art. 9(2)(b) | HR (MFA), direct line manager, the employee | Not stored |
 | Bank holidays | Public GOV.UK data — no personal data | `bank_holidays` | Calculating working days | — | Everyone signed in | Kept |
+| Employee documents | The file itself plus title, type, file name, size, SHA-256 fingerprint, who uploaded it, who can see it | `documents` + private bucket `employee-documents` | Keeping employment records (contracts, letters, certificates, right-to-work copies, fit notes, meeting notes) | 6(1)(b), 6(1)(c); fit notes Art. 9(2)(b) | HR, plus the employee and/or direct line manager as set per document. Fit notes never to AbsorbHR Support | Contracts/letters: employment + 6 years; right-to-work copies: employment + 2 years; fit notes: as sickness **[DECISION]** |
+| Policies | Title, text, attached file, versions, audience, who published | `policies`, `policy_versions`, bucket `policy-documents` | Informing staff of rules and procedures | 6(1)(b), 6(1)(f) | Everyone in the audience (published only); HR manage | While in force + 6 years for superseded versions **[DECISION]** |
+| Policy acknowledgements | Employee, version, date/time | `policy_acknowledgements` | Evidence staff were told about policies (relevant in disciplinary and tribunal cases) | 6(1)(f) | HR; the employee (their own) | Employment + 6 years |
+| AbsorbHR policy templates | Template text — no personal data | `policies` (no company) | Consultancy service to clients | — | AbsorbHR admins; client HR (published templates) | Kept |
 
 **Phase 2 minimisation choices:** sickness reasons are optional categories rather than free-text diagnoses; the request note field warns staff not to include health details; health details stay hidden until someone chooses to view them (and that view is logged); fit notes themselves are not uploaded until Phase 3's secure document storage.
 
@@ -64,10 +68,10 @@ later phases. **[DECISION]** if clients need any of them.
 ## 4. Technical measures (built and tested)
 
 ### Separation between client companies
-- Every business table carries a `tenant_id`. **Row Level Security (RLS) is enabled on all 25 tables**, enforced by the
+- Every business table carries a `tenant_id`. **Row Level Security (RLS) is enabled on all 29 tables**, enforced by the
   database itself — not just the website.
 - Composite foreign keys make it impossible to link a record to a department, location or manager in another company.
-- Automated tests (`npm run test:rls`, 106 tests across tenant isolation, roles, holiday and sickness) prove that one company cannot read or modify another's employees,
+- Automated tests (`npm run test:rls`, 141 tests across tenant isolation, roles, holiday, sickness, documents and policies) prove that one company cannot read or modify another's employees,
   personal details, salaries, emergency contacts, right-to-work checks, user accounts or audit entries.
 
 ### Role-based access (least privilege)
@@ -110,6 +114,27 @@ later phases. **[DECISION]** if clients need any of them.
   discrimination under the Equality Act 2010. The screen says this is a prompt for support, not an automatic trigger.
 - The team calendar shows colleagues only "Away", never the type of leave or sickness.
 - Bank holidays are fetched daily from GOV.UK by the database itself (no personal data leaves the system).
+
+### Documents and policies (Phase 3)
+- Files live in **private** storage buckets in London. No browser can list or read them directly: there are deliberately
+  no storage access rules. Every upload and download goes through the server, which first checks the person's rights
+  in the database (RLS) and then issues a **single-use upload link** or a **60-second download link**.
+- Uploads go straight from the browser to storage, never through the web server. The server then checks the file's
+  actual contents ("magic bytes") match its claimed type (PDF, Word, JPEG, PNG, HEIC); macro-enabled Word files and
+  anything else are deleted. Limit: 10 MB, also enforced by the storage bucket itself. A SHA-256 fingerprint is
+  recorded for every file.
+- Who can see a document is set per document (HR only / HR + manager / HR + employee / all three). Who can upload is
+  limited by role: employees can add only their own certificates, fit notes, right-to-work and other documents;
+  line managers only for direct reports. Only HR can change visibility or delete. Every download is logged.
+- File names are cleaned before storage, and file locations sent by the browser are checked against the person's
+  own records before the server touches storage. Without that check, a forged location could have been used to
+  read or delete another company's file (found and fixed during the build).
+- Published policy versions can't be changed. HR chooses for each new version whether everyone must re-confirm it.
+  The acknowledgement tracker shows who is still to confirm. Staff can't see each other's confirmations.
+- 35 automated tests cover document and policy access.
+- Forms now always send data in the request body (POST), and their buttons are disabled until the page has fully
+  loaded. During testing, a sign-in clicked before the page was ready put the email and password into the web
+  address; this is now impossible.
 
 ### Encryption
 - **In transit:** HTTPS only; `Strict-Transport-Security` header with preload.
@@ -186,5 +211,7 @@ To be confirmed before Phase 5 builds the automatic schedule.
 | Irregular-hours / part-year workers | 12.07% accrual (Employment Rights (Amendment, Revocation and Transitional Provision) Regulations 2023) not yet automated | HR uses holiday adjustments meanwhile; deferred by AbsorbHR decision |
 | First-year accrual rule | WTR reg. 15A (holiday accrues monthly in the first year) is not enforced | **[DECISION]** whether to enforce or leave to HR judgement |
 | Statutory carry-over | Carry-over required by law (e.g. after long sickness or family leave) is added manually by HR | **[LEGAL]** confirm the process |
+| Virus scanning | Uploaded files are type-checked but not virus-scanned | **[DECISION]** add a scanning service (e.g. ClamAV-based) before go-live, or rely on staff devices' antivirus |
+| Abandoned uploads | An upload started but never finished leaves an unused record and file until cleaned up | Add a scheduled clean-up job (Phase 5) |
 | QA test login | `qa.admin@example.com` (Client Admin, no employee record) exists in the development project for automated browser testing | Remove before any real use; never create in production |
-| Automated accessibility checks | All Phase 1–2 pages pass axe-core WCAG 2.1 AA checks; automated tools catch only part of the issues | Manual screen-reader test before go-live |
+| Automated accessibility checks | All Phase 1–3 pages pass axe-core WCAG 2.1 AA checks; automated tools catch only part of the issues | Manual screen-reader test before go-live |

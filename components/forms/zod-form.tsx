@@ -42,6 +42,10 @@ export function ZodForm({
   const [formError, setFormError] = React.useState<string | null>(null);
   const [message, setMessage] = React.useState<string | null>(null);
   const [pending, startTransition] = React.useTransition();
+  // Until JavaScript has loaded, the browser would submit the form natively. Keep the button
+  // disabled until then, and use POST so values (e.g. passwords) can never end up in a URL.
+  const [ready, setReady] = React.useState(false);
+  React.useEffect(() => setReady(true), []);
 
   function onSubmit(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -76,12 +80,12 @@ export function ZodForm({
   }
 
   return (
-    <form onSubmit={onSubmit} noValidate className={className}>
+    <form method="post" onSubmit={onSubmit} noValidate className={className}>
       <div className="space-y-4">
         {formError && <Alert variant="error">{formError}</Alert>}
         {message && <Alert variant="success">{message}</Alert>}
         {children({ errors, pending })}
-        <Button type="submit" disabled={pending} className={submitClassName}>
+        <Button type="submit" disabled={pending || !ready} className={submitClassName}>
           {pending ? pendingLabel : submitLabel}
         </Button>
       </div>
