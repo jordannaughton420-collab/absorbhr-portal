@@ -15,8 +15,8 @@ Each client company's data is completely separated from every other client's, an
 | 1 | Sign-in, MFA, companies, employees, org chart, audit log | ✅ Approved 26 Oct 2026 |
 | 2 | Holiday & sickness | ✅ Approved 26 Oct 2026 |
 | 3 | Documents & policies | ✅ Approved 26 Oct 2026 |
-| 4 | Onboarding, reviews, cases, self-service | Ready for your review |
-| 5 | Reports, emails, GDPR tools | Not started |
+| 4 | Onboarding, reviews, cases, self-service | ✅ Approved 26 Oct 2026 |
+| 5 | Reports, emails, GDPR tools | In progress |
 
 Test site: <https://absorbhr-portal.vercel.app>
 

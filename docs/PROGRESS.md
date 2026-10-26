@@ -53,7 +53,7 @@ All environment variables verified correct on 26 Oct 2026 (rate limiting and inv
     read/delete another tenant's policy file (validated before storage access); native GET form submission could put
     passwords in URLs (forms now POST and stay disabled until hydrated)
   - Demo: `supabase/seed_policies.sql` (3 AbsorbHR templates + Brightwater policies), `scripts/seed-documents.mjs`
-- [ ] Phase 4 — people processes: **built and tested, awaiting AbsorbHR approval**
+- [x] Phase 4 — people processes: **approved by AbsorbHR on 26 Oct 2026** (commit `7bc5ef4`)
   - Decisions (26 Oct): disciplinary/grievance cases **HR only** (no assigned managers); review scoring chosen per
     company (written only, or 1–5 with company labels); 1-to-1 notes shared by default with optional private notes
     (author + HR) and a SAR warning
@@ -63,6 +63,8 @@ All environment variables verified correct on 26 Oct 2026 (rate limiting and inv
     review settings in /settings
   - Demo: `supabase/seed_people.sql` (onboarding checklist, review cycle with 3 reviews, notes, 1 grievance case,
     1 correction request)
+
+- [ ] Phase 5 — reports, emails, GDPR tools (in progress)
 
 ## Follow-ups noted for later phases
 - Scheduled clean-up of abandoned uploads (`documents.status = 'uploading'` older than a day) and orphaned files.
