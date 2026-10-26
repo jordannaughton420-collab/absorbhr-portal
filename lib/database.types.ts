@@ -361,6 +361,116 @@ export type Database = {
           },
         ];
       };
+      cleanup_queue: {
+        Row: {
+          attempts: number;
+          bucket: string | null;
+          created_at: string;
+          id: number;
+          kind: string;
+          path: string | null;
+          user_id: string | null;
+        };
+        Insert: {
+          attempts?: number;
+          bucket?: string | null;
+          created_at?: string;
+          id?: never;
+          kind: string;
+          path?: string | null;
+          user_id?: string | null;
+        };
+        Update: {
+          attempts?: number;
+          bucket?: string | null;
+          created_at?: string;
+          id?: never;
+          kind?: string;
+          path?: string | null;
+          user_id?: string | null;
+        };
+        Relationships: [];
+      };
+      data_breaches: {
+        Row: {
+          actions_taken: string | null;
+          created_at: string;
+          created_by: string;
+          data_types: string | null;
+          decision_reason: string | null;
+          description: string;
+          discovered_at: string;
+          ico_reference: string | null;
+          ico_reportable: boolean | null;
+          ico_reported_at: string | null;
+          id: string;
+          individuals_informed_at: string | null;
+          occurred_at: string | null;
+          people_affected: number | null;
+          risk_level: string;
+          special_category: boolean;
+          status: string;
+          tenant_id: string;
+          title: string;
+          updated_at: string;
+          updated_by: string | null;
+        };
+        Insert: {
+          actions_taken?: string | null;
+          created_at?: string;
+          created_by?: string;
+          data_types?: string | null;
+          decision_reason?: string | null;
+          description: string;
+          discovered_at: string;
+          ico_reference?: string | null;
+          ico_reportable?: boolean | null;
+          ico_reported_at?: string | null;
+          id?: string;
+          individuals_informed_at?: string | null;
+          occurred_at?: string | null;
+          people_affected?: number | null;
+          risk_level?: string;
+          special_category?: boolean;
+          status?: string;
+          tenant_id?: string;
+          title: string;
+          updated_at?: string;
+          updated_by?: string | null;
+        };
+        Update: {
+          actions_taken?: string | null;
+          created_at?: string;
+          created_by?: string;
+          data_types?: string | null;
+          decision_reason?: string | null;
+          description?: string;
+          discovered_at?: string;
+          ico_reference?: string | null;
+          ico_reportable?: boolean | null;
+          ico_reported_at?: string | null;
+          id?: string;
+          individuals_informed_at?: string | null;
+          occurred_at?: string | null;
+          people_affected?: number | null;
+          risk_level?: string;
+          special_category?: boolean;
+          status?: string;
+          tenant_id?: string;
+          title?: string;
+          updated_at?: string;
+          updated_by?: string | null;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "data_breaches_tenant_id_fkey";
+            columns: ["tenant_id"];
+            isOneToOne: false;
+            referencedRelation: "tenants";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
       departments: {
         Row: {
           created_at: string;
@@ -475,6 +585,56 @@ export type Database = {
             isOneToOne: false;
             referencedRelation: "employees";
             referencedColumns: ["tenant_id", "id"];
+          },
+        ];
+      };
+      email_outbox: {
+        Row: {
+          attempts: number;
+          created_at: string;
+          dedupe_key: string | null;
+          error_code: string | null;
+          id: number;
+          link: string;
+          sent_at: string | null;
+          status: string;
+          template: string;
+          tenant_id: string | null;
+          user_id: string;
+        };
+        Insert: {
+          attempts?: number;
+          created_at?: string;
+          dedupe_key?: string | null;
+          error_code?: string | null;
+          id?: never;
+          link: string;
+          sent_at?: string | null;
+          status?: string;
+          template: string;
+          tenant_id?: string | null;
+          user_id: string;
+        };
+        Update: {
+          attempts?: number;
+          created_at?: string;
+          dedupe_key?: string | null;
+          error_code?: string | null;
+          id?: never;
+          link?: string;
+          sent_at?: string | null;
+          status?: string;
+          template?: string;
+          tenant_id?: string | null;
+          user_id?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "email_outbox_tenant_id_fkey";
+            columns: ["tenant_id"];
+            isOneToOne: false;
+            referencedRelation: "tenants";
+            referencedColumns: ["id"];
           },
         ];
       };
@@ -648,6 +808,7 @@ export type Database = {
           manager_id: string | null;
           preferred_name: string | null;
           probation_end_date: string | null;
+          retention_hold_reason: string | null;
           start_date: string;
           status: Database["public"]["Enums"]["employment_status"];
           tenant_id: string;
@@ -677,6 +838,7 @@ export type Database = {
           manager_id?: string | null;
           preferred_name?: string | null;
           probation_end_date?: string | null;
+          retention_hold_reason?: string | null;
           start_date: string;
           status?: Database["public"]["Enums"]["employment_status"];
           tenant_id?: string;
@@ -706,6 +868,7 @@ export type Database = {
           manager_id?: string | null;
           preferred_name?: string | null;
           probation_end_date?: string | null;
+          retention_hold_reason?: string | null;
           start_date?: string;
           status?: Database["public"]["Enums"]["employment_status"];
           tenant_id?: string;
@@ -832,6 +995,44 @@ export type Database = {
             isOneToOne: false;
             referencedRelation: "employees";
             referencedColumns: ["tenant_id", "id"];
+          },
+        ];
+      };
+      erasure_log: {
+        Row: {
+          early: boolean;
+          employee_id: string;
+          id: string;
+          performed_at: string;
+          performed_by: string;
+          reason: string | null;
+          tenant_id: string;
+        };
+        Insert: {
+          early?: boolean;
+          employee_id: string;
+          id?: string;
+          performed_at?: string;
+          performed_by?: string;
+          reason?: string | null;
+          tenant_id: string;
+        };
+        Update: {
+          early?: boolean;
+          employee_id?: string;
+          id?: string;
+          performed_at?: string;
+          performed_by?: string;
+          reason?: string | null;
+          tenant_id?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "erasure_log_tenant_id_fkey";
+            columns: ["tenant_id"];
+            isOneToOne: false;
+            referencedRelation: "tenants";
+            referencedColumns: ["id"];
           },
         ];
       };
@@ -1895,6 +2096,69 @@ export type Database = {
           },
         ];
       };
+      sar_exports: {
+        Row: {
+          created_at: string;
+          employee_id: string;
+          expires_at: string;
+          id: string;
+          needs_redaction_review: boolean;
+          released_at: string | null;
+          released_by: string | null;
+          request_received_on: string;
+          requested_by: string;
+          size_bytes: number | null;
+          status: string;
+          storage_path: string | null;
+          tenant_id: string;
+        };
+        Insert: {
+          created_at?: string;
+          employee_id: string;
+          expires_at?: string;
+          id?: string;
+          needs_redaction_review?: boolean;
+          released_at?: string | null;
+          released_by?: string | null;
+          request_received_on: string;
+          requested_by?: string;
+          size_bytes?: number | null;
+          status?: string;
+          storage_path?: string | null;
+          tenant_id: string;
+        };
+        Update: {
+          created_at?: string;
+          employee_id?: string;
+          expires_at?: string;
+          id?: string;
+          needs_redaction_review?: boolean;
+          released_at?: string | null;
+          released_by?: string | null;
+          request_received_on?: string;
+          requested_by?: string;
+          size_bytes?: number | null;
+          status?: string;
+          storage_path?: string | null;
+          tenant_id?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "sar_exports_tenant_id_employee_id_fkey";
+            columns: ["tenant_id", "employee_id"];
+            isOneToOne: false;
+            referencedRelation: "employee_directory";
+            referencedColumns: ["tenant_id", "id"];
+          },
+          {
+            foreignKeyName: "sar_exports_tenant_id_employee_id_fkey";
+            columns: ["tenant_id", "employee_id"];
+            isOneToOne: false;
+            referencedRelation: "employees";
+            referencedColumns: ["tenant_id", "id"];
+          },
+        ];
+      };
       sickness_absences: {
         Row: {
           created_at: string;
@@ -2038,6 +2302,7 @@ export type Database = {
           leave_year_start_day: number;
           leave_year_start_month: number;
           require_mfa_for_all: boolean;
+          retention_years: number;
           review_rating_labels: string[];
           review_rating_scale: boolean;
           session_idle_minutes: number;
@@ -2051,6 +2316,7 @@ export type Database = {
           leave_year_start_day?: number;
           leave_year_start_month?: number;
           require_mfa_for_all?: boolean;
+          retention_years?: number;
           review_rating_labels?: string[];
           review_rating_scale?: boolean;
           session_idle_minutes?: number;
@@ -2064,6 +2330,7 @@ export type Database = {
           leave_year_start_day?: number;
           leave_year_start_month?: number;
           require_mfa_for_all?: boolean;
+          retention_years?: number;
           review_rating_labels?: string[];
           review_rating_scale?: boolean;
           session_idle_minutes?: number;
@@ -2201,6 +2468,10 @@ export type Database = {
           p_type: string;
         };
         Returns: string;
+      };
+      anonymise_employee: {
+        Args: { p_early?: boolean; p_employee: string; p_reason?: string };
+        Returns: undefined;
       };
       bradford_scores: {
         Args: never;
@@ -2354,6 +2625,19 @@ export type Database = {
         };
         Returns: string;
       };
+      retention_due: {
+        Args: never;
+        Returns: {
+          department: string;
+          due_on: string;
+          employee_id: string;
+          end_date: string;
+          hold_reason: string;
+          is_due: boolean;
+          name: string;
+        }[];
+      };
+      sar_data: { Args: { p_employee: string }; Returns: Json };
       save_manager_review: {
         Args: {
           p_assessment: string;
@@ -2378,6 +2662,10 @@ export type Database = {
       };
       set_employee_sensitive: {
         Args: { p_data: Json; p_employee: string };
+        Returns: undefined;
+      };
+      set_retention_hold: {
+        Args: { p_employee: string; p_reason: string };
         Returns: undefined;
       };
       set_sickness_exclusion: {

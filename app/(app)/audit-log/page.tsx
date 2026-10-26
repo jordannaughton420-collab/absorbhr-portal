@@ -45,6 +45,11 @@ const ENTITY_LABELS: Record<string, string> = {
   cases: "Disciplinary/grievance case",
   case_events: "Case timeline entry",
   rectification_requests: "Correction request",
+  sar: "Subject access export (data)",
+  sar_exports: "Subject access export (file)",
+  data_breaches: "Breach log",
+  report: "Report",
+  erasure_log: "Erasure",
 };
 
 const ACTION_VARIANT: Record<string, "default" | "muted" | "warning" | "destructive" | "success"> =
@@ -61,7 +66,7 @@ const ACTION_VARIANT: Record<string, "default" | "muted" | "warning" | "destruct
 export default async function AuditLogPage() {
   await requireClientAdmin();
   const supabase = await createClient();
-  const [{ data: entries }, { data: people }] = await Promise.all([
+  const [{ data: entries }, { data: people }, { data: members }] = await Promise.all([
     supabase
       .from("audit_log")
       .select(
@@ -70,7 +75,10 @@ export default async function AuditLogPage() {
       .order("occurred_at", { ascending: false })
       .limit(300),
     supabase.from("employees").select("id, user_id, first_name, preferred_name, last_name"),
+    supabase.from("memberships").select("user_id, role"),
   ]);
+  // Portal users without an employee record (e.g. an outside administrator).
+  const memberRoles = new Map((members ?? []).map((m) => [m.user_id, m.role]));
   const byUser = new Map(
     (people ?? [])
       .filter((p) => p.user_id)
@@ -117,7 +125,10 @@ export default async function AuditLogPage() {
                       ? "AbsorbHR support"
                       : e.actor_kind === "system"
                         ? "System"
-                        : (byUser.get(e.actor_user_id ?? "") ?? "AbsorbHR / removed user")}
+                        : (byUser.get(e.actor_user_id ?? "") ??
+                          (memberRoles.has(e.actor_user_id ?? "")
+                            ? "Portal user (no employee record)"
+                            : "AbsorbHR / removed user"))}
                   </Td>
                   <Td>
                     <Badge variant={ACTION_VARIANT[e.action] ?? "muted"}>

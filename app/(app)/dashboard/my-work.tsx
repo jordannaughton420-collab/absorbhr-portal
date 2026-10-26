@@ -25,6 +25,9 @@ export async function MyWork({ ctx }: { ctx: SessionContext }) {
     { data: myReviews },
     { data: teamReviews },
     { data: requests },
+    { data: sars },
+    { data: due },
+    { data: breaches },
   ] = await Promise.all([
     me ? getBalance(me) : Promise.resolve(null),
     me ? supabase.rpc("my_policies") : Promise.resolve({ data: null }),
@@ -49,6 +52,13 @@ export async function MyWork({ ctx }: { ctx: SessionContext }) {
           .in("status", ["manager_review", "discussion"])
       : Promise.resolve({ data: null }),
     supabase.from("rectification_requests").select("id, employee_id, status").eq("status", "open"),
+    ctx.isHr
+      ? supabase.from("sar_exports").select("id, request_received_on").eq("status", "review")
+      : Promise.resolve({ data: null }),
+    ctx.isHr ? supabase.rpc("retention_due") : Promise.resolve({ data: null }),
+    ctx.isClientAdmin
+      ? supabase.from("data_breaches").select("id").eq("status", "open")
+      : Promise.resolve({ data: null }),
   ]);
 
   const reportNames = new Map(
@@ -125,6 +135,27 @@ export async function MyWork({ ctx }: { ctx: SessionContext }) {
       label: ctx.isHr
         ? `${openRequests.length} correction request${openRequests.length === 1 ? "" : "s"} to answer`
         : `${openRequests.length} correction request${openRequests.length === 1 ? "" : "s"} waiting for HR`,
+    });
+
+  if (sars?.length)
+    todos.push({
+      key: "sar",
+      href: "/privacy-tools",
+      label: `${sars.length} subject access export${sars.length === 1 ? "" : "s"} to check and send`,
+    });
+  const dueNow = (due ?? []).filter((d) => d.is_due && !d.hold_reason);
+  if (dueNow.length)
+    todos.push({
+      key: "retention",
+      href: "/privacy-tools",
+      label: `${dueNow.length} leaver record${dueNow.length === 1 ? "" : "s"} due for anonymisation`,
+    });
+  if (breaches?.length)
+    todos.push({
+      key: "breaches",
+      href: "/breaches",
+      label: `${breaches.length} open data breach${breaches.length === 1 ? "" : "es"}`,
+      detail: "Check the ICO decision",
     });
 
   return (

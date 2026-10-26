@@ -14,7 +14,7 @@ business or legal decision; items marked **[LEGAL]** need review by a qualified 
 | AbsorbHR (Absorb Employment Law Consultants Ltd) | **Processor** providing the platform | Needs a written processing agreement (Art. 28) with every client. **[LEGAL]** |
 | Supabase Inc. | Sub-processor: database, authentication, file storage | Project hosted in **AWS eu-west-2 (London)**. Sign Supabase's DPA. **[DECISION]** |
 | Vercel Inc. | Sub-processor: website hosting | Functions pinned to **lhr1 (London)** in `vercel.json`. Sign Vercel's DPA. |
-| Resend | Sub-processor: email delivery (from Phase 5) | Not yet in use. |
+| Resend | Sub-processor: email delivery | Built (Phase 5); switched on when the API key is added. Emails contain only the recipient's address, a one-line notice and a link — never names, dates or health details. Sign Resend's DPA and choose its EU region if offered. **[DECISION]** |
 
 AbsorbHR acting as an HR consultancy for a client (giving advice) may make it a controller for that advice work —
 the platform role and the consultancy role should be separated in contracts. **[LEGAL]**
@@ -27,7 +27,7 @@ the platform role and the consultancy role should be separated in contracts. **[
   browser storage used is a timestamp of the user's last activity (for the idle timeout) — no personal data.
 - **No analytics, tracking or advertising** tools are used. The Inter font is self-hosted (no Google requests).
 
-## 3. Data inventory (Phases 1–4)
+## 3. Data inventory (Phases 1–5)
 
 "HR" means Client Admin or HR Manager with two-step verification (MFA). "Support" means an AbsorbHR staff member during a
 time-limited, logged support session. Lawful bases are suggestions for the controller to confirm. **[LEGAL]**
@@ -63,6 +63,11 @@ time-limited, logged support session. Lawful bases are suggestions for the contr
 | 1-to-1 notes | Meeting date, notes, *agreed actions*, private flag, author | `one_to_one_notes` | Regular check-ins, support and development | 6(1)(f) | Author, HR, direct line manager; the employee sees notes **unless** marked private. Private notes are still disclosable in a Subject Access Request | Employment + 6 years |
 | Disciplinary & grievance cases | Reference, type, stage, outcome, dates, summary and timeline — **summary and timeline encrypted**; case documents (letters, statements, notes) | `cases`, `case_events` (**encrypted**), `documents` (category *case document*, HR only) | Following fair procedures (ACAS Code of Practice), defending tribunal claims | 6(1)(b), 6(1)(c), 6(1)(f); Art. 10 / DPA 2018 Sch. 1 para 1 if criminal allegations are involved **[LEGAL]** | **HR only** (decided by AbsorbHR 26 Oct 2026), with MFA. Never line managers, never the employee in the portal, never AbsorbHR Support. HR never sees a case about themselves. Every view is logged | Case closed + 6 years **[DECISION]** |
 | Correction requests | Area (personal details, job, pay, absence, documents, other), what's wrong, status, HR reply, who resolved it and when | `rectification_requests` | Handling the right to rectification (Art. 16) | 6(1)(c) legal obligation | The employee (their own); HR | 6 years after the request is closed |
+| Subject access exports | Who it's for, date received, who created/released it, the ZIP file (all data above, plus document copies) | `sar_exports`, private bucket `sar-exports` | Answering access requests (Art. 15) | 6(1)(c) | HR only (MFA, not support, not about themselves) | File deleted automatically after 30 days; the record (no data) kept 6 years |
+| Erasure log | Which (anonymised) record, when, who, whether early, reason | `erasure_log` | Evidence of erasure / retention compliance (Art. 5(2)) | 6(1)(c) | HR | Kept (contains no personal data about the erased person beyond an ID) |
+| Breach log | Title, dates, description (no names), kinds of data, number affected, risk, ICO decision and reason, ICO reference, actions | `data_breaches` | Art. 33(5) breach record | 6(1)(c) | The company's Client Admins; AbsorbHR admins (read only, all companies — decided by AbsorbHR 26 Oct 2026) | 6 years **[DECISION]** |
+| Email notifications | Recipient (login), notification type, link, sent/failed status | `email_outbox` | Telling people something needs their attention | 6(1)(b), 6(1)(f) | Server only (nobody can read it in the app) | Deleted 90 days after sending |
+| Reports and CSV exports | Calculated on demand from the data above; not stored | — | Workforce planning, absence management, compliance deadlines | 6(1)(f), 6(1)(c); absence: Art. 9(2)(b) | HR (MFA). The absence report is never available in AbsorbHR support sessions | Not stored by the portal; downloaded files are the company's responsibility |
 
 **Phase 2 minimisation choices:** sickness reasons are optional categories rather than free-text diagnoses; the request note field warns staff not to include health details; health details stay hidden until someone chooses to view them (and that view is logged); fit notes themselves are not uploaded until Phase 3's secure document storage.
 
@@ -162,6 +167,32 @@ later phases. **[DECISION]** if clients need any of them.
   declines it must give a reason (the employee can complain to the ICO).
 - 50 automated tests cover Phase 4 access rules (191 in total).
 
+### GDPR tools (Phase 5)
+- **Subject access exports:** one database function gathers everything held about one person, decrypts it, and
+  records the export in the audit log in the same step. Only HR with MFA can run it — never AbsorbHR support,
+  managers or the employee, and never HR about themselves. The ZIP contains a readable PDF summary, the full data
+  as JSON (data portability) and copies of every document. If it contains case records, case documents or private
+  notes, it's flagged so HR checks for other people's data before sending. Files are private and deleted
+  automatically after 30 days; downloads use 60-second links and are logged.
+- **Retention:** each night the system checks for leavers whose retention period has ended (6 years minimum,
+  companies can choose longer, up to 20) and emails HR. **HR confirms each anonymisation** (decided by AbsorbHR
+  26 Oct 2026) and can put a record on hold with a reason (e.g. a live claim). Anonymisation deletes every personal
+  record — documents, notes, reviews, cases, absence, pay, contacts — and the login; it keeps a shell with
+  department, location, dates and contract type for headcount history, and the audit log (which holds IDs, not
+  names). Files and the login are removed by the server within minutes.
+- **Early erasure** (an upheld Art. 17 request, or someone who never started) needs a Client Admin and a written
+  reason, and is recorded separately in the erasure log.
+- **Breach log** for Client Admins with a 72-hour ICO countdown; deciding *not* to report requires a reason.
+  AbsorbHR admins can read every company's log so they can advise. Records can't be deleted.
+- **Reports** (headcount, starters/leavers and turnover, absence with Bradford Factor, upcoming expiries) are
+  calculated under the same access rules. CSV downloads are logged and protected against spreadsheet formula
+  injection.
+- **Email** is queued by database triggers and sent by the server through Resend. Emails never contain personal
+  detail. Demo and test addresses are never sent to.
+- **Housekeeping:** a nightly job removes uploads that were started but never finished, deletes expired exports and
+  old email records.
+- 47 automated tests cover Phase 5 (238 in total).
+
 ### Encryption
 - **In transit:** HTTPS only; `Strict-Transport-Security` header with preload.
 - **At rest:** Supabase encrypts all database storage (AES-256) and backups.
@@ -193,16 +224,18 @@ later phases. **[DECISION]** if clients need any of them.
 | Right | Status |
 |---|---|
 | Be informed (Art. 13) | ✅ Privacy notice gate with recorded acknowledgement. Wording is a **draft placeholder**. **[LEGAL]** |
-| Access (Art. 15) | Phase 5: one-click SAR export (ZIP: JSON + PDF). Until then, HR can view all data on the employee page. |
+| Access (Art. 15) | ✅ **Data protection → Subject access requests**: ZIP with PDF summary, JSON and documents; shows the one-month deadline; flags content needing redaction review. |
+| Data portability (Art. 20) | ✅ The same export includes machine-readable JSON. |
 | Rectification (Art. 16) | ✅ Employees can correct their own contact details and emergency contacts, and use **Correction requests** to ask HR to fix anything else. HR replies in the portal; requests and replies are kept and audited. Reply within one month. |
-| Erasure / anonymisation (Art. 17) | Phase 5: erasure tool and automatic anonymisation via retention schedule. Employee records cannot be deleted in the app meanwhile (no delete permission exists). |
+| Erasure / anonymisation (Art. 17) | ✅ Retention review (HR confirms each record) plus early erasure for upheld requests (Client Admin, reason required). |
 | Restriction / objection | Handled manually by HR for now. **[DECISION]** whether to build a workflow. |
 | Withdraw consent (diversity data) | ✅ The employee clears their answers on their profile, which deletes the record. Diversity collection is off by default per company. |
 
 ## 6. Retention
 
-**Decision (AbsorbHR, 26 Oct 2026): personal data is kept for a minimum of 6 years.** Phase 5's automatic schedule
-will use 6 years as the floor. Companies may set longer periods but not shorter ones.
+**Decision (AbsorbHR, 26 Oct 2026): personal data is kept for a minimum of 6 years.** The database refuses any
+setting below 6 years; companies can choose up to 20 (Data protection → Retention period). When a leaver reaches the
+end of the period, HR is emailed and the record appears in **Data protection → Retention review** for HR to confirm.
 
 | Data | Retention | Notes |
 |---|---|---|
@@ -232,7 +265,8 @@ lawyer to confirm, and record the reasoning in your DPIA and retention policy.
 - [ ] Sign Supabase and Vercel DPAs
 - [ ] Staff confidentiality and data protection training for anyone with platform admin access
 - [ ] Quarterly review of who holds AbsorbHR platform admin access
-- [ ] Breach response procedure (72-hour ICO notification) — the in-app breach log arrives in Phase 5
+- [ ] Breach response procedure (72-hour ICO notification) — the in-app breach log is built; write the procedure around it
+- [ ] SAR procedure: who checks exports, how redaction is decided, how the file is sent securely (e.g. password-protected, password sent separately)
 - [ ] ICO registration / data protection fee check
 - [ ] Independent penetration test before onboarding the first real client
 
@@ -242,15 +276,17 @@ lawyer to confirm, and record the reasoning in your DPIA and retention policy.
 |---|---|---|
 | Supabase **Pro** plan | Needed for breached-password checking (HaveIBeenPwned), server-side session time limits, point-in-time backups, no auto-pausing | Upgrade before real data; then enable these settings |
 | Correct secret key in the environment | Rate limiting and invitations depend on it; in production, sign-in **refuses** requests if rate limiting can't run | Replace `SUPABASE_SERVICE_ROLE_KEY` with a key from the London project |
-| Custom email sender (Resend) | Supabase's built-in email is for testing only and heavily limited | Phase 5 |
+| Email (Resend) | Built but switched off until configured. Supabase's own sign-in emails also need Resend SMTP for reliable delivery | Follow `docs/GO-LIVE.md` steps 3–4 |
 | Vault encryption key | If lost, encrypted special-category data cannot be recovered. It is held in the database and included in Supabase backups of the same project | Never delete the `pii_encryption_key` secret; document backup/restore procedure |
 | Demo data | The development project contains fake people with a shared demo password | Never use the development project for real data; create a separate production project |
 | Irregular-hours / part-year workers | 12.07% accrual (Employment Rights (Amendment, Revocation and Transitional Provision) Regulations 2023) not yet automated | HR uses holiday adjustments meanwhile; deferred by AbsorbHR decision |
 | First-year accrual rule | WTR reg. 15A (holiday accrues monthly in the first year) is not enforced | **[DECISION]** whether to enforce or leave to HR judgement |
 | Statutory carry-over | Carry-over required by law (e.g. after long sickness or family leave) is added manually by HR | **[LEGAL]** confirm the process |
 | Virus scanning | Uploaded files are type-checked but not virus-scanned | **Deferred by AbsorbHR (26 Oct 2026).** Revisit before go-live; consider in the DPIA risk register |
-| Abandoned uploads | An upload started but never finished leaves an unused record and file until cleaned up | Add a scheduled clean-up job (Phase 5) |
+| Background jobs need a shared secret | Sending email and deleting files after anonymisation run on the web server, triggered by the database every 5 minutes. Until `CRON_SECRET` is set in Vercel and Supabase Vault, queued email waits and deleted records' files remain in storage | Follow `docs/GO-LIVE.md` step 4 |
+| Records of current employees | Retention runs from the leaving date, so old records of long-serving staff (e.g. a 10-year-old closed case) are kept while they're employed | **[DECISION]** whether to add a review of old closed cases and old sickness records for current staff |
+| Anonymised shell | Department, location, start/leave dates and contract type are kept for statistics. In a very small company these could identify someone | **[LEGAL]** confirm this counts as anonymised for your clients |
 | Private 1-to-1 notes and SARs | Private notes are hidden from the employee in the portal but are personal data they are entitled to in a Subject Access Request | Train managers to write every note as if the employee will read it **[LEGAL]** |
-| Case records and SARs | Case records can be requested in a SAR; some content (e.g. witness identities) may need redacting under DPA 2018 Sch. 2 | Phase 5 SAR export will flag case records for HR review before release **[LEGAL]** |
+| Case records and SARs | Case records can be requested in a SAR; some content (e.g. witness identities) may need redacting under DPA 2018 Sch. 2 | The export flags case records, case documents and private notes for HR review; redaction itself is done by HR outside the portal **[LEGAL]** |
 | QA test login | `qa.admin@example.com` (Client Admin, no employee record) exists in the development project for automated browser testing | Remove before any real use; never create in production |
-| Automated accessibility checks | All Phase 1–4 pages pass axe-core WCAG 2.1 AA checks; automated tools catch only part of the issues | Manual screen-reader test before go-live |
+| Automated accessibility checks | All Phase 1–5 pages pass axe-core WCAG 2.1 AA checks; automated tools catch only part of the issues | Manual screen-reader test before go-live |

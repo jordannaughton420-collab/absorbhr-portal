@@ -64,19 +64,30 @@ All environment variables verified correct on 26 Oct 2026 (rate limiting and inv
   - Demo: `supabase/seed_people.sql` (onboarding checklist, review cycle with 3 reviews, notes, 1 grievance case,
     1 correction request)
 
-- [ ] Phase 5 — reports, emails, GDPR tools (in progress)
+- [ ] Phase 5 — reports, emails, GDPR tools: **built and tested, awaiting AbsorbHR approval**
+  - Decisions (26 Oct): retention — nightly job lists records due after 6 years, **HR confirms** before anonymising
+    (can hold back for live claims); SAR export run by **HR/Client Admin only**, with case records and private notes
+    flagged for review before release; **AbsorbHR admins can see every client's breach log** (summary only);
+    Resend not yet set up — emails queue safely until the key is added
+  - Migration 0014; 44 tables, RLS on all; 238 pgTAP tests passing (47 for Phase 5)
+  - Pages: /reports (+ CSV export route), /privacy-tools (SAR exports, retention review, holds, early erasure,
+    retention period, erasure log), /breaches (Client Admin; AbsorbHR admins read all); dashboard to-dos for HR
+  - Email: triggers queue to `email_outbox`; `/api/cron/dispatch` (Bearer `CRON_SECRET`) sends via Resend and processes
+    `cleanup_queue` (storage files, auth users). pg_cron `dispatch-email` every 5 min calls it via pg_net once Vault has
+    `cron_secret` + `app_base_url` (writing Vault from this session was blocked by the permission classifier — user step
+    in docs/GO-LIVE.md); `daily-housekeeping` 02:43; Vercel cron daily backup
+  - Demo: `supabase/seed_gdpr.sql` (3 leavers: one due, one due in 30 days, one recent; 1 breach)
+  - Libraries added: fflate (ZIP), pdf-lib (PDF summary)
 
 ## Follow-ups noted for later phases
-- Scheduled clean-up of abandoned uploads (`documents.status = 'uploading'` older than a day) and orphaned files.
 - Virus scanning for uploads: deferred by AbsorbHR (26 Oct); revisit before go-live.
 - AbsorbHR will supply its own template policy library later (bulk import; see below).
 - Template management screens were only tested at database level (AbsorbHR admin's 2FA is on the user's phone).
 - Irregular-hours/part-year 12.07% accrual (deferred by AbsorbHR); first-year monthly accrual rule (decision needed).
-- Email notifications for leave decisions (Phase 5).
 - Convert the Playwright walkthrough / accessibility / idle-timeout scripts into a committed `npm run test:e2e` suite
   (needs a test-only seed password + TOTP handling).
-- Audit log viewer: add filters and paging (currently latest 300 entries). People without an employee record
-  (e.g. the QA login) show as "removed user" — show their email instead.
-- Email reminders for checklist tasks, review deadlines and correction requests (Phase 5).
-- SAR export must include private 1-to-1 notes and flag case records for HR redaction review (Phase 5).
-- Invitations need the correct service key and, for reliable delivery, Resend SMTP (Phase 5).
+- Audit log viewer: add filters and paging (currently latest 300 entries).
+- Email reminders for overdue checklist tasks and review deadlines; policy-published emails (dashboard covers these now).
+- Retention review for old records of *current* employees (decision needed).
+- In-app notification centre (the dashboard to-do list covers this for now).
+- Invitations need Resend SMTP configured in Supabase for reliable delivery (docs/GO-LIVE.md step 3).

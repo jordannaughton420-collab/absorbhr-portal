@@ -4,6 +4,9 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import {
   BookOpen,
+  BarChart3,
+  DatabaseZap,
+  ShieldAlert,
   Building2,
   CalendarDays,
   ClipboardCheck,
@@ -41,6 +44,9 @@ const ICONS = {
   reviews: Target,
   cases: Gavel,
   requests: FilePen,
+  reports: BarChart3,
+  dataProtection: DatabaseZap,
+  breaches: ShieldAlert,
 };
 
 export type NavItem = { href: string; label: string; icon: keyof typeof ICONS };

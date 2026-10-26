@@ -35,3 +35,39 @@ export function daysUntil(date: string) {
   const today = new Date(new Date().toISOString().slice(0, 10) + "T00:00:00Z").getTime();
   return Math.round((target - today) / 86_400_000);
 }
+
+// Converts a UK wall-clock time from <input type="datetime-local"> ("2026-10-26T14:30") to an
+// ISO timestamp, allowing for British Summer Time.
+export function londonLocalToIso(local: string) {
+  const asUtc = new Date(`${local}:00Z`);
+  const parts = new Intl.DateTimeFormat("en-GB", {
+    timeZone: "Europe/London",
+    hourCycle: "h23",
+    year: "numeric",
+    month: "2-digit",
+    day: "2-digit",
+    hour: "2-digit",
+    minute: "2-digit",
+  }).formatToParts(asUtc);
+  const get = (t: string) => parts.find((p) => p.type === t)!.value;
+  const shown = new Date(
+    `${get("year")}-${get("month")}-${get("day")}T${get("hour")}:${get("minute")}:00Z`,
+  );
+  return new Date(asUtc.getTime() - (shown.getTime() - asUtc.getTime())).toISOString();
+}
+
+// The reverse, for pre-filling datetime-local inputs.
+export function isoToLondonLocal(iso: string | null | undefined) {
+  if (!iso) return "";
+  const parts = new Intl.DateTimeFormat("en-GB", {
+    timeZone: "Europe/London",
+    hourCycle: "h23",
+    year: "numeric",
+    month: "2-digit",
+    day: "2-digit",
+    hour: "2-digit",
+    minute: "2-digit",
+  }).formatToParts(new Date(iso));
+  const get = (t: string) => parts.find((p) => p.type === t)!.value;
+  return `${get("year")}-${get("month")}-${get("day")}T${get("hour")}:${get("minute")}`;
+}

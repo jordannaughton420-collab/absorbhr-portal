@@ -21,6 +21,7 @@ export default async function EmployeesPage() {
       .select(
         "id, first_name, last_name, preferred_name, job_title, start_date, status, manager_id, departments(name)",
       )
+      .is("anonymised_at", null)
       .order("last_name"),
     supabase.from("employee_directory").select("id, first_name, preferred_name, last_name"),
   ]);

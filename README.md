@@ -6,6 +6,7 @@ Each client company's data is completely separated from every other client's, an
 - Architecture and build plan: [`docs/PLAN.md`](docs/PLAN.md)
 - Data protection documentation (for your DPIA): [`docs/GDPR.md`](docs/GDPR.md)
 - Progress and decisions log: [`docs/PROGRESS.md`](docs/PROGRESS.md)
+- Going live (production setup, email, background jobs): [`docs/GO-LIVE.md`](docs/GO-LIVE.md)
 
 ## Status
 
@@ -16,7 +17,7 @@ Each client company's data is completely separated from every other client's, an
 | 2 | Holiday & sickness | ✅ Approved 26 Oct 2026 |
 | 3 | Documents & policies | ✅ Approved 26 Oct 2026 |
 | 4 | Onboarding, reviews, cases, self-service | ✅ Approved 26 Oct 2026 |
-| 5 | Reports, emails, GDPR tools | In progress |
+| 5 | Reports, emails, GDPR tools | Ready for your review |
 
 Test site: <https://absorbhr-portal.vercel.app>
 
@@ -63,8 +64,9 @@ These talk to the Supabase project through its Management API, using `SUPABASE_A
 | `node scripts/db.mjs file supabase/seed_absence.sql` | Reset only the demo holiday/sickness data (keeps accounts) |
 | `node scripts/db.mjs file supabase/seed_policies.sql` | Reset demo policies and the AbsorbHR template library |
 | `node scripts/db.mjs file supabase/seed_people.sql` | Reset demo checklists, reviews, 1-to-1 notes, cases and correction requests |
+| `node scripts/db.mjs file supabase/seed_gdpr.sql` | Reset demo leavers (for the retention tool), breach log and subject access exports |
 | `node scripts/seed-documents.mjs` | Re-upload the fake demo documents (needs the secret key) |
-| `npm run test:rls` | Run the 191 database tests (tenant isolation, roles, MFA, encryption, audit log, holiday maths, sickness, documents, policies, checklists, reviews, notes, cases) |
+| `npm run test:rls` | Run the 238 database tests (tenant isolation, roles, MFA, encryption, audit log, holiday maths, sickness, documents, policies, checklists, reviews, notes, cases, subject access, retention, breach log, email queue) |
 | `npm run db:types` | Regenerate TypeScript types from the database |
 | `npm test` | Run validation unit tests |
 | `npm run lint` / `npm run typecheck` | Code quality checks |

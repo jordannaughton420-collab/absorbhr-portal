@@ -42,6 +42,11 @@ function navFor(ctx: SessionContext, pendingApprovals: number): NavItem[] {
   if (inTenant) items.push({ href: "/org-chart", label: "Org chart", icon: "org" });
   if (inTenant || ctx.isPlatformAdmin)
     items.push({ href: "/policies", label: "Policies", icon: "policies" });
+  if (ctx.isHr) items.push({ href: "/reports", label: "Reports", icon: "reports" });
+  if (ctx.isHr && !ctx.supportSession)
+    items.push({ href: "/privacy-tools", label: "Data protection", icon: "dataProtection" });
+  if ((ctx.isClientAdmin && !ctx.supportSession) || (ctx.isPlatformAdmin && !ctx.supportSession))
+    items.push({ href: "/breaches", label: "Breach log", icon: "breaches" });
   if (ctx.isHr) items.push({ href: "/settings", label: "Company settings", icon: "settings" });
   if (ctx.isClientAdmin && !ctx.supportSession)
     items.push({ href: "/audit-log", label: "Audit log", icon: "audit" });
