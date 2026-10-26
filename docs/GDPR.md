@@ -173,20 +173,28 @@ later phases. **[DECISION]** if clients need any of them.
 | Restriction / objection | Handled manually by HR for now. **[DECISION]** whether to build a workflow. |
 | Withdraw consent (diversity data) | Database support built and tested (clearing the answers deletes the record). The employee-facing form arrives with the self-service dashboard in Phase 4; diversity collection is off by default. |
 
-## 6. Retention — proposed defaults **[DECISION] [LEGAL]**
+## 6. Retention
 
-To be confirmed before Phase 5 builds the automatic schedule.
+**Decision (AbsorbHR, 26 Oct 2026): personal data is kept for a minimum of 6 years.** Phase 5's automatic schedule
+will use 6 years as the floor. Companies may set longer periods but not shorter ones.
 
-| Data | Proposed period | Basis for proposal |
+| Data | Retention | Notes |
 |---|---|---|
 | Leaver core record, salary, employment history | 6 years after leaving | Limitation Act 1980 (contract claims) |
-| Right-to-work check records | 2 years after employment ends | Home Office employer guidance |
-| Emergency contacts | Delete on leaving | No purpose after employment |
-| Diversity monitoring | Delete on leaving (aggregate stats only kept) | Minimisation |
-| Holiday records | Employment + 6 years (minimum 2 years for Working Time Regulations records) | WTR 1998 reg. 9; contract claims |
-| Sickness records, reasons, return-to-work forms | Employment + 6 years, or shorter if no claim risk | Statutory Sick Pay records; personal injury and discrimination claims — **[LEGAL]** consider 3 years after leaving for health detail |
+| Right-to-work check records and copies | 6 years after leaving | Home Office minimum is 2 years after employment ends; 6 years meets it |
+| Holiday and leave records | 6 years after leaving | Covers Working Time Regulations record-keeping (2 years minimum) |
+| Sickness records, reasons, return-to-work forms, fit notes | 6 years after leaving | Statutory Sick Pay, personal injury and discrimination claims |
+| Employee documents (contracts, letters, certificates, notes) | 6 years after leaving | |
+| Policy versions and acknowledgements | 6 years after the version is replaced or the employee leaves | Evidence staff were informed |
+| Emergency contacts | 6 years after leaving | See note below |
+| Diversity monitoring | 6 years after leaving, or immediately on withdrawal | Withdrawal by the employee always deletes it |
 | Audit log | 6 years | Accountability evidence |
-| Unused portal accounts | Disable on leaving date | Security |
+| Unused portal accounts | Disabled on the leaving date; deleted with the record | Security |
+
+**[LEGAL] note:** UK GDPR's storage-limitation principle (Art. 5(1)(e)) expects each period to be justified. A blanket
+6 years is easy to defend for employment, pay, absence and case records. It is harder to justify for **emergency
+contacts** (data about third parties with no purpose after employment) and **diversity data**. Ask your data protection
+lawyer to confirm, and record the reasoning in your DPIA and retention policy.
 
 ## 7. Organisational measures (for AbsorbHR to complete)
 
@@ -211,7 +219,7 @@ To be confirmed before Phase 5 builds the automatic schedule.
 | Irregular-hours / part-year workers | 12.07% accrual (Employment Rights (Amendment, Revocation and Transitional Provision) Regulations 2023) not yet automated | HR uses holiday adjustments meanwhile; deferred by AbsorbHR decision |
 | First-year accrual rule | WTR reg. 15A (holiday accrues monthly in the first year) is not enforced | **[DECISION]** whether to enforce or leave to HR judgement |
 | Statutory carry-over | Carry-over required by law (e.g. after long sickness or family leave) is added manually by HR | **[LEGAL]** confirm the process |
-| Virus scanning | Uploaded files are type-checked but not virus-scanned | **[DECISION]** add a scanning service (e.g. ClamAV-based) before go-live, or rely on staff devices' antivirus |
+| Virus scanning | Uploaded files are type-checked but not virus-scanned | **Deferred by AbsorbHR (26 Oct 2026).** Revisit before go-live; consider in the DPIA risk register |
 | Abandoned uploads | An upload started but never finished leaves an unused record and file until cleaned up | Add a scheduled clean-up job (Phase 5) |
 | QA test login | `qa.admin@example.com` (Client Admin, no employee record) exists in the development project for automated browser testing | Remove before any real use; never create in production |
 | Automated accessibility checks | All Phase 1–3 pages pass axe-core WCAG 2.1 AA checks; automated tools catch only part of the issues | Manual screen-reader test before go-live |

@@ -3,6 +3,7 @@
 Read this first when resuming work in a new session.
 
 ## Decisions
+- Retention: **minimum 6 years** for all personal data (AbsorbHR, 26 Oct). Phase 5 schedule uses 6 years as a floor.
 - Hosting: Vercel (London, lhr1). Email: Resend (Phase 5). Code: this GitHub repo.
 - Logo: `public/brand/absorbhr-logo.svg` (placeholder until the real file is added).
 - Database: hosted **development** Supabase project `absorbhr-portal`, ref **`djdjrrziukllerhhnrix`**,
@@ -56,7 +57,8 @@ All environment variables verified correct on 26 Oct 2026 (rate limiting and inv
 
 ## Follow-ups noted for later phases
 - Scheduled clean-up of abandoned uploads (`documents.status = 'uploading'` older than a day) and orphaned files.
-- Virus scanning for uploads (decision needed).
+- Virus scanning for uploads: deferred by AbsorbHR (26 Oct); revisit before go-live.
+- AbsorbHR will supply its own template policy library later (bulk import; see below).
 - Template management screens were only tested at database level (AbsorbHR admin's 2FA is on the user's phone).
 - Irregular-hours/part-year 12.07% accrual (deferred by AbsorbHR); first-year monthly accrual rule (decision needed).
 - Email notifications for leave decisions (Phase 5).
