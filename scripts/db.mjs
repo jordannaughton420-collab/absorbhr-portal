@@ -8,10 +8,11 @@
 //   node scripts/db.mjs migrate                 apply new files in supabase/migrations
 //   node scripts/db.mjs seed                    run supabase/seed.sql
 //   node scripts/db.mjs test                    run every supabase/tests/*.sql (pgTAP)
+//   node scripts/db.mjs types                   regenerate lib/database.types.ts
 //
 // Needs SUPABASE_ACCESS_TOKEN and SUPABASE_PROJECT_REF (or NEXT_PUBLIC_SUPABASE_URL).
 
-import { readFileSync, readdirSync } from "node:fs";
+import { readFileSync, readdirSync, writeFileSync } from "node:fs";
 import { join, basename } from "node:path";
 
 const token = process.env.SUPABASE_ACCESS_TOKEN;
@@ -61,6 +62,17 @@ async function migrate() {
   console.log("migrations up to date");
 }
 
+async function types() {
+  const res = await fetch(
+    `https://api.supabase.com/v1/projects/${ref}/types/typescript?included_schemas=public`,
+    { headers: { Authorization: `Bearer ${token}` } },
+  );
+  const body = await res.json();
+  if (!res.ok) throw new Error(body.message ?? `HTTP ${res.status}`);
+  writeFileSync("lib/database.types.ts", body.types);
+  console.log("wrote lib/database.types.ts");
+}
+
 async function seed() {
   const password = process.env.SEED_PASSWORD ?? "";
   if (password.length < 12) throw new Error("Set SEED_PASSWORD (at least 12 characters).");
@@ -94,7 +106,11 @@ try {
   else if (cmd === "migrate") await migrate();
   else if (cmd === "seed") await seed();
   else if (cmd === "test") await test();
-  else console.error("Unknown command. See the comment at the top of scripts/db.mjs."), process.exit(1);
+  else if (cmd === "types") await types();
+  else {
+    console.error("Unknown command. See the comment at the top of scripts/db.mjs.");
+    process.exit(1);
+  }
 } catch (e) {
   console.error(`Database error: ${e.message}`);
   process.exit(1);

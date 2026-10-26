@@ -14,7 +14,8 @@
     "db:stop": "supabase stop",
     "test:rls": "NODE_USE_ENV_PROXY=1 node scripts/db.mjs test",
     "db:migrate": "NODE_USE_ENV_PROXY=1 node scripts/db.mjs migrate",
-    "db:seed": "NODE_USE_ENV_PROXY=1 node scripts/db.mjs seed"
+    "db:seed": "NODE_USE_ENV_PROXY=1 node scripts/db.mjs seed",
+    "db:types": "NODE_USE_ENV_PROXY=1 node scripts/db.mjs types"
   },
   "dependencies": {
     "@hookform/resolvers": "^5.9.2",
@@ -27,6 +28,7 @@
     "react": "19.1.0",
     "react-dom": "19.1.0",
     "react-hook-form": "^7.91.0",
+    "server-only": "^0.0.1",
     "tailwind-merge": "^3.7.0",
     "zod": "^4.6.7"
   },
