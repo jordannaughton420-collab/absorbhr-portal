@@ -17,6 +17,7 @@ import { Badge } from "@/components/ui/feedback";
 import { Button } from "@/components/ui/button";
 import { Table, Td, Th } from "@/components/ui/table";
 import { deleteEmergencyContact } from "../actions";
+import { AbsenceSection } from "./absence-section";
 import {
   EmergencyContactForm,
   EmployeeForm,
@@ -39,12 +40,13 @@ function Detail({ label, value }: { label: string; value: React.ReactNode }) {
   );
 }
 
-// Only the plain columns the edit form needs (drops joined objects).
-function employeeFormValues<T extends { id: string; departments?: unknown; locations?: unknown }>(
-  emp: T,
-) {
-  const { departments: _d, locations: _l, ...rest } = emp; // eslint-disable-line @typescript-eslint/no-unused-vars
-  return rest as unknown as Record<string, string | number | null> & { id: string };
+// Only the plain columns the edit form needs (drops joined objects and arrays).
+const NON_FORM_KEYS = new Set(["departments", "locations", "working_days"]);
+function employeeFormValues(emp: { id: string } & Record<string, unknown>) {
+  return Object.fromEntries(Object.entries(emp).filter(([k]) => !NON_FORM_KEYS.has(k))) as Record<
+    string,
+    string | number | null
+  > & { id: string };
 }
 
 function EditPanel({ label, children }: { label: string; children: React.ReactNode }) {
@@ -181,11 +183,22 @@ export default async function EmployeePage({ params }: { params: Promise<{ id: s
           </dl>
           {canEditCore && lookups && (
             <EditPanel label="Edit employment details">
-              <EmployeeForm employee={employeeFormValues(emp)} {...lookups} />
+              <EmployeeForm
+                employee={employeeFormValues(emp)}
+                workingDays={emp.working_days}
+                {...lookups}
+              />
             </EditPanel>
           )}
         </CardContent>
       </Card>
+
+      <AbsenceSection
+        employeeId={id}
+        ctx={ctx}
+        isSelf={isSelf}
+        isDirectManager={Boolean(ctx.employeeId) && emp.manager_id === ctx.employeeId}
+      />
 
       {/* Personal details: self + HR only (RLS) */}
       {canEditPersonal && (

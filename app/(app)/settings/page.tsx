@@ -9,6 +9,9 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/feedback";
 import { Table, Td, Th } from "@/components/ui/table";
 import { deleteOrgUnit } from "./actions";
+import { getHolidayPolicy } from "@/lib/data/leave";
+import { Alert } from "@/components/ui/feedback";
+import { CarryOverForm, HolidayPolicyForm } from "./holiday-forms";
 import {
   AddDepartmentForm,
   AddLocationForm,
@@ -79,6 +82,29 @@ export default async function SettingsPage() {
           .limit(20)
       : Promise.resolve({ data: null }),
   ]);
+  const policy = await getHolidayPolicy();
+
+  // Leave years HR can run carry-over for: the current one and the one before.
+  const m = settings?.leave_year_start_month ?? 1;
+  const d = settings?.leave_year_start_day ?? 1;
+  const now = new Date();
+  const thisStart = new Date(Date.UTC(now.getUTCFullYear(), m - 1, d));
+  if (thisStart > now) thisStart.setUTCFullYear(thisStart.getUTCFullYear() - 1);
+  const years = [0, 1].map((back) => {
+    const s = new Date(thisStart);
+    s.setUTCFullYear(s.getUTCFullYear() - back);
+    const e = new Date(s);
+    e.setUTCFullYear(e.getUTCFullYear() + 1);
+    e.setUTCDate(e.getUTCDate() - 1);
+    const f = (x: Date) =>
+      x.toLocaleDateString("en-GB", {
+        day: "numeric",
+        month: "short",
+        year: "numeric",
+        timeZone: "UTC",
+      });
+    return { value: s.toISOString().slice(0, 10), label: `${f(s)} – ${f(e)}` };
+  });
 
   const nameByUser = new Map(
     (employees ?? []).map((e) => [
@@ -107,6 +133,50 @@ export default async function SettingsPage() {
             </CardHeader>
             <CardContent>
               <SecurityForm values={settings} />
+            </CardContent>
+          </Card>
+        </div>
+      )}
+
+      {policy && (
+        <div className="grid gap-6 lg:grid-cols-[1.5fr_1fr]">
+          <Card>
+            <CardHeader>
+              <CardTitle>Holiday rules</CardTitle>
+              <CardDescription>
+                The legal minimum is 5.6 weeks a year (28 days for a five-day week, including bank
+                holidays).
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              {!policy.configured_at && (
+                <Alert variant="warning">
+                  Staff can&apos;t book holiday until these rules are confirmed — in particular, how
+                  much unused holiday can be carried into the next year.
+                </Alert>
+              )}
+              {ctx.isClientAdmin ? (
+                <HolidayPolicyForm policy={policy} yearMonth={m} yearDay={d} />
+              ) : (
+                <p className="text-sm text-muted-foreground">
+                  Only Client Admins can change the holiday rules.
+                </p>
+              )}
+            </CardContent>
+          </Card>
+          <Card>
+            <CardHeader>
+              <CardTitle>Year-end carry-over</CardTitle>
+              <CardDescription>
+                {policy.configured_at && Number(policy.carry_over_max_days) > 0
+                  ? `Moves up to ${Number(policy.carry_over_max_days)} unused days per person into the next leave year.`
+                  : "Your rules don't allow carry-over. Use an adjustment on someone's profile for exceptions."}
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              {policy.configured_at && Number(policy.carry_over_max_days) > 0 && (
+                <CarryOverForm years={years} />
+              )}
             </CardContent>
           </Card>
         </div>

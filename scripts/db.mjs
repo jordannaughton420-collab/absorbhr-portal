@@ -6,7 +6,7 @@
 //   node scripts/db.mjs query "select 1"        run one SQL string
 //   node scripts/db.mjs file path/to/file.sql   run a SQL file
 //   node scripts/db.mjs migrate                 apply new files in supabase/migrations
-//   node scripts/db.mjs seed                    run supabase/seed.sql
+//   node scripts/db.mjs seed                    run supabase/seed.sql + seed_absence.sql
 //   node scripts/db.mjs test                    run every supabase/tests/*.sql (pgTAP)
 //   node scripts/db.mjs types                   regenerate lib/database.types.ts
 //
@@ -81,6 +81,7 @@ async function seed() {
     password.replaceAll("'", "''"),
   );
   await runSql(sql);
+  await runSql(readFileSync("supabase/seed_absence.sql", "utf8"));
   console.log("seeded fake demo data");
 }
 

@@ -11,12 +11,23 @@ import { signOut } from "@/app/auth/actions";
 import { endSupportSession } from "@/app/(app)/admin/actions";
 import { PrivacyGate } from "./privacy/privacy-gate";
 
-function navFor(ctx: SessionContext): NavItem[] {
+function navFor(ctx: SessionContext, pendingApprovals: number): NavItem[] {
   const inTenant = Boolean(ctx.tenantId || ctx.supportSession);
   const isManager = ctx.role === "line_manager";
+  const ownRecord = Boolean(ctx.employeeId) && !ctx.supportSession;
   const items: NavItem[] = [{ href: "/dashboard", label: "Dashboard", icon: "dashboard" }];
-  if (ctx.employeeId && !ctx.supportSession)
+  if (ownRecord)
     items.push({ href: `/employees/${ctx.employeeId}`, label: "My profile", icon: "profile" });
+  if (ownRecord) items.push({ href: "/leave", label: "My leave", icon: "leave" });
+  if (ctx.isHr || isManager)
+    items.push({
+      href: "/leave/approvals",
+      label: pendingApprovals ? `Approvals (${pendingApprovals})` : "Approvals",
+      icon: "approvals",
+    });
+  if (inTenant) items.push({ href: "/calendar", label: "Team calendar", icon: "calendar" });
+  if (ownRecord || ((ctx.isHr || isManager) && !ctx.supportSession))
+    items.push({ href: "/sickness", label: "Sickness", icon: "sickness" });
   if (ctx.isHr || isManager)
     items.push({
       href: "/employees",
@@ -34,12 +45,21 @@ function navFor(ctx: SessionContext): NavItem[] {
 
 export default async function AppLayout({ children }: { children: React.ReactNode }) {
   const ctx = await requireContext();
-  const items = navFor(ctx);
+  const supabase = await createClient();
+  let pendingApprovals = 0;
+  if (ctx.isHr || ctx.role === "line_manager") {
+    const { count } = await supabase
+      .from("leave_requests")
+      .select("id", { count: "exact", head: true })
+      .eq("status", "pending")
+      .neq("employee_id", ctx.employeeId ?? "00000000-0000-0000-0000-000000000000");
+    pendingApprovals = count ?? 0;
+  }
+  const items = navFor(ctx, pendingApprovals);
 
   // Employees must read and acknowledge the current privacy notice before using the portal.
   let gate: React.ReactNode = null;
   if (ctx.tenantId) {
-    const supabase = await createClient();
     const { data: notice } = await supabase.rpc("current_privacy_notice").maybeSingle();
     if (notice && !notice.acknowledged_at) gate = <PrivacyGate notice={notice} />;
   }

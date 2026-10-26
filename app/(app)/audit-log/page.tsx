@@ -24,6 +24,13 @@ const ENTITY_LABELS: Record<string, string> = {
   privacy_notices: "Privacy notice",
   support_sessions: "AbsorbHR support session",
   auth: "Sign-in",
+  leave_requests: "Leave request",
+  leave_adjustments: "Holiday adjustment",
+  leave_types: "Leave type",
+  holiday_policies: "Holiday rules",
+  sickness_absences: "Sickness record",
+  sickness_details: "Sickness reason (health data)",
+  return_to_work_forms: "Return-to-work form (health data)",
 };
 
 const ACTION_VARIANT: Record<string, "default" | "muted" | "warning" | "destructive" | "success"> =

@@ -6,6 +6,7 @@ import { Field, Input, Select, Textarea } from "@/components/ui/form";
 import {
   CONTRACT_TYPES,
   EMPLOYMENT_STATUSES,
+  WEEKDAYS,
   RTW_CHECK_TYPES,
   RTW_STATUSES,
   emergencyContactSchema,
@@ -34,11 +35,13 @@ const grid = "grid gap-4 sm:grid-cols-2";
 
 export function EmployeeForm({
   employee,
+  workingDays,
   departments,
   locations,
   managers,
 }: {
   employee?: Values & { id: string };
+  workingDays?: number[];
   departments: Option[];
   locations: Option[];
   managers: Option[];
@@ -205,7 +208,7 @@ export function EmployeeForm({
               label="Days worked per week"
               optional
               error={errors.days_per_week}
-              hint="Used to pro-rata holiday in Phase 2."
+              hint="Used to pro-rata holiday. Leave blank to use the days ticked below."
             >
               {(p) => (
                 <Input
@@ -218,6 +221,33 @@ export function EmployeeForm({
                 />
               )}
             </Field>
+            <fieldset className="space-y-1.5 sm:col-span-2" aria-describedby="working-days-hint">
+              <legend className="text-sm font-medium">Days normally worked</legend>
+              <p id="working-days-hint" className="text-xs text-muted-foreground">
+                Used to count days of holiday and sickness, and which bank holidays apply.
+              </p>
+              <input type="hidden" name="working_days" value="" />
+              <div className="flex flex-wrap gap-3">
+                {WEEKDAYS.map((day, i) => (
+                  <label
+                    key={day}
+                    className="flex items-center gap-1.5 rounded-md border px-3 py-1.5 text-sm"
+                  >
+                    <input
+                      type="checkbox"
+                      name="working_days"
+                      value={i + 1}
+                      defaultChecked={(workingDays ?? [1, 2, 3, 4, 5]).includes(i + 1)}
+                      className="size-4 accent-primary"
+                    />
+                    {day}
+                  </label>
+                ))}
+              </div>
+              {errors.working_days && (
+                <p className="text-xs font-medium text-destructive">{errors.working_days}</p>
+              )}
+            </fieldset>
             <Field name="status" label="Status" error={errors.status}>
               {(p) => (
                 <Select {...p} value={status} onChange={(e) => setStatus(e.target.value)}>

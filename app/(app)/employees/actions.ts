@@ -83,13 +83,11 @@ export async function savePersonal(formData: FormData): Promise<ActionResult> {
     .eq("id", employeeId)
     .maybeSingle();
   if (!emp) return { ok: false, error: "You don't have permission to change this record." };
-  const { error } = await supabase
-    .from("employee_personal")
-    .upsert({
-      employee_id: employeeId,
-      tenant_id: emp.tenant_id,
-      ...withNulls(parsed.data, formData),
-    });
+  const { error } = await supabase.from("employee_personal").upsert({
+    employee_id: employeeId,
+    tenant_id: emp.tenant_id,
+    ...withNulls(parsed.data, formData),
+  });
   if (error) return safeError(error, "employees.personal");
   revalidatePath(`/employees/${employeeId}`);
   return { ok: true, message: "Personal details saved." };

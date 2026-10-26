@@ -17,9 +17,11 @@ const FRIENDLY: Record<string, string> = {
   "22023": "Some of the details are not valid. Please check and try again.",
   PGRST116: "We couldn't find that record.",
   // Supabase Auth (invitations, sign-in emails)
-  email_address_invalid: "That email address can't receive invitations. Check it's a real, working address.",
+  email_address_invalid:
+    "That email address can't receive invitations. Check it's a real, working address.",
   email_exists: "Someone already has an account with that email address.",
-  over_email_send_rate_limit: "Too many emails have been sent recently. Please try again in an hour.",
+  over_email_send_rate_limit:
+    "Too many emails have been sent recently. Please try again in an hour.",
 };
 
 export function safeError(error: unknown, context: string): { ok: false; error: string } {

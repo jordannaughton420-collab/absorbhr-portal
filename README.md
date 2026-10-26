@@ -13,7 +13,7 @@ Each client company's data is completely separated from every other client's, an
 |---|---|---|
 | 0 | Project setup, brand theme | ✅ Done |
 | 1 | Sign-in, MFA, companies, employees, org chart, audit log | ✅ Approved 26 Oct 2026 |
-| 2 | Holiday & sickness | In progress |
+| 2 | Holiday & sickness | ✅ Built and tested — awaiting your sign-off |
 | 3 | Documents & policies | Not started |
 | 4 | Onboarding, reviews, cases, self-service | Not started |
 | 5 | Reports, emails, GDPR tools | Not started |
@@ -30,6 +30,7 @@ Test site: <https://absorbhr-portal.vercel.app>
 | `brightwater.admin@example.com` | Client Admin | Everything at Brightwater, plus roles, security settings and the audit log |
 | `northgate.admin@example.com` | Client Admin | Only Northgate Logistics — never Brightwater |
 | `absorb.admin@example.com` | AbsorbHR admin | Client list; nothing else until a support session is opened |
+| `qa.admin@example.com` | Client Admin (no employee record) | Used by Claude's automated browser tests — its two-step code is held by the test scripts, so you won't be able to sign in with it |
 
 The demo password is set when the demo data is loaded (`SEED_PASSWORD`) and is never stored in this repository.
 Accounts that need MFA ask you to scan a QR code with an authenticator app (Microsoft Authenticator, Google
@@ -58,8 +59,9 @@ These talk to the Supabase project through its Management API, using `SUPABASE_A
 | Command | What it does |
 |---|---|
 | `npm run db:migrate` | Apply any new files in `supabase/migrations` |
-| `SEED_PASSWORD='…' npm run db:seed` | Reset the **fake** demo data (never run against production) |
-| `npm run test:rls` | Run the 49 database security tests (tenant isolation, roles, MFA, encryption, audit log) |
+| `SEED_PASSWORD='…' npm run db:seed` | Reset **all** fake demo data incl. accounts (never run against production; resets everyone's two-step setup) |
+| `node scripts/db.mjs file supabase/seed_absence.sql` | Reset only the demo holiday/sickness data (keeps accounts) |
+| `npm run test:rls` | Run the 106 database tests (tenant isolation, roles, MFA, encryption, audit log, holiday maths, sickness privacy) |
 | `npm run db:types` | Regenerate TypeScript types from the database |
 | `npm test` | Run validation unit tests |
 | `npm run lint` / `npm run typecheck` | Code quality checks |

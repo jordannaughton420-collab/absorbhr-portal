@@ -1,12 +1,19 @@
 import type { z } from "zod";
 
 // Turns FormData into a plain object, mapping empty strings to undefined so
-// optional fields stay optional.
+// optional fields stay optional. Repeated keys become arrays.
 export function formToObject(formData: FormData) {
   const out: Record<string, unknown> = {};
-  for (const [key, value] of formData.entries()) {
+  for (const key of new Set(formData.keys())) {
     if (key.startsWith("$ACTION")) continue;
-    out[key] = typeof value === "string" && value.trim() === "" ? undefined : value;
+    const values = formData.getAll(key);
+    if (values.length > 1) {
+      // Tick-box groups (e.g. working days): keep every non-empty value.
+      out[key] = values.filter((v) => !(typeof v === "string" && v.trim() === ""));
+    } else {
+      const value = values[0];
+      out[key] = typeof value === "string" && value.trim() === "" ? undefined : value;
+    }
   }
   return out;
 }

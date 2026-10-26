@@ -34,9 +34,20 @@ All environment variables verified correct on 26 Oct 2026 (rate limiting and inv
   - Bugs caught by tests and fixed: NULL access checks let support sessions read special-category data
     (migration 0004); idle timer reset itself while the warning was showing
   - Browser walkthrough passed for every role; axe-core WCAG 2.1 AA checks pass on all pages
-- [ ] Phase 2 — absence & leave (next)
+- [x] Phase 2 — absence & leave: built and tested; awaiting user sign-off
+  - Decisions (26 Oct): bank holidays included in allowance by default; carry-over has no default — each company must
+    confirm its holiday rules before holiday can be booked; irregular-hours 12.07% accrual deferred; sickness reasons
+    visible to HR + direct line manager (not AbsorbHR support)
+  - Migrations 0005–0007; 25 tables, RLS on all; 106 pgTAP tests passing (32 holiday worked examples, 25 sickness)
+  - Bank holidays: pg_net fetch from GOV.UK + pg_cron daily job `refresh-bank-holidays` (03:17)
+  - Demo absence data: `supabase/seed_absence.sql` (Brightwater configured; Northgate deliberately unconfigured)
+  - QA login `qa.admin@example.com` (Client Admin, no employee record) for browser tests; TOTP secret in the
+    session scratchpad only
+- [ ] Phase 3 — documents & policies (next)
 
 ## Follow-ups noted for later phases
+- Irregular-hours/part-year 12.07% accrual (deferred by AbsorbHR); first-year monthly accrual rule (decision needed).
+- Email notifications for leave decisions (Phase 5).
 - Convert the Playwright walkthrough / accessibility / idle-timeout scripts into a committed `npm run test:e2e` suite
   (needs a test-only seed password + TOTP handling).
 - Audit log viewer: add filters and paging (currently latest 300 entries).

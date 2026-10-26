@@ -17,6 +17,8 @@ export const CONTRACT_TYPES = {
   contractor: "Contractor",
 } as const;
 
+export const WEEKDAYS = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"] as const;
+
 export const EMPLOYMENT_STATUSES = {
   pre_start: "Not started yet",
   active: "Active",
@@ -55,6 +57,10 @@ export const employeeSchema = z
       .min(0, "Must be 0 or more")
       .max(7, "Must be 7 or less")
       .optional(),
+    working_days: z.preprocess(
+      (v) => (v === undefined ? [] : Array.isArray(v) ? v : [v]),
+      z.array(z.coerce.number().int().min(1).max(7)).max(7),
+    ),
     status: z
       .enum(Object.keys(EMPLOYMENT_STATUSES) as [keyof typeof EMPLOYMENT_STATUSES])
       .default("active"),

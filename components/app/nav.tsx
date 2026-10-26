@@ -4,6 +4,10 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import {
   Building2,
+  CalendarDays,
+  ClipboardCheck,
+  Plane,
+  Thermometer,
   FileClock,
   LayoutDashboard,
   Network,
@@ -23,6 +27,10 @@ const ICONS = {
   audit: FileClock,
   privacy: ShieldCheck,
   admin: Building2,
+  leave: Plane,
+  approvals: ClipboardCheck,
+  calendar: CalendarDays,
+  sickness: Thermometer,
 };
 
 export type NavItem = { href: string; label: string; icon: keyof typeof ICONS };
