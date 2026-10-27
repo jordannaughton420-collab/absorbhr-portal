@@ -13,7 +13,8 @@ business or legal decision; items marked **[LEGAL]** need review by a qualified 
 | Each client company (tenant) | **Controller** for its employees' data | Decides why and how employee data is used. |
 | AbsorbHR (Absorb Employment Law Consultants Ltd) | **Processor** providing the platform | Needs a written processing agreement (Art. 28) with every client. **[LEGAL]** |
 | Supabase Inc. | Sub-processor: database, authentication, file storage | Project hosted in **AWS eu-west-2 (London)**. Sign Supabase's DPA. **[DECISION]** |
-| Vercel Inc. | Sub-processor: website hosting | Functions pinned to **lhr1 (London)** in `vercel.json`. Sign Vercel's DPA. |
+| Krystal Hosting Ltd | Sub-processor: live website hosting, outgoing email (SMTP mailbox), encrypted nightly backups | UK data centres. Hosts absorbhr-portal.co.uk. Check Krystal's DPA. |
+| Vercel Inc. | Sub-processor: website hosting (test site, fake data only) | Functions pinned to **lhr1 (London)** in `vercel.json`. Sign Vercel's DPA. |
 | Resend | Sub-processor: email delivery | Built (Phase 5); switched on when the API key is added. Emails contain only the recipient's address, a one-line notice and a link — never names, dates or health details. Sign Resend's DPA and choose its EU region if offered. **[DECISION]** |
 
 AbsorbHR acting as an HR consultancy for a client (giving advice) may make it a controller for that advice work —
@@ -196,6 +197,9 @@ later phases. **[DECISION]** if clients need any of them.
 ### Encryption
 - **In transit:** HTTPS only; `Strict-Transport-Security` header with preload.
 - **At rest:** Supabase encrypts all database storage (AES-256) and backups.
+- **Off-site backup:** a nightly GitHub Actions job copies the database, Vault secrets and uploaded files, encrypts
+  them with a passphrase (AES-256, `gpg`) before they leave the job, and stores them in a private folder on Krystal
+  (UK); 30 nights kept. The passphrase is held only in AbsorbHR's password manager and as a GitHub secret.
 - **Column-level:** special-category data (diversity answers, sickness reasons, return-to-work notes) is encrypted with AES-256 (`pgcrypto`) using a key generated inside the
   database and stored in **Supabase Vault**. The key never appears in code, configuration or the browser. Decryption
   only happens inside a database function that checks permission and writes an audit entry in the same step.
