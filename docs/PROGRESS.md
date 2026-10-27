@@ -65,7 +65,11 @@ All environment variables verified correct on 26 Oct 2026 (rate limiting and inv
     1 correction request)
 
 - [x] Phase 5 — reports, emails, GDPR tools: **approved by AbsorbHR on 26 Oct 2026** (commit `33a4a22`)
-- [ ] Go-live — follow docs/GO-LIVE.md (production Supabase/Vercel Pro, Resend, CRON_SECRET + Vault)
+- [ ] Go-live — **decided 27 Oct 2026: no new subscriptions.** Krystal hosts absorbhr-portal.co.uk (cPanel Node.js 20,
+  Passenger; start file `deploy/krystal/app.js`, standalone build in `build/`), Supabase free London project for
+  production, email via Krystal mailbox SMTP, cPanel cron every 5 min calls /api/cron/dispatch, GitHub Actions
+  `.github/workflows/deploy-krystal.yml` builds and rsyncs over SSH (port 722). Steps: docs/GO-LIVE-KRYSTAL.md.
+  Still to add: nightly encrypted backup to Krystal (free plan has no downloadable backups)
   - Decisions (26 Oct): retention — nightly job lists records due after 6 years, **HR confirms** before anonymising
     (can hold back for live claims); SAR export run by **HR/Client Admin only**, with case records and private notes
     flagged for review before release; **AbsorbHR admins can see every client's breach log** (summary only);

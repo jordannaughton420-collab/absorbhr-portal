@@ -1,4 +1,5 @@
 import "server-only";
+import nodemailer from "nodemailer";
 import { createAdminClient } from "@/lib/supabase/admin";
 import type { Database } from "@/lib/database.types";
 
@@ -88,11 +89,65 @@ export function renderEmail(template: string, link: string, baseUrl: string) {
 // Addresses that can never receive mail (demo and test accounts).
 const UNDELIVERABLE = /@example\.(com|org|net|test)$/i;
 
-export async function sendQueuedEmails(limit = 50) {
-  const apiKey = process.env.RESEND_API_KEY;
+type Delivery = { ok: true } | { ok: false; final: boolean; code: string };
+type Content = NonNullable<ReturnType<typeof renderEmail>>;
+
+// Two ways to send, whichever is configured:
+//   SMTP (e.g. a Krystal mailbox): SMTP_HOST, SMTP_PORT, SMTP_USER, SMTP_PASSWORD
+//   Resend: RESEND_API_KEY
+function mailer() {
   const from = process.env.EMAIL_FROM;
+  if (!from) return null;
+  if (process.env.SMTP_HOST && process.env.SMTP_USER && process.env.SMTP_PASSWORD) {
+    const port = Number(process.env.SMTP_PORT ?? 465);
+    const transport = nodemailer.createTransport({
+      host: process.env.SMTP_HOST,
+      port,
+      secure: port === 465,
+      requireTLS: port !== 465,
+      auth: { user: process.env.SMTP_USER, pass: process.env.SMTP_PASSWORD },
+    });
+    return async (to: string, c: Content): Promise<Delivery> => {
+      try {
+        await transport.sendMail({ from, to, subject: c.subject, text: c.text, html: c.html });
+        return { ok: true };
+      } catch (e) {
+        // 5xx = permanent (bad address etc.); anything else may succeed on retry.
+        const code = (e as { responseCode?: number }).responseCode;
+        return {
+          ok: false,
+          final: Boolean(code && code >= 500),
+          code: code ? `smtp_${code}` : "network",
+        };
+      }
+    };
+  }
+  const apiKey = process.env.RESEND_API_KEY;
+  if (!apiKey) return null;
+  return async (to: string, c: Content): Promise<Delivery> => {
+    try {
+      const res = await fetch("https://api.resend.com/emails", {
+        method: "POST",
+        headers: { Authorization: `Bearer ${apiKey}`, "Content-Type": "application/json" },
+        body: JSON.stringify({ from, to: [to], subject: c.subject, text: c.text, html: c.html }),
+      });
+      if (res.ok) return { ok: true };
+      // 4xx (bad address etc.) won't succeed on retry; 5xx/429 may.
+      return {
+        ok: false,
+        final: res.status < 500 && res.status !== 429,
+        code: `http_${res.status}`,
+      };
+    } catch {
+      return { ok: false, final: false, code: "network" };
+    }
+  };
+}
+
+export async function sendQueuedEmails(limit = 50) {
+  const send = mailer();
   const baseUrl = process.env.NEXT_PUBLIC_SITE_URL;
-  if (!apiKey || !from || !baseUrl) return { sent: 0, failed: 0, skipped: "email not configured" };
+  if (!send || !baseUrl) return { sent: 0, failed: 0, skipped: "email not configured" };
 
   const admin = createAdminClient();
   const { data: queued } = await admin
@@ -113,37 +168,18 @@ export async function sendQueuedEmails(limit = 50) {
       failed++;
       continue;
     }
-    try {
-      const res = await fetch("https://api.resend.com/emails", {
-        method: "POST",
-        headers: { Authorization: `Bearer ${apiKey}`, "Content-Type": "application/json" },
-        body: JSON.stringify({
-          from,
-          to: [to],
-          subject: content.subject,
-          text: content.text,
-          html: content.html,
-        }),
-      });
-      if (res.ok) {
-        await mark({ status: "sent", sent_at: new Date().toISOString(), attempts: m.attempts + 1 });
-        sent++;
-      } else {
-        // 4xx (bad address etc.) won't succeed on retry; 5xx/429 retry up to 5 times.
-        const final = (res.status < 500 && res.status !== 429) || m.attempts + 1 >= 5;
-        await mark({
-          status: final ? "failed" : "queued",
-          attempts: m.attempts + 1,
-          error_code: `http_${res.status}`,
-        });
-        if (final) failed++;
-      }
-    } catch {
+    const result = await send(to, content);
+    if (result.ok) {
+      await mark({ status: "sent", sent_at: new Date().toISOString(), attempts: m.attempts + 1 });
+      sent++;
+    } else {
+      const final = result.final || m.attempts + 1 >= 5;
       await mark({
+        status: final ? "failed" : "queued",
         attempts: m.attempts + 1,
-        error_code: "network",
-        status: m.attempts + 1 >= 5 ? "failed" : "queued",
+        error_code: result.code,
       });
+      if (final) failed++;
     }
   }
   return { sent, failed };

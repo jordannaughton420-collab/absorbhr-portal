@@ -1,0 +1,82 @@
+# Builds the portal and uploads it to Krystal (cPanel "Setup Node.js App").
+# Runs on every push to main once the repository variable KRYSTAL_ENABLED is "true".
+# Setup: docs/GO-LIVE-KRYSTAL.md
+name: Deploy to Krystal
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+concurrency:
+  group: deploy-krystal
+  cancel-in-progress: false
+
+permissions:
+  contents: read
+
+jobs:
+  deploy:
+    if: vars.KRYSTAL_ENABLED == 'true'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+
+      - run: npm ci
+
+      - name: Check
+        run: |
+          npx tsc --noEmit
+          npm run lint
+          npm test
+
+      # Only public values are needed at build time; secret keys are set in cPanel on Krystal.
+      - name: Build
+        env:
+          NEXT_PUBLIC_SUPABASE_URL: ${{ vars.NEXT_PUBLIC_SUPABASE_URL }}
+          NEXT_PUBLIC_SUPABASE_ANON_KEY: ${{ vars.NEXT_PUBLIC_SUPABASE_ANON_KEY }}
+          NEXT_PUBLIC_SITE_URL: ${{ vars.NEXT_PUBLIC_SITE_URL }}
+        run: npm run build
+
+      - name: Assemble bundle
+        run: |
+          mkdir -p bundle/build/.next
+          cp deploy/krystal/app.js bundle/
+          cp -a .next/standalone/. bundle/build/
+          cp -a .next/static bundle/build/.next/static
+          cp -a public bundle/build/public
+          if find bundle -name '.env*' | grep -q .; then echo "Refusing to upload an .env file"; exit 1; fi
+
+      - name: Upload to Krystal
+        env:
+          SSH_KEY: ${{ secrets.KRYSTAL_SSH_KEY }}
+          KNOWN_HOSTS: ${{ secrets.KRYSTAL_KNOWN_HOSTS }}
+          HOST: ${{ vars.KRYSTAL_SSH_HOST }}
+          PORT: ${{ vars.KRYSTAL_SSH_PORT }}
+          USER: ${{ vars.KRYSTAL_SSH_USER }}
+          APP_DIR: ${{ vars.KRYSTAL_APP_DIR }}
+        run: |
+          mkdir -p ~/.ssh && chmod 700 ~/.ssh
+          printf '%s\n' "$SSH_KEY" > ~/.ssh/id_krystal && chmod 600 ~/.ssh/id_krystal
+          # Pin Krystal's server key if provided; otherwise trust it on first connection.
+          if [ -n "$KNOWN_HOSTS" ]; then
+            printf '%s\n' "$KNOWN_HOSTS" > ~/.ssh/known_hosts
+          else
+            ssh-keyscan -p "${PORT:-722}" "$HOST" > ~/.ssh/known_hosts 2>/dev/null
+          fi
+          SSH="ssh -i ~/.ssh/id_krystal -p ${PORT:-722} -o StrictHostKeyChecking=yes"
+          # node_modules in the app folder belongs to cPanel; never touch it, the logs or Passenger's tmp.
+          rsync -az --delete -e "$SSH" \
+            --exclude node_modules --exclude tmp --exclude stderr.log --exclude .htaccess \
+            bundle/ "$USER@$HOST:$APP_DIR/"
+          $SSH "$USER@$HOST" "mkdir -p '$APP_DIR/tmp' && touch '$APP_DIR/tmp/restart.txt'"
+
+      - name: Check the live site responds
+        run: |
+          sleep 10
+          curl -fsS -o /dev/null -w "%{http_code}\n" "${{ vars.NEXT_PUBLIC_SITE_URL }}/login"

@@ -6,7 +6,8 @@ Each client company's data is completely separated from every other client's, an
 - Architecture and build plan: [`docs/PLAN.md`](docs/PLAN.md)
 - Data protection documentation (for your DPIA): [`docs/GDPR.md`](docs/GDPR.md)
 - Progress and decisions log: [`docs/PROGRESS.md`](docs/PROGRESS.md)
-- Going live (production setup, email, background jobs): [`docs/GO-LIVE.md`](docs/GO-LIVE.md)
+- Going live on Krystal + free Supabase (the chosen route): [`docs/GO-LIVE-KRYSTAL.md`](docs/GO-LIVE-KRYSTAL.md)
+- Going live on paid plans (Vercel Pro / Supabase Pro), for later: [`docs/GO-LIVE.md`](docs/GO-LIVE.md)
 
 ## Status
 
