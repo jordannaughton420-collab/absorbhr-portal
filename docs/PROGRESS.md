@@ -70,7 +70,15 @@ All environment variables verified correct on 26 Oct 2026 (rate limiting and inv
   production, email via Krystal mailbox SMTP, cPanel cron every 5 min calls /api/cron/dispatch, GitHub Actions
   `.github/workflows/deploy-krystal.yml` builds and rsyncs over SSH (port 722). Steps: docs/GO-LIVE-KRYSTAL.md.
   - 27 Oct: production Supabase project created by AbsorbHR — `gnvmakhtgnswlmsdquai` (London, Postgres 17), empty;
-    the session's access token now only sees this project. Migrations not yet applied (needs AbsorbHR's go-ahead)
+    the session's access token now only sees this project.
+  - 27 Oct (AbsorbHR go-ahead): migrations 0001–0014 applied, **no seed data**; 44 tables, RLS on all; Vault has
+    `pii_encryption_key`; cron jobs refresh-bank-holidays, daily-housekeeping, dispatch-email; 280 bank holidays
+    imported; all 238 pgTAP tests pass on production (rolled back, nothing left behind)
+  - Auth: sign-ups off, site URL + redirect allow-list `https://absorbhr-portal.co.uk`, 12-char passwords with
+    lower/upper/digit, reauthentication for password change, TOTP on. Session time-box/inactivity timeout and
+    leaked-password check are Pro-only (app's own idle timeout still applies)
+  - Platform admin `sales@absorbhr.co.uk` created with no password (sets one via /forgot-password once Part 6 SMTP
+    is live). Vault `cron_secret`/`app_base_url` not set yet — Krystal cPanel cron (Part 5) calls dispatch instead
   - Nightly backup: `.github/workflows/backup-nightly.yml` (off until `BACKUP_ENABLED`) — `supabase db dump`
     (roles/schema/data) + Vault secrets + storage files (`scripts/backup-storage.mjs`), gpg AES-256 with
     `BACKUP_PASSPHRASE`, rsync to `~/absorbhr-backups` on Krystal, 30 kept. Setup/restore: Part 7 of the guide.

@@ -116,6 +116,13 @@ Supabase (production project) → **Authentication** → **Emails** → **SMTP S
 sender `no-reply@absorbhr-portal.co.uk`, name `AbsorbHR Portal`, host `mail.absorbhr-portal.co.uk`, port `465`, username
 `no-reply@absorbhr-portal.co.uk`, password = mailbox password. Save.
 
+## Your first sign-in (after Parts 3, 4 and 6)
+
+Claude created your AbsorbHR admin login `sales@absorbhr.co.uk` on 27 Oct 2026 **without a password**.
+Go to https://absorbhr-portal.co.uk/forgot-password, enter `sales@absorbhr.co.uk`, open the email and choose your own
+password (12+ characters, upper and lower case and a number). Then set up two-step verification when asked, and
+create the first client company from **AbsorbHR admin**.
+
 ## Part 7 — Nightly backup (5 minutes, after Part 4)
 
 Every night at 01:37 (UTC) GitHub copies the whole database, the encryption key from Vault and every uploaded file,
