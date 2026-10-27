@@ -92,6 +92,7 @@ jobs:
           fi
           SSH="ssh -i $HOME/.ssh/id_krystal -p ${PORT:-722} -o StrictHostKeyChecking=yes"
           $SSH "$USER@$HOST" "mkdir -p absorbhr-backups && chmod 700 absorbhr-backups"
-          rsync -a --chmod=F600 -e "$SSH" "$RUNNER_TEMP/$NAME" "$USER@$HOST:absorbhr-backups/"
+          # Plain ssh rather than rsync, which Krystal's shell breaks.
+          $SSH "$USER@$HOST" "umask 077 && cat > 'absorbhr-backups/$NAME.part' && mv 'absorbhr-backups/$NAME.part' 'absorbhr-backups/$NAME'" < "$RUNNER_TEMP/$NAME"
           $SSH "$USER@$HOST" 'cd absorbhr-backups && ls -1t absorbhr-backup-*.tar.gz.gpg | tail -n +31 | xargs -r rm -f && ls -lh | tail -n 5'
           rm -f "$RUNNER_TEMP/$NAME"
