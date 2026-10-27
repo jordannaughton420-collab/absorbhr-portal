@@ -1,0 +1,93 @@
+# Nightly encrypted backup of the production database and files to Krystal storage.
+# Supabase's free plan has no downloadable backups, so this is the only off-site copy.
+# Runs once the repository variable BACKUP_ENABLED is "true". Setup and restore: docs/BACKUPS.md
+name: Nightly backup to Krystal
+
+on:
+  schedule:
+    - cron: "23 1 * * *"
+  workflow_dispatch:
+
+concurrency:
+  group: backup-krystal
+  cancel-in-progress: false
+
+permissions:
+  contents: read
+
+jobs:
+  backup:
+    if: vars.BACKUP_ENABLED == 'true'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+
+      - run: npm ci
+
+      - name: Dump database
+        env:
+          DB_URL: ${{ secrets.SUPABASE_DB_URL }}
+        run: |
+          umask 077
+          mkdir -p backup/db
+          npx supabase db dump --db-url "$DB_URL" -f backup/db/roles.sql --role-only
+          npx supabase db dump --db-url "$DB_URL" -f backup/db/schema.sql
+          npx supabase db dump --db-url "$DB_URL" -f backup/db/data.sql --data-only --use-copy
+          # Supabase leaves Vault out of dumps, and a new project could not decrypt it anyway.
+          # pii_encryption_key is needed to read health, diversity and case data after a restore.
+          psql "$DB_URL" -v ON_ERROR_STOP=1 -c \
+            "copy (select name, decrypted_secret from vault.decrypted_secrets order by name) to stdout with csv header" \
+            > backup/db/vault-secrets.csv
+          grep -q '^pii_encryption_key,' backup/db/vault-secrets.csv || { echo "Vault export is missing pii_encryption_key"; exit 1; }
+          grep -q 'COPY "public"."tenants"' backup/db/data.sql || { echo "Data dump looks empty"; exit 1; }
+
+      - name: Download files
+        env:
+          NEXT_PUBLIC_SUPABASE_URL: ${{ vars.NEXT_PUBLIC_SUPABASE_URL }}
+          SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
+        run: |
+          umask 077
+          node scripts/backup-storage.mjs backup/storage
+
+      - name: Encrypt
+        env:
+          PASSPHRASE: ${{ secrets.BACKUP_PASSPHRASE }}
+        run: |
+          umask 077
+          [ ${#PASSPHRASE} -ge 32 ] || { echo "BACKUP_PASSPHRASE must be at least 32 characters"; exit 1; }
+          NAME="absorbhr-$(date -u +%Y-%m-%d).tar.gz.gpg"
+          tar -czf - -C backup . | gpg --batch --yes --pinentry-mode loopback --passphrase-fd 3 \
+            --symmetric --cipher-algo AES256 -o "$NAME" 3<<<"$PASSPHRASE"
+          # Prove the file decrypts before relying on it, then remove the readable copy.
+          gpg --batch --pinentry-mode loopback --passphrase-fd 3 -d "$NAME" 3<<<"$PASSPHRASE" | tar -tzf - > /dev/null
+          rm -rf backup
+          echo "NAME=$NAME" >> "$GITHUB_ENV"
+          ls -lh "$NAME"
+
+      - name: Upload to Krystal and keep the last 30
+        env:
+          SSH_KEY: ${{ secrets.KRYSTAL_SSH_KEY }}
+          KNOWN_HOSTS: ${{ secrets.KRYSTAL_KNOWN_HOSTS }}
+          HOST: ${{ vars.KRYSTAL_SSH_HOST }}
+          PORT: ${{ vars.KRYSTAL_SSH_PORT }}
+          USER: ${{ vars.KRYSTAL_SSH_USER }}
+          DIR: ${{ vars.KRYSTAL_BACKUP_DIR || 'absorbhr-backups' }}
+        run: |
+          mkdir -p ~/.ssh && chmod 700 ~/.ssh
+          printf '%s\n' "$SSH_KEY" > ~/.ssh/id_krystal && chmod 600 ~/.ssh/id_krystal
+          if [ -n "$KNOWN_HOSTS" ]; then
+            printf '%s\n' "$KNOWN_HOSTS" > ~/.ssh/known_hosts
+          else
+            ssh-keyscan -p "${PORT:-722}" "$HOST" > ~/.ssh/known_hosts 2>/dev/null
+          fi
+          SSH="ssh -i ~/.ssh/id_krystal -p ${PORT:-722} -o StrictHostKeyChecking=yes"
+          # A relative DIR is inside the cPanel home folder, outside public_html, so never on the web.
+          $SSH "$USER@$HOST" "umask 077 && mkdir -p '$DIR'"
+          rsync -a -e "$SSH" "$NAME" "$USER@$HOST:$DIR/$NAME.part"
+          $SSH "$USER@$HOST" "cd '$DIR' && mv '$NAME.part' '$NAME' && chmod 600 '$NAME' \
+            && ls -1t absorbhr-*.tar.gz.gpg | tail -n +31 | xargs -r rm -f -- && ls -lh"

@@ -69,7 +69,12 @@ All environment variables verified correct on 26 Oct 2026 (rate limiting and inv
   Passenger; start file `deploy/krystal/app.js`, standalone build in `build/`), Supabase free London project for
   production, email via Krystal mailbox SMTP, cPanel cron every 5 min calls /api/cron/dispatch, GitHub Actions
   `.github/workflows/deploy-krystal.yml` builds and rsyncs over SSH (port 722). Steps: docs/GO-LIVE-KRYSTAL.md.
-  Still to add: nightly encrypted backup to Krystal (free plan has no downloadable backups)
+  - Nightly backup (27 Oct): `.github/workflows/backup-krystal.yml` at 01:23 UTC: Supabase CLI dump (roles, schema,
+    data) + Vault secrets export (`pii_encryption_key`; Supabase dumps skip Vault) + all Storage files
+    (`scripts/backup-storage.mjs`), one AES-256 gpg file checked by decrypting it, rsynced to `~/absorbhr-backups`
+    on Krystal, newest 30 kept. Off until `BACKUP_ENABLED=true`. Setup, restore test and restore: docs/BACKUPS.md.
+    Storage download tested on the test project; the dump and Vault export first run on production (the session's
+    Supabase access token is now refused for SQL, so they couldn't be tried here)
   - Decisions (26 Oct): retention — nightly job lists records due after 6 years, **HR confirms** before anonymising
     (can hold back for live claims); SAR export run by **HR/Client Admin only**, with case records and private notes
     flagged for review before release; **AbsorbHR admins can see every client's breach log** (summary only);

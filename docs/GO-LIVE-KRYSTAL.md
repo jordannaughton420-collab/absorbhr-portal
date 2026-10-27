@@ -116,13 +116,19 @@ Supabase (production project) → **Authentication** → **Emails** → **SMTP S
 sender `no-reply@absorbhr-portal.co.uk`, name `AbsorbHR Portal`, host `mail.absorbhr-portal.co.uk`, port `465`, username
 `no-reply@absorbhr-portal.co.uk`, password = mailbox password. Save.
 
+## Part 7 — Nightly encrypted backups (10 minutes)
+
+Follow **docs/BACKUPS.md → Setting it up**: three GitHub secrets (database connection string, Supabase secret key,
+a backup passphrase you keep in your password manager) and the variable `BACKUP_ENABLED` = `true`. Each night
+GitHub saves an encrypted copy of the database and all files to `~/absorbhr-backups` on Krystal and keeps 30 days.
+
 ---
 
 ## Free-plan limits to know about
 
-- **Backups:** Supabase's free plan doesn't include downloadable backups. A nightly encrypted backup to your
-  Krystal storage is the next thing Claude adds. Upgrading Supabase to Pro (about $25/month) is the first upgrade
-  to make when you can.
+- **Backups:** Supabase's free plan doesn't include downloadable backups, so Part 7 sends an encrypted copy to
+  Krystal every night (docs/BACKUPS.md). Upgrading Supabase to Pro (about $25/month) is still the first upgrade to
+  make when you can.
 - **Pausing:** free projects pause after 7 days without use. The 5-minute job and normal use keep it awake.
 - **Size:** 500 MB database and 1 GB of files — plenty for the first clients; the Supabase dashboard shows usage.
 - **Leaked-password check** is a Pro feature; passwords still need 12+ characters with mixed types, and admins must

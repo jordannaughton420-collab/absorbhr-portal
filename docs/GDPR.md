@@ -195,7 +195,8 @@ later phases. **[DECISION]** if clients need any of them.
 
 ### Encryption
 - **In transit:** HTTPS only; `Strict-Transport-Security` header with preload.
-- **At rest:** Supabase encrypts all database storage (AES-256) and backups.
+- **At rest:** Supabase encrypts all database storage (AES-256). Nightly off-site backups to Krystal are AES-256
+  encrypted with a passphrase held only by AbsorbHR and GitHub, and kept for 30 days (docs/BACKUPS.md).
 - **Column-level:** special-category data (diversity answers, sickness reasons, return-to-work notes) is encrypted with AES-256 (`pgcrypto`) using a key generated inside the
   database and stored in **Supabase Vault**. The key never appears in code, configuration or the browser. Decryption
   only happens inside a database function that checks permission and writes an audit entry in the same step.
@@ -277,7 +278,7 @@ lawyer to confirm, and record the reasoning in your DPIA and retention policy.
 | Supabase **Pro** plan | Needed for breached-password checking (HaveIBeenPwned), server-side session time limits, point-in-time backups, no auto-pausing | Upgrade before real data; then enable these settings |
 | Correct secret key in the environment | Rate limiting and invitations depend on it; in production, sign-in **refuses** requests if rate limiting can't run | Replace `SUPABASE_SERVICE_ROLE_KEY` with a key from the London project |
 | Email (Resend) | Built but switched off until configured. Supabase's own sign-in emails also need Resend SMTP for reliable delivery | Follow `docs/GO-LIVE.md` steps 3–4 |
-| Vault encryption key | If lost, encrypted special-category data cannot be recovered. It is held in the database and included in Supabase backups of the same project | Never delete the `pii_encryption_key` secret; document backup/restore procedure |
+| Vault encryption key | If lost, encrypted special-category data cannot be recovered. It is held in the database and included in Supabase backups of the same project | Never delete the `pii_encryption_key` secret. The nightly backup also exports it (inside the encrypted file); restore steps in docs/BACKUPS.md |
 | Demo data | The development project contains fake people with a shared demo password | Never use the development project for real data; create a separate production project |
 | Irregular-hours / part-year workers | 12.07% accrual (Employment Rights (Amendment, Revocation and Transitional Provision) Regulations 2023) not yet automated | HR uses holiday adjustments meanwhile; deferred by AbsorbHR decision |
 | First-year accrual rule | WTR reg. 15A (holiday accrues monthly in the first year) is not enforced | **[DECISION]** whether to enforce or leave to HR judgement |
