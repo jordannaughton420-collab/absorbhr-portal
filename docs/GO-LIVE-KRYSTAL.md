@@ -43,7 +43,7 @@ cPanel → **Setup Node.js App** → **Create Application**:
 
 | Setting | Value |
 |---|---|
-| Node.js version | **20.20.2** |
+| Node.js version | **22.x** (the newest 22 listed; 24 also works) |
 | Application mode | **Production** |
 | Application root | `absorbhr-portal-app` |
 | Application URL | choose **absorbhr-portal.co.uk** in the dropdown; leave the box after it empty |

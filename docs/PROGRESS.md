@@ -65,7 +65,7 @@ All environment variables verified correct on 26 Oct 2026 (rate limiting and inv
     1 correction request)
 
 - [x] Phase 5 — reports, emails, GDPR tools: **approved by AbsorbHR on 26 Oct 2026** (commit `33a4a22`)
-- [ ] Go-live — **decided 27 Oct 2026: no new subscriptions.** Krystal hosts absorbhr-portal.co.uk (cPanel Node.js 20,
+- [ ] Go-live — **decided 27 Oct 2026: no new subscriptions.** Krystal hosts absorbhr-portal.co.uk (cPanel Node.js 22,
   Passenger; start file `deploy/krystal/app.js`, standalone build in `build/`), Supabase free London project for
   production, email via Krystal mailbox SMTP, cPanel cron every 5 min calls /api/cron/dispatch, GitHub Actions
   `.github/workflows/deploy-krystal.yml` builds and rsyncs over SSH (port 722). Steps: docs/GO-LIVE-KRYSTAL.md.
