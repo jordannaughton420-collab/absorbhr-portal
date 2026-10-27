@@ -72,19 +72,20 @@ working yet, cPanel → **SSL/TLS Status** → select the domain → **Run AutoS
 
 ## Part 4 — Let GitHub upload new versions (10 minutes)
 
-**a. Create an upload key on Krystal**
-1. cPanel → **SSH Access** → **Manage SSH Keys** → **Generate a New Key**. Key name `github-deploy`, leave the
-   password **empty**, type RSA 4096. Generate.
-2. Back on Manage SSH Keys, find `github-deploy` under **Public Keys** → **Manage** → **Authorize**.
-3. Under **Private Keys**, `github-deploy` → **View/Download** → copy the whole text (from
-   `-----BEGIN` to `PRIVATE KEY-----`).
+**a. Create an upload key on your PC** (Krystal's own key generator insists on a password, which the upload can't use)
+1. Windows PowerShell: `ssh-keygen -t rsa -b 4096 -C github-deploy -f "$HOME\github-deploy"` — press Enter twice
+   when asked for a passphrase (no passphrase).
+2. `Get-Content "$HOME\github-deploy.pub" | Set-Clipboard`, then cPanel → **SSH Access** → **Manage SSH Keys** →
+   **Import Key**: name `github-deploy`, paste into **Public Key** only. Import.
+3. Manage SSH Keys → **Public Keys** → `github-deploy` → **Manage** → **Authorize**.
 
 **b. Give it to GitHub** — github.com/jordannaughton420-collab/absorbhr-portal → **Settings** → **Secrets and
 variables** → **Actions**:
 
-- **Secrets** tab → **New repository secret**: name `KRYSTAL_SSH_KEY`, paste the private key. Save.
-- Then delete the private key from Krystal (Manage SSH Keys → Private Keys → `github-deploy` → Delete). GitHub now
-  holds the only copy; the public key stays authorised.
+- `Get-Content "$HOME\github-deploy" -Raw | Set-Clipboard`, then **Secrets** tab → **New repository secret**: name
+  `KRYSTAL_SSH_KEY`, paste (starts `-----BEGIN OPENSSH PRIVATE KEY-----`). Save.
+- Delete both files from your PC: `Remove-Item "$HOME\github-deploy", "$HOME\github-deploy.pub"`. GitHub now holds
+  the only copy of the private key.
 - **Variables** tab → **New repository variable**, one at a time:
 
 | Name | Value |
