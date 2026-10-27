@@ -70,6 +70,7 @@ jobs:
             ssh-keyscan -p "${PORT:-722}" "$HOST" > ~/.ssh/known_hosts 2>/dev/null
           fi
           SSH="ssh -i ~/.ssh/id_krystal -p ${PORT:-722} -o StrictHostKeyChecking=yes"
+          set -euo pipefail
           # Streamed as a tar over plain ssh (Krystal's shell breaks rsync). The new build is unpacked beside the
           # old one and swapped in; node_modules, .htaccess, logs and Passenger's tmp in the app folder are cPanel's.
           tar -C bundle -czf - . | $SSH "$USER@$HOST" "set -e
@@ -79,9 +80,15 @@ jobs:
             if [ -d build ]; then mv build .previous; fi
             mv .incoming/build build && mv .incoming/app.js app.js
             rm -rf .incoming .previous
-            mkdir -p tmp && touch tmp/restart.txt"
+            mkdir -p tmp && touch tmp/restart.txt
+            echo UPLOAD-OK" | tee "$RUNNER_TEMP/upload.log"
+          grep -q '^UPLOAD-OK$' "$RUNNER_TEMP/upload.log"
 
+      # Must be the portal's own sign-in page, not cPanel's "It works!" placeholder.
       - name: Check the live site responds
         run: |
-          curl -fsS --retry 8 --retry-delay 10 --retry-all-errors -o /dev/null -w "%{http_code}\n" \
-            "${{ vars.NEXT_PUBLIC_SITE_URL }}/login"
+          for i in $(seq 1 10); do
+            if curl -fsS "${{ vars.NEXT_PUBLIC_SITE_URL }}/login" | grep -q 'AbsorbHR'; then echo "Portal is live"; exit 0; fi
+            sleep 10
+          done
+          echo "The site did not show the AbsorbHR sign-in page"; exit 1

@@ -93,6 +93,8 @@ jobs:
           SSH="ssh -i $HOME/.ssh/id_krystal -p ${PORT:-722} -o StrictHostKeyChecking=yes"
           $SSH "$USER@$HOST" "mkdir -p absorbhr-backups && chmod 700 absorbhr-backups"
           # Plain ssh rather than rsync, which Krystal's shell breaks.
-          $SSH "$USER@$HOST" "umask 077 && cat > 'absorbhr-backups/$NAME.part' && mv 'absorbhr-backups/$NAME.part' 'absorbhr-backups/$NAME'" < "$RUNNER_TEMP/$NAME"
+          $SSH "$USER@$HOST" "umask 077 && cat > 'absorbhr-backups/$NAME.part' && mv 'absorbhr-backups/$NAME.part' 'absorbhr-backups/$NAME' && echo UPLOAD-OK" \
+            < "$RUNNER_TEMP/$NAME" | tee "$RUNNER_TEMP/upload.log"
+          grep -q '^UPLOAD-OK$' "$RUNNER_TEMP/upload.log"
           $SSH "$USER@$HOST" 'cd absorbhr-backups && ls -1t absorbhr-backup-*.tar.gz.gpg | tail -n +31 | xargs -r rm -f && ls -lh | tail -n 5'
           rm -f "$RUNNER_TEMP/$NAME"
