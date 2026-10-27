@@ -79,6 +79,11 @@ All environment variables verified correct on 26 Oct 2026 (rate limiting and inv
     leaked-password check are Pro-only (app's own idle timeout still applies)
   - Platform admin `sales@absorbhr.co.uk` created with no password (sets one via /forgot-password once Part 6 SMTP
     is live). Vault `cron_secret`/`app_base_url` not set yet — Krystal cPanel cron (Part 5) calls dispatch instead
+  - 27 Oct: **portal live on https://absorbhr-portal.co.uk** (deploy run 7, from branch `claude/clever-allen-efixmz`).
+    Fixes on the way: Node 22 (supabase-js/vitest need it; cPanel app switched to 22), lint exception for
+    `deploy/krystal/app.js`, deploy key made on the PC (cPanel keygen insists on a passphrase), rsync replaced by
+    tar over ssh (Krystal's shell broke rsync), Krystal support enabled SSH shell access, uploads/site check now
+    fail loudly (an earlier run falsely passed on cPanel's placeholder page)
   - Nightly backup: `.github/workflows/backup-nightly.yml` (off until `BACKUP_ENABLED`) — `supabase db dump`
     (roles/schema/data) + Vault secrets + storage files (`scripts/backup-storage.mjs`), gpg AES-256 with
     `BACKUP_PASSPHRASE`, rsync to `~/absorbhr-backups` on Krystal, 30 kept. Setup/restore: Part 7 of the guide.
