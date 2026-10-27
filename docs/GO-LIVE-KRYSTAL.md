@@ -34,7 +34,7 @@ Claude then sets up the database, security settings and your admin login.
 
 1. cPanel → **Email Accounts** → **Create**. Domain `absorbhr-portal.co.uk`, username `no-reply`, generate a strong
    password and save it in your password manager. Create.
-2. On that mailbox click **Connect Devices**. Note the **Outgoing Server** name and the **SMTP port** (usually 465).
+2. Done 27 Oct 2026: outgoing server `mail.absorbhr-portal.co.uk`, SMTP port 465 (SSL/TLS).
 3. cPanel → **Email Deliverability**. If `absorbhr-portal.co.uk` shows a problem, click **Repair** for DKIM and SPF.
 
 ## Part 3 — The website on Krystal (10 minutes)
@@ -60,7 +60,7 @@ Under **Environment variables**, click **Add variable** for each:
 | `IP_HASH_SECRET` | a new 40-character random password from your password manager |
 | `CRON_SECRET` | another new 40-character random password (keep it — Part 5 uses it) |
 | `EMAIL_FROM` | `AbsorbHR Portal <no-reply@absorbhr-portal.co.uk>` |
-| `SMTP_HOST` | the Outgoing Server from Part 2 |
+| `SMTP_HOST` | `mail.absorbhr-portal.co.uk` |
 | `SMTP_PORT` | `465` |
 | `SMTP_USER` | `no-reply@absorbhr-portal.co.uk` |
 | `SMTP_PASSWORD` | the mailbox password from Part 2 |
@@ -113,7 +113,7 @@ curl -fsS -m 60 -H "Authorization: Bearer YOUR-CRON-SECRET" https://absorbhr-por
 ## Part 6 — Sign-in emails from Supabase (3 minutes)
 
 Supabase (production project) → **Authentication** → **Emails** → **SMTP Settings** → Enable custom SMTP:
-sender `no-reply@absorbhr-portal.co.uk`, name `AbsorbHR Portal`, host/port from Part 2, username
+sender `no-reply@absorbhr-portal.co.uk`, name `AbsorbHR Portal`, host `mail.absorbhr-portal.co.uk`, port `465`, username
 `no-reply@absorbhr-portal.co.uk`, password = mailbox password. Save.
 
 ---
