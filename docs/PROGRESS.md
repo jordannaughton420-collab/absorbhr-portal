@@ -84,6 +84,10 @@ All environment variables verified correct on 26 Oct 2026 (rate limiting and inv
     `deploy/krystal/app.js`, deploy key made on the PC (cPanel keygen insists on a passphrase), rsync replaced by
     tar over ssh (Krystal's shell broke rsync), Krystal support enabled SSH shell access, uploads/site check now
     fail loudly (an earlier run falsely passed on cPanel's placeholder page)
+  - 27 Oct: redirects fixed to use NEXT_PUBLIC_SITE_URL (Passenger made them point at localhost:3000). AbsorbHR
+    admin `sales@absorbhr.co.uk` has set its password. Demo company **Brightwater Bakery Ltd (Demo)** created on
+    production with `scripts/seed-demo-company.mjs` (29 made-up staff); logins on `jordannaughton420+admin/hr/
+    manager/employee@gmail.com`, no passwords (set via Forgot password). Remove by deleting that tenant + 4 users
   - Nightly backup: `.github/workflows/backup-nightly.yml` (off until `BACKUP_ENABLED`) — `supabase db dump`
     (roles/schema/data) + Vault secrets + storage files (`scripts/backup-storage.mjs`), gpg AES-256 with
     `BACKUP_PASSPHRASE`, rsync to `~/absorbhr-backups` on Krystal, 30 kept. Setup/restore: Part 7 of the guide.
