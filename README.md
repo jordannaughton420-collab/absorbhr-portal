@@ -74,7 +74,9 @@ These talk to the Supabase project through its Management API, using `SUPABASE_A
 
 ## Branding
 
-- Logo: replace `public/brand/absorbhr-logo.svg` with the real logo (keep the same filename).
+- Logo: `public/brand/absorbhr-logo.png` (all purple exactly `#570080`, transparent background). If you replace it,
+  update `LOGO_WIDTH`/`LOGO_HEIGHT` in `components/brand/logo.tsx`.
+- Browser and phone icons: `app/favicon.ico`, `app/icon.png`, `app/apple-icon.png`.
 - Colours: defined once at the top of `app/globals.css` (`--brand-*` variables).
 
 ## Security notes

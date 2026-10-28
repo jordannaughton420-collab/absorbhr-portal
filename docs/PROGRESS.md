@@ -5,7 +5,7 @@ Read this first when resuming work in a new session.
 ## Decisions
 - Retention: **minimum 6 years** for all personal data (AbsorbHR, 26 Oct). Phase 5 schedule uses 6 years as a floor.
 - Hosting: Vercel (London, lhr1). Email: Resend (Phase 5). Code: this GitHub repo.
-- Logo: `public/brand/absorbhr-logo.svg` (placeholder until the real file is added).
+- Logo: `public/brand/absorbhr-logo.png` (real AbsorbHR logo, recoloured to exactly `#570080`, 28 Oct 2026); icons in `app/`.
 - Database: hosted **development** Supabase project `absorbhr-portal`, ref **`djdjrrziukllerhhnrix`**,
   region **eu-west-2 (London)** — verified 26 Oct 2026. Local Docker Supabase is blocked by the cloud
   environment's network policy, so migrations, seed and RLS tests run through the Supabase Management API

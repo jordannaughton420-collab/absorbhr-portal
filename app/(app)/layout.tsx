@@ -108,7 +108,7 @@ export default async function AppLayout({ children }: { children: React.ReactNod
       {/* Desktop sidebar */}
       <aside className="hidden w-64 shrink-0 border-r bg-card p-5 lg:block">
         <Link href="/dashboard" aria-label="AbsorbHR Portal home">
-          <Logo height={36} />
+          <Logo height={34} />
         </Link>
         <div className="mt-8">{sidebar}</div>
       </aside>

@@ -22,7 +22,7 @@ type Entry = {
 
 const KIND_STYLE: Record<string, string> = {
   holiday: "bg-primary text-primary-foreground",
-  leave: "bg-leave-other text-white",
+  leave: "border-2 border-primary bg-primary/15 text-primary",
   sickness: "bg-warning text-white",
   away: "bg-muted-foreground text-white",
 };
@@ -162,7 +162,11 @@ export default async function CalendarPage({
           <span className="size-4 rounded bg-primary" aria-hidden="true" /> Holiday
         </li>
         <li className="flex items-center gap-2">
-          <span className="size-4 rounded bg-leave-other" aria-hidden="true" /> Other leave
+          <span
+            className="size-4 rounded border-2 border-primary bg-primary/15"
+            aria-hidden="true"
+          />{" "}
+          Other leave
         </li>
         {(wide || ctx.role === "line_manager") && (
           <li className="flex items-center gap-2">
