@@ -79,6 +79,11 @@ Updated 16 Nov 2026. Read from: 2 email threads (PDF), GoHighLevel, Stripe, Make
 ## From Me (16 Nov 2026)
 - Price (16 Nov 2026): from £14 + VAT per employee per month.
 - Discounts grow with headcount and contract length. Today the term discount only starts at 3 years.
+- Who buys (16 Nov 2026): a mix of sectors.
+  - Main targets: care, construction, hospitality and office-based companies.
+  - Sign-off is usually by a director. Day-to-day contact is often an HR person or operations manager, or simply a manager in a small business.
+  - The first few clients are expected to have under 50 staff each.
+
 ## New Pricing (agreed 16 Nov 2026, ready to put on the website)
 - Base price: £14.00 + VAT per employee per month.
 - Term discounts: 1 year none; 2 years 5%; 3 years 10%; 4 years 15%; 5 years 20%.
