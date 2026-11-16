@@ -12,8 +12,8 @@ Updated 16 Nov 2026. Read from: 2 email threads (PDF), GoHighLevel, Stripe, Make
 - Jordan Naughton: Managing Director, AbsorbHR; owner of this project. Not technical: wants plain English and one step at a time.
 - Julian Coleman: at Harvey's Workwear (an AbsorbHR client); introduces Jordan to his contacts.
 - Daniel (Dan) Lloyd-John: Chief Executive, Broadway Insurance Partners (insurance broker, Stockport). Introduced by Julian on 11 Nov 2026; interested in a Teams chat.
-- Nicholas Whittle: Director, nicholaswhittle.co.uk. Introduced by Julian on 10 Nov 2026.
-- Elvin Lucas: Protec Security (Oldham). Added as a Stripe customer on 3 Nov 2026.
+- Nicholas Whittle: Director, nicholaswhittle.co.uk. Introduced by Julian on 10 Nov 2026. Jordan spoke with him on 16 Nov 2026 (only part of the email chain was read).
+- Elvin Lucas: Protec Security (Oldham), a friend of the business. Jordan does his marketing. He is invoiced through the Stripe "Marketing" product, not an HR subscription (16 Nov 2026).
 
 ## Where Things Stand
 - Portal (as of 27 Oct 2026): runs on a test site (Vercel, fake data). Go-live is on free plans plus Krystal:
@@ -36,12 +36,10 @@ Updated 16 Nov 2026. Read from: 2 email threads (PDF), GoHighLevel, Stripe, Make
 - 26 Oct 2026: SAR exports are run by HR and reviewed before release.
 - 26 Oct 2026: AbsorbHR admins can see every client's breach log.
 - 27 Oct 2026: no new paid subscriptions. Krystal hosts the site, Supabase is on the free plan, email goes through a Krystal mailbox, backups go to Krystal.
-- 9 Nov 2026: "Marketing" product created in Stripe (one-off prices of £650, and £150 added on 12 Nov).
+- 9 Nov 2026: "Marketing" product created in Stripe for marketing work, e.g. for Protec Security (one-off prices of £650, and £150 added on 12 Nov).
 
 ## Open Loops
-- Nicholas Whittle: Zoom agreed for Mon 16 Nov 2026, 10am. On 11 Nov he asked Jordan to send the link. Whether it was sent and the call happened is unknown (guess).
-- Dan Lloyd-John (Broadway): offered Mon 16 Nov 11am, Fri 20 Nov 9:30am or 12pm, or Mon 23 Nov 10am, on Teams. No reply was seen (guess: Jordan still needs to confirm a slot).
-- Protec Security (Elvin Lucas): Stripe customer since 3 Nov with no subscription yet (guess: onboarding pending).
+- Dan Lloyd-John (Broadway): Teams call booked for Fri 20 Nov 2026. Dan sent the invite.
 - Portal go-live: give the session access to the production Supabase project, then follow docs/GO-LIVE-KRYSTAL.md parts 3–6.
 - Portal go-live: add the nightly encrypted backup to Krystal.
 - Portal go-live: Jordan's lawyer to review the [LEGAL] items in docs/GDPR.md.
@@ -71,7 +69,7 @@ Updated 16 Nov 2026. Read from: 2 email threads (PDF), GoHighLevel, Stripe, Make
 - docs/PLAN.md: the original architecture plan.
 - README.md: commands and demo accounts.
 - GoHighLevel holds contacts, deals and the calendar.
-- Stripe holds billing (products: AbsorbHR HR Software & Employment Law Support on 1, 3 or 5-year monthly prices; Marketing).
+- Stripe holds billing (products: AbsorbHR HR Software & Employment Law Support on 1, 3 or 5-year monthly prices; Marketing, for one-off marketing work).
 - Make holds the billing and LinkedIn automations.
 - The sales@absorbhr.co.uk mailbox (Krystal webmail) holds client email.
 - Public pricing page: absorbhr.co.uk/pricing.html. It has a calculator using employee count and contract length.
