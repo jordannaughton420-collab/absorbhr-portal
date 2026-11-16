@@ -79,9 +79,23 @@ Updated 16 Nov 2026. Read from: 2 email threads (PDF), GoHighLevel, Stripe, Make
 ## From Me (16 Nov 2026)
 - Price (16 Nov 2026): from £14 + VAT per employee per month.
 - Discounts grow with headcount and contract length. Today the term discount only starts at 3 years.
-- Planned change, agreed 16 Nov 2026:
-  - Term discounts: 1 year none; 2 years 5%; 3 years 10%; 4 years 15%; 5 years 20%.
-  - Staff discounts: 1–19 none; 20–39 3%; 40–59 5%; 60–99 10%; 100+ 15%.
-  - Whether the two stack or are capped: not yet decided.
-  - Still to update: the website calculator (absorbhr.co.uk/pricing.html on Krystal) and Stripe prices (2- and 4-year prices to add); then check the Make billing automation.
+## New Pricing (agreed 16 Nov 2026, ready to put on the website)
+- Base price: £14.00 + VAT per employee per month.
+- Term discounts: 1 year none; 2 years 5%; 3 years 10%; 4 years 15%; 5 years 20%.
+- Staff discounts: 1–19 none; 20–39 3%; 40–59 5%; 60–99 10%; 100+ 15%.
+- The two discounts stack, one after the other: price = 14 × (1 − term %) × (1 − staff %), rounded to the nearest penny.
+- Price per employee per month (+ VAT):
+
+| Staff \ Term | 1 yr | 2 yr | 3 yr | 4 yr | 5 yr |
+|---|---|---|---|---|---|
+| 1–19 | £14.00 | £13.30 | £12.60 | £11.90 | £11.20 |
+| 20–39 | £13.58 | £12.90 | £12.22 | £11.54 | £10.86 |
+| 40–59 | £13.30 | £12.63 | £11.97 | £11.30 | £10.64 |
+| 60–99 | £12.60 | £11.97 | £11.34 | £10.71 | £10.08 |
+| 100+ | £11.90 | £11.30 | £10.71 | £10.12 | £9.52 |
+
+- Where it has to change:
+  1. Website calculator: absorbhr.co.uk/pricing.html, hosted on Krystal (cPanel → File Manager → public_html). Jordan plans to do this on the evening of 16 Nov 2026.
+  2. Stripe: today it only has 1-, 3- and 5-year prices. Add 2- and 4-year prices, and update the tiers to match this table.
+  3. Make "Billing – Deal stage to Stripe": check it picks the right Stripe price for each term.
 <!-- memory end -->
