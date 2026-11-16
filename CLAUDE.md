@@ -79,5 +79,9 @@ Updated 16 Nov 2026. Read from: 2 email threads (PDF), GoHighLevel, Stripe, Make
 ## From Me (16 Nov 2026)
 - Price (16 Nov 2026): from £14 + VAT per employee per month.
 - Discounts grow with headcount and contract length. Today the term discount only starts at 3 years.
-- Planned change (16 Nov 2026): term discounts of 5% at 2 years, 10% at 3, 15% at 4 and 20% at 5. A headcount discount of up to 20% starting from about 20–40 staff; the exact bands are still to be confirmed.
+- Planned change, agreed 16 Nov 2026:
+  - Term discounts: 1 year none; 2 years 5%; 3 years 10%; 4 years 15%; 5 years 20%.
+  - Staff discounts: 1–19 none; 20–39 3%; 40–59 5%; 60–99 10%; 100+ 15%.
+  - Whether the two stack or are capped: not yet decided.
+  - Still to update: the website calculator (absorbhr.co.uk/pricing.html on Krystal) and Stripe prices (2- and 4-year prices to add); then check the Make billing automation.
 <!-- memory end -->
