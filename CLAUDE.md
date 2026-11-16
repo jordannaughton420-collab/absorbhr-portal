@@ -74,4 +74,10 @@ Updated 16 Nov 2026. Read from: 2 email threads (PDF), GoHighLevel, Stripe, Make
 - Stripe holds billing (products: AbsorbHR HR Software & Employment Law Support on 1, 3 or 5-year monthly prices; Marketing).
 - Make holds the billing and LinkedIn automations.
 - The sales@absorbhr.co.uk mailbox (Krystal webmail) holds client email.
+- Public pricing page: absorbhr.co.uk/pricing.html. It has a calculator using employee count and contract length.
+
+## From Me (16 Nov 2026)
+- Price (16 Nov 2026): from £14 + VAT per employee per month.
+- Discounts grow with headcount and contract length. Today the term discount only starts at 3 years.
+- Planned change (16 Nov 2026): term discounts of 5% at 2 years, 10% at 3, 15% at 4 and 20% at 5. A headcount discount of up to 20% starting from about 20–40 staff; the exact bands are still to be confirmed.
 <!-- memory end -->
