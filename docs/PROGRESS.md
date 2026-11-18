@@ -237,3 +237,13 @@ All environment variables verified correct on 26 Oct 2026 (rate limiting and inv
   shifts, Company settings and the subject access export.)
 - Follow-ups: optional "approval needed" mode, shift swaps, offer expiry, rota templates/copy week, notify staff
   when the rota is published, shift costs, clock in/out.
+
+## Fix: "Something went wrong" when an admin/HR login sets a new password — 18 Nov 2026
+- Seen on live 18 Nov ~22:21: a reset-link password change for an account with two-step verification was refused by
+  Supabase Auth (`insufficient_aal`: AAL2 needed to change the password when MFA is enabled), and the portal showed
+  the generic error.
+- Fix: the "Choose a new password" page now asks for the 6-digit code too when the account has two-step
+  verification and hasn't passed it yet; `updatePassword` checks the code (same rate limits as sign-in), then saves
+  the password. If the code box is missing for any reason, a clear message says to enter the code.
+- Test: e2e/password-reset.spec.ts (Northgate admin, signed in but not past two-step, sets a new password with the
+  code; password put back afterwards). open-shifts.spec.ts now uses a unique shift label per run.
