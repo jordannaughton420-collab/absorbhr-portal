@@ -1,11 +1,11 @@
 # Builds the portal and uploads it to Krystal (cPanel "Setup Node.js App").
-# Runs on every push to main once the repository variable KRYSTAL_ENABLED is "true".
+# Runs only when started by hand (GitHub -> Actions -> Deploy to Krystal -> Run workflow, pick the branch),
+# and only once the repository variable KRYSTAL_ENABLED is "true". Pushes never deploy on their own (owner's
+# decision, 18 Nov 2026), so code that isn't ready, or needs a live database update first, can't go live by accident.
 # Setup: docs/GO-LIVE-KRYSTAL.md
 name: Deploy to Krystal
 
 on:
-  push:
-    branches: [main]
   workflow_dispatch:
 
 concurrency:

@@ -176,3 +176,14 @@ All environment variables verified correct on 26 Oct 2026 (rate limiting and inv
   cPanel's Node.js app settings. Passes it through unchanged, or Yes = the address can still be faked; ask which
   header LiteSpeed sets instead and change `lib/client-ip.ts`.
 - Checked 18 Nov: lint, typecheck, 45 unit tests and 45 end-to-end tests pass (fresh sign-ins including 2-step).
+
+## Merged into main — 18 Nov 2026
+- `main` now holds everything on `claude/clever-allen-efixmz` (rate-limit fix, AI assistant, end-to-end tests) plus
+  main's own `CLAUDE.md` memory commits.
+- **Deploys are by hand only from now on** (owner's decision): `deploy-krystal.yml` lost its push-to-main trigger, so
+  neither the merge nor later memory commits to main deploy anything. Deploy with GitHub → Actions → Deploy to
+  Krystal → Run workflow. Live is still `c55be3d` (rate-limit fix, no assistant).
+- Before deploying the assistant: apply migration 0015 to the live database first, or saving company settings and
+  the subject access export break (they use the new columns and tables).
+- The nightly backup job is now on main but stays off until `BACKUP_ENABLED` and its secrets are set (Part 7 of
+  docs/GO-LIVE-KRYSTAL.md).
