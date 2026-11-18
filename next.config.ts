@@ -21,7 +21,20 @@ const nextConfig: NextConfig = {
   // build folder stops the two from overwriting each other's files.
   distDir: process.env.NEXT_DIST_DIR || ".next",
   async headers() {
-    return [{ source: "/:path*", headers: securityHeaders }];
+    return [
+      { source: "/:path*", headers: securityHeaders },
+      // The assistant's speak button needs the microphone; every other page keeps it blocked.
+      // (When two rules set the same header, the later one wins.)
+      {
+        source: "/assistant/:path*",
+        headers: [
+          {
+            key: "Permissions-Policy",
+            value: "camera=(), microphone=(self), geolocation=(), interest-cohort=()",
+          },
+        ],
+      },
+    ];
   },
 };
 
