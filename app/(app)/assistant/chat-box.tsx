@@ -1,0 +1,145 @@
+"use client";
+
+import { useEffect, useRef, useState, useTransition } from "react";
+import { useRouter } from "next/navigation";
+import { Mic, MicOff, Send } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Textarea } from "@/components/ui/form";
+import { Alert } from "@/components/ui/feedback";
+import { sendMessage } from "./actions";
+
+// Minimal typing for the browser's built-in speech recognition (Chrome, Edge, Safari).
+type Recognition = {
+  lang: string;
+  interimResults: boolean;
+  continuous: boolean;
+  start: () => void;
+  stop: () => void;
+  onresult: ((e: { results: ArrayLike<ArrayLike<{ transcript: string }>> }) => void) | null;
+  onend: (() => void) | null;
+  onerror: (() => void) | null;
+};
+
+function getRecognition(): Recognition | null {
+  if (typeof window === "undefined") return null;
+  const w = window as unknown as Record<string, (new () => Recognition) | undefined>;
+  const Ctor = w.SpeechRecognition ?? w.webkitSpeechRecognition;
+  return Ctor ? new Ctor() : null;
+}
+
+export function ChatBox({
+  conversationId,
+  disabled,
+}: {
+  conversationId?: string;
+  disabled?: boolean;
+}) {
+  const router = useRouter();
+  const [text, setText] = useState("");
+  const [error, setError] = useState<string | null>(null);
+  const [pending, startTransition] = useTransition();
+  const [listening, setListening] = useState(false);
+  const [voiceSupported, setVoiceSupported] = useState(false);
+  const recognition = useRef<Recognition | null>(null);
+
+  useEffect(() => setVoiceSupported(getRecognition() !== null), []);
+
+  function submit() {
+    const message = text.trim();
+    if (!message || pending) return;
+    setError(null);
+    startTransition(async () => {
+      const result = await sendMessage({ conversation_id: conversationId, text: message });
+      if (!result.ok) {
+        setError(result.error);
+        return;
+      }
+      setText("");
+      if (result.data && result.data.conversationId !== conversationId) {
+        router.push(`/assistant?c=${result.data.conversationId}`);
+      } else {
+        router.refresh();
+      }
+    });
+  }
+
+  function toggleVoice() {
+    if (listening) {
+      recognition.current?.stop();
+      return;
+    }
+    const r = getRecognition();
+    if (!r) return;
+    r.lang = "en-GB";
+    r.interimResults = false;
+    r.continuous = false;
+    r.onresult = (e) => {
+      const heard = Array.from(e.results)
+        .map((res) => res[0]?.transcript ?? "")
+        .join(" ")
+        .trim();
+      if (heard) setText((t) => (t ? `${t} ${heard}` : heard));
+    };
+    r.onend = () => setListening(false);
+    r.onerror = () => setListening(false);
+    recognition.current = r;
+    setListening(true);
+    r.start();
+  }
+
+  return (
+    <form
+      className="space-y-2 border-t pt-4"
+      onSubmit={(e) => {
+        e.preventDefault();
+        submit();
+      }}
+    >
+      {error && <Alert variant="error">{error}</Alert>}
+      <label htmlFor="assistant-message" className="sr-only">
+        Message the assistant
+      </label>
+      <Textarea
+        id="assistant-message"
+        value={text}
+        onChange={(e) => setText(e.target.value)}
+        onKeyDown={(e) => {
+          if (e.key === "Enter" && !e.shiftKey) {
+            e.preventDefault();
+            submit();
+          }
+        }}
+        rows={3}
+        maxLength={2000}
+        placeholder={listening ? "Listening…" : "Ask or tell the assistant what to do…"}
+        disabled={disabled || pending}
+      />
+      <div className="flex items-center justify-between gap-2">
+        <p className="text-xs text-muted-foreground" aria-live="polite">
+          {pending
+            ? "The assistant is working on it…"
+            : "Enter to send, Shift+Enter for a new line."}
+        </p>
+        <div className="flex gap-2">
+          {voiceSupported && (
+            <Button
+              type="button"
+              variant="outline"
+              size="icon"
+              onClick={toggleVoice}
+              disabled={disabled || pending}
+              aria-pressed={listening}
+              aria-label={listening ? "Stop listening" : "Speak your message"}
+              title="Uses your browser's speech-to-text"
+            >
+              {listening ? <MicOff aria-hidden="true" /> : <Mic aria-hidden="true" />}
+            </Button>
+          )}
+          <Button type="submit" disabled={disabled || pending || !text.trim()}>
+            <Send aria-hidden="true" /> Send
+          </Button>
+        </div>
+      </div>
+    </form>
+  );
+}

@@ -5,7 +5,7 @@ Read this first when resuming work in a new session.
 ## Decisions
 - Retention: **minimum 6 years** for all personal data (AbsorbHR, 26 Oct). Phase 5 schedule uses 6 years as a floor.
 - Hosting: Vercel (London, lhr1). Email: Resend (Phase 5). Code: this GitHub repo.
-- Logo: `public/brand/absorbhr-logo.svg` (placeholder until the real file is added).
+- Logo: `public/brand/absorbhr-logo.png` (real AbsorbHR logo, recoloured to exactly `#570080`, 28 Oct 2026); icons in `app/`.
 - Database: hosted **development** Supabase project `absorbhr-portal`, ref **`djdjrrziukllerhhnrix`**,
   region **eu-west-2 (London)** — verified 26 Oct 2026. Local Docker Supabase is blocked by the cloud
   environment's network policy, so migrations, seed and RLS tests run through the Supabase Management API
@@ -65,11 +65,33 @@ All environment variables verified correct on 26 Oct 2026 (rate limiting and inv
     1 correction request)
 
 - [x] Phase 5 — reports, emails, GDPR tools: **approved by AbsorbHR on 26 Oct 2026** (commit `33a4a22`)
-- [ ] Go-live — **decided 27 Oct 2026: no new subscriptions.** Krystal hosts absorbhr-portal.co.uk (cPanel Node.js 20,
+- [ ] Go-live — **decided 27 Oct 2026: no new subscriptions.** Krystal hosts absorbhr-portal.co.uk (cPanel Node.js 22,
   Passenger; start file `deploy/krystal/app.js`, standalone build in `build/`), Supabase free London project for
   production, email via Krystal mailbox SMTP, cPanel cron every 5 min calls /api/cron/dispatch, GitHub Actions
   `.github/workflows/deploy-krystal.yml` builds and rsyncs over SSH (port 722). Steps: docs/GO-LIVE-KRYSTAL.md.
-  Still to add: nightly encrypted backup to Krystal (free plan has no downloadable backups)
+  - 27 Oct: production Supabase project created by AbsorbHR — `gnvmakhtgnswlmsdquai` (London, Postgres 17), empty;
+    the session's access token now only sees this project.
+  - 27 Oct (AbsorbHR go-ahead): migrations 0001–0014 applied, **no seed data**; 44 tables, RLS on all; Vault has
+    `pii_encryption_key`; cron jobs refresh-bank-holidays, daily-housekeeping, dispatch-email; 280 bank holidays
+    imported; all 238 pgTAP tests pass on production (rolled back, nothing left behind)
+  - Auth: sign-ups off, site URL + redirect allow-list `https://absorbhr-portal.co.uk`, 12-char passwords with
+    lower/upper/digit, reauthentication for password change, TOTP on. Session time-box/inactivity timeout and
+    leaked-password check are Pro-only (app's own idle timeout still applies)
+  - Platform admin `sales@absorbhr.co.uk` created with no password (sets one via /forgot-password once Part 6 SMTP
+    is live). Vault `cron_secret`/`app_base_url` not set yet — Krystal cPanel cron (Part 5) calls dispatch instead
+  - 27 Oct: **portal live on https://absorbhr-portal.co.uk** (deploy run 7, from branch `claude/clever-allen-efixmz`).
+    Fixes on the way: Node 22 (supabase-js/vitest need it; cPanel app switched to 22), lint exception for
+    `deploy/krystal/app.js`, deploy key made on the PC (cPanel keygen insists on a passphrase), rsync replaced by
+    tar over ssh (Krystal's shell broke rsync), Krystal support enabled SSH shell access, uploads/site check now
+    fail loudly (an earlier run falsely passed on cPanel's placeholder page)
+  - 27 Oct: redirects fixed to use NEXT_PUBLIC_SITE_URL (Passenger made them point at localhost:3000). AbsorbHR
+    admin `sales@absorbhr.co.uk` has set its password. Demo company **Brightwater Bakery Ltd (Demo)** created on
+    production with `scripts/seed-demo-company.mjs` (29 made-up staff); logins on `jordannaughton420+admin/hr/
+    manager/employee@gmail.com`, no passwords (set via Forgot password). Remove by deleting that tenant + 4 users
+  - Nightly backup: `.github/workflows/backup-nightly.yml` (off until `BACKUP_ENABLED`) — `supabase db dump`
+    (roles/schema/data) + Vault secrets + storage files (`scripts/backup-storage.mjs`), gpg AES-256 with
+    `BACKUP_PASSPHRASE`, rsync to `~/absorbhr-backups` on Krystal, 30 kept. Setup/restore: Part 7 of the guide.
+    Storage download and encrypt/decrypt tested locally; database dump untested until the secrets exist
   - Decisions (26 Oct): retention — nightly job lists records due after 6 years, **HR confirms** before anonymising
     (can hold back for live claims); SAR export run by **HR/Client Admin only**, with case records and private notes
     flagged for review before release; **AbsorbHR admins can see every client's breach log** (summary only);
@@ -84,15 +106,84 @@ All environment variables verified correct on 26 Oct 2026 (rate limiting and inv
   - Demo: `supabase/seed_gdpr.sql` (3 leavers: one due, one due in 30 days, one recent; 1 breach)
   - Libraries added: fflate (ZIP), pdf-lib (PDF summary)
 
+- [ ] Phase 6 — AI assistant: **built 18 Nov 2026 on this computer (Denise/absorbhr-portal), not yet live**
+  - Decisions (owner, 17–18 Nov): one assistant per company, off until the Client Admin switches it on; it only
+    *suggests* changes and the person who asked must tap Confirm (accountability stays with a person); company
+    notes saved only on Confirm; chats kept 6 years by default (company may shorten), private to the person;
+    confirmed changes recorded permanently in the audit log; model Claude Opus 5.5 (`ASSISTANT_MODEL` to change)
+  - Migration 0015 (`assistant_*` tables, settings columns, claim/finish/cancel functions, SAR function,
+    anonymise trigger, `assistant-housekeeping` cron 02:53); 08_assistant.sql 45 pgTAP tests; 283 total pass on
+    the test database. Unit tests: tests/assistant.test.ts
+  - Code: lib/assistant/ (schemas, tools, run loop, execute), app/(app)/assistant (chat, confirm cards, notes),
+    Company settings "AI assistant" card, nav link, SAR export includes assistant data
+  - Needs `ANTHROPIC_API_KEY` on the server (and the test computer); without it the page says it isn't connected
+  - Fixed on the way: 07_gdpr_tools breach-log test assumed an empty breach log
+  - Before live: Anthropic DPA + sub-processor list/privacy notice (docs/GDPR.md), try it end to end, then deploy
+
 ## Follow-ups noted for later phases
 - Virus scanning for uploads: deferred by AbsorbHR (26 Oct); revisit before go-live.
 - AbsorbHR will supply its own template policy library later (bulk import; see below).
 - Template management screens were only tested at database level (AbsorbHR admin's 2FA is on the user's phone).
 - Irregular-hours/part-year 12.07% accrual (deferred by AbsorbHR); first-year monthly accrual rule (decision needed).
-- Convert the Playwright walkthrough / accessibility / idle-timeout scripts into a committed `npm run test:e2e` suite
-  (needs a test-only seed password + TOTP handling).
+- ~~Convert the Playwright walkthrough / accessibility / idle-timeout scripts into a committed `npm run test:e2e`
+  suite~~ — done 18 Nov 2026, see "End-to-end tests" below.
+- Next end-to-end batch: documents (upload/download), policies (publish → acknowledge), checklists, reviews,
+  1-to-1 note privacy, cases, SAR export download, breach log entry, reports CSV.
 - Audit log viewer: add filters and paging (currently latest 300 entries).
 - Email reminders for overdue checklist tasks and review deadlines; policy-published emails (dashboard covers these now).
 - Retention review for old records of *current* employees (decision needed).
 - In-app notification centre (the dashboard to-do list covers this for now).
 - Invitations need Resend SMTP configured in Supabase for reliable delivery (docs/GO-LIVE.md step 3).
+
+## End-to-end tests (Playwright) — added 18 Nov 2026 on this computer
+- `npm run test:e2e` runs Playwright in the installed Google Chrome against its own production build (`next build` + `next start`) on port 3100
+  (`NEXT_DIST_DIR=.next-e2e`, so it can run beside `npm run dev`; dev mode was flaky because pages rebuilt mid-test), **test database only**: `e2e/guard.mjs`
+  stops the run unless the settings point at `djdjrrziukllerhhnrix`, and every page blocks requests to the live site.
+- `npm run test:e2e:reset` reseeds the test database with `SEED_PASSWORD` from `.env.local` and clears
+  `app.rate_limits`. Sign-ins are saved in `e2e/.auth/` (git-ignored) and reused for 40 minutes, because login and
+  MFA are rate limited (10 per 15 min). The setup enrols TOTP through the real /auth/mfa page and keeps the key there.
+- 45 tests, all passing 18 Nov 2026. Covered: sign-in, wrong password, sign-out, admin blocked until 2-step, idle warning + timeout (fake clock);
+  Northgate can't open or list Brightwater staff; employee/manager kept out of HR pages; employee can't open a
+  colleague; manager sees own team only; holiday request → manager approval → cancel; unconfigured company can't
+  book holiday; assistant off by default; axe WCAG 2.1 AA on 23 pages across 4 roles; phone width on 2 pages.
+- `npm run test:live`: read-only check of absorbhr-portal.co.uk (login page, signed-out redirect, security headers).
+- Fixed on the way: screen-reader-only table labels made pages 1px too wide on phones (`components/ui/table.tsx`
+  wrapper is now `relative`).
+- ~~Found, not fixed: `lib/rate-limit.ts` trusts the first `X-Forwarded-For` value~~ — fixed 18 Nov 2026, see below.
+
+## Rate-limit address fix — 18 Nov 2026 (LIVE: commit c55be3d, deployed 18 Nov 16:13 on its own, on top of a35bb63)
+- Problem: `clientIp()` took the **first** `X-Forwarded-For` value (then `X-Real-IP`). Visitors write those
+  themselves, so a password guesser could send a new made-up address on each try and never hit the login or 2-step
+  limits. `ipHash()` had the same weakness (it is not called anywhere yet).
+- Fix: `lib/client-ip.ts` takes the entry added by our own proxy — counted `TRUSTED_PROXY_HOPS` in from the
+  **right** (default 1 = LiteSpeed only; set 2 if a CDN is ever put in front). `X-Real-IP` is no longer read. Next.js
+  fills `X-Forwarded-For` from the connection only when it is missing (`base-server.js`, `??=`), so local runs still
+  get the real address. Still hashed with `IP_HASH_SECRET`; no raw addresses stored.
+- Added per-account buckets that ignore the address entirely: `loginAccount` (30 per 15 min per email, from all
+  addresses together) and `mfaVerifyAccount` (10 per 15 min per signed-in user). These hold even if the address is
+  ever wrong. `verifyMfa` now gets the user first and refuses if signed out.
+- Tests: `tests/client-ip.test.ts` (forged left-hand entries ignored, hop counting, ports/IPv6, junk → `unknown`,
+  setting parsing).
+- Live server check (read-only headers, 18 Nov): the live site answers as `server: LiteSpeed`, not Apache as
+  assumed, so LiteSpeed is the web server in front of the Node app. Whether LiteSpeed
+  **adds** the visitor's real address to the end of `X-Forwarded-For` for Node apps can't be seen from outside (no
+  route echoes headers, and signing in to test was off limits).
+  If LiteSpeed does **not** add it, the per-account limits above still stop guessing one account's password.
+- **To ask Krystal support:** (1) when LiteSpeed passes a request to our cPanel Node.js app, does it add the visitor's
+  real IP to the end of `X-Forwarded-For` (or replace the header), or pass on what the visitor sent? (2) is "Use
+  Client IP in Header" set to No or Trusted IP Only (not Yes)? (3) is any proxy or CDN in front of LiteSpeed?
+  Adds/replaces + not Yes + no CDN = fix is right as is. CDN that adds an entry = set `TRUSTED_PROXY_HOPS=2` in
+  cPanel's Node.js app settings. Passes it through unchanged, or Yes = the address can still be faked; ask which
+  header LiteSpeed sets instead and change `lib/client-ip.ts`.
+- Checked 18 Nov: lint, typecheck, 45 unit tests and 45 end-to-end tests pass (fresh sign-ins including 2-step).
+
+## Merged into main — 18 Nov 2026
+- `main` now holds everything on `claude/clever-allen-efixmz` (rate-limit fix, AI assistant, end-to-end tests) plus
+  main's own `CLAUDE.md` memory commits.
+- **Deploys are by hand only from now on** (owner's decision): `deploy-krystal.yml` lost its push-to-main trigger, so
+  neither the merge nor later memory commits to main deploy anything. Deploy with GitHub → Actions → Deploy to
+  Krystal → Run workflow. Live is still `c55be3d` (rate-limit fix, no assistant).
+- Before deploying the assistant: apply migration 0015 to the live database first, or saving company settings and
+  the subject access export break (they use the new columns and tables).
+- The nightly backup job is now on main but stays off until `BACKUP_ENABLED` and its secrets are set (Part 7 of
+  docs/GO-LIVE-KRYSTAL.md).

@@ -43,7 +43,7 @@ cPanel → **Setup Node.js App** → **Create Application**:
 
 | Setting | Value |
 |---|---|
-| Node.js version | **20.20.2** |
+| Node.js version | **22.x** (the newest 22 listed; 24 also works) |
 | Application mode | **Production** |
 | Application root | `absorbhr-portal-app` |
 | Application URL | choose **absorbhr-portal.co.uk** in the dropdown; leave the box after it empty |
@@ -72,19 +72,20 @@ working yet, cPanel → **SSL/TLS Status** → select the domain → **Run AutoS
 
 ## Part 4 — Let GitHub upload new versions (10 minutes)
 
-**a. Create an upload key on Krystal**
-1. cPanel → **SSH Access** → **Manage SSH Keys** → **Generate a New Key**. Key name `github-deploy`, leave the
-   password **empty**, type RSA 4096. Generate.
-2. Back on Manage SSH Keys, find `github-deploy` under **Public Keys** → **Manage** → **Authorize**.
-3. Under **Private Keys**, `github-deploy` → **View/Download** → copy the whole text (from
-   `-----BEGIN` to `PRIVATE KEY-----`).
+**a. Create an upload key on your PC** (Krystal's own key generator insists on a password, which the upload can't use)
+1. Windows PowerShell: `ssh-keygen -t rsa -b 4096 -C github-deploy -f "$HOME\github-deploy"` — press Enter twice
+   when asked for a passphrase (no passphrase).
+2. `Get-Content "$HOME\github-deploy.pub" | Set-Clipboard`, then cPanel → **SSH Access** → **Manage SSH Keys** →
+   **Import Key**: name `github-deploy`, paste into **Public Key** only. Import.
+3. Manage SSH Keys → **Public Keys** → `github-deploy` → **Manage** → **Authorize**.
 
 **b. Give it to GitHub** — github.com/jordannaughton420-collab/absorbhr-portal → **Settings** → **Secrets and
 variables** → **Actions**:
 
-- **Secrets** tab → **New repository secret**: name `KRYSTAL_SSH_KEY`, paste the private key. Save.
-- Then delete the private key from Krystal (Manage SSH Keys → Private Keys → `github-deploy` → Delete). GitHub now
-  holds the only copy; the public key stays authorised.
+- `Get-Content "$HOME\github-deploy" -Raw | Set-Clipboard`, then **Secrets** tab → **New repository secret**: name
+  `KRYSTAL_SSH_KEY`, paste (starts `-----BEGIN OPENSSH PRIVATE KEY-----`). Save.
+- Delete both files from your PC: `Remove-Item "$HOME\github-deploy", "$HOME\github-deploy.pub"`. GitHub now holds
+  the only copy of the private key.
 - **Variables** tab → **New repository variable**, one at a time:
 
 | Name | Value |
@@ -116,13 +117,65 @@ Supabase (production project) → **Authentication** → **Emails** → **SMTP S
 sender `no-reply@absorbhr-portal.co.uk`, name `AbsorbHR Portal`, host `mail.absorbhr-portal.co.uk`, port `465`, username
 `no-reply@absorbhr-portal.co.uk`, password = mailbox password. Save.
 
+## Your first sign-in (after Parts 3, 4 and 6)
+
+Claude created your AbsorbHR admin login `sales@absorbhr.co.uk` on 27 Oct 2026 **without a password**.
+Go to https://absorbhr-portal.co.uk/forgot-password, enter `sales@absorbhr.co.uk`, open the email and choose your own
+password (12+ characters, upper and lower case and a number). Then set up two-step verification when asked, and
+create the first client company from **AbsorbHR admin**.
+
+## Part 7 — Nightly backup (5 minutes, after Part 4)
+
+Every night at 01:37 (UTC) GitHub copies the whole database, the encryption key from Vault and every uploaded file,
+locks them with a passphrase (AES-256) and saves the file in a private `absorbhr-backups` folder in your Krystal
+home folder — outside the website, so nobody can download it from the web. The latest 30 nights are kept.
+GitHub never stores the backup itself.
+
+1. In your password manager, generate a **new 40-character passphrase** and save it as "AbsorbHR backup passphrase".
+   **Without it no backup can ever be opened**, so make sure it's in the password manager before going on.
+2. Supabase (production project) → **Connect** (top of the page) → **Session pooler** → copy the connection string
+   (it starts `postgresql://postgres.`…`:5432/postgres`). Replace `[YOUR-PASSWORD]` with the database password from
+   Part 1.
+3. GitHub → repository **Settings** → **Secrets and variables** → **Actions**:
+   - **Secrets** tab → New repository secret, one at a time:
+
+     | Name | Value |
+     |---|---|
+     | `SUPABASE_DB_URL` | the connection string from step 2 |
+     | `SUPABASE_SERVICE_ROLE_KEY` | Supabase **secret** key (same as in Krystal) |
+     | `BACKUP_PASSPHRASE` | the passphrase from step 1 |
+
+   - **Variables** tab → New repository variable: `BACKUP_ENABLED` = `true`.
+4. Tell Claude; it runs the first backup straight away (Actions → **Nightly backup** → Run workflow) and checks it
+   arrived on Krystal (cPanel → File Manager → `absorbhr-backups`).
+
+If a night's backup fails, GitHub emails you. GitHub switches off scheduled jobs in repositories with no changes for
+60 days; if you get that email, click **Enable workflow** on the Actions tab.
+
+### Restoring (Claude does this with you)
+
+1. Download the backup file you want from cPanel → File Manager → `absorbhr-backups`.
+2. Unlock it: `gpg -d absorbhr-backup-YYYY-MM-DD.tar.gz.gpg | tar -xz` (asks for the backup passphrase). Inside:
+   `roles.sql`, `schema.sql`, `data.sql`, `vault-secrets.json` and `files/<bucket>/…`.
+3. Into a **new, empty** Supabase project (never over the live one until the restore has been checked):
+   ```
+   psql "$NEW_DB_URL" --single-transaction -v ON_ERROR_STOP=1 \
+     -f roles.sql -f schema.sql -c 'set session_replication_role = replica' -f data.sql
+   ```
+4. Put each secret from `vault-secrets.json` back with `select vault.create_secret('<secret>', '<name>', '<description>');`
+   — `pii_encryption_key` first, with exactly the old value, or encrypted data stays unreadable.
+5. Re-create the scheduled jobs (`cron.schedule` lines at the end of migrations 0005 and 0014), upload the files in
+   `files/` to the same buckets and paths with `SUPABASE_SERVICE_ROLE_KEY` of the new project, then point Krystal's
+   environment variables at the new project.
+6. Check: sign in, open an employee's sickness record (proves the key works) and a document (proves the files).
+
 ---
 
 ## Free-plan limits to know about
 
-- **Backups:** Supabase's free plan doesn't include downloadable backups. A nightly encrypted backup to your
-  Krystal storage is the next thing Claude adds. Upgrading Supabase to Pro (about $25/month) is the first upgrade
-  to make when you can.
+- **Backups:** Supabase's free plan doesn't include downloadable backups, so Part 7 makes a nightly encrypted copy on
+  Krystal (30 nights kept; a day's changes could be lost at worst). Upgrading Supabase to Pro (about $25/month) adds
+  its own daily backups and is the first upgrade to make when you can.
 - **Pausing:** free projects pause after 7 days without use. The 5-minute job and normal use keep it awake.
 - **Size:** 500 MB database and 1 GB of files — plenty for the first clients; the Supabase dashboard shows usage.
 - **Leaked-password check** is a Pro feature; passwords still need 12+ characters with mixed types, and admins must

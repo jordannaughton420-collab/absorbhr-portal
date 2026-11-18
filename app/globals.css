@@ -31,7 +31,6 @@
   --destructive-foreground: #ffffff;
   --success: #05603a;
   --warning: #93370d;
-  --leave-other: #7a3aa0;
 
   --radius: 0.875rem;
 }
@@ -55,7 +54,6 @@
   --color-destructive-foreground: var(--destructive-foreground);
   --color-success: var(--success);
   --color-warning: var(--warning);
-  --color-leave-other: var(--leave-other);
 
   --radius-sm: calc(var(--radius) - 6px);
   --radius-md: calc(var(--radius) - 4px);

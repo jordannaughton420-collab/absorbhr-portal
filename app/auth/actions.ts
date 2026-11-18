@@ -2,7 +2,7 @@
 
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
-import { rateLimit } from "@/lib/rate-limit";
+import { rateLimit, rateLimitAccount } from "@/lib/rate-limit";
 import { logEvent } from "@/lib/audit";
 import { safeError, type ActionResult } from "@/lib/errors";
 import { fieldErrors, parseForm } from "@/lib/validation/form";
@@ -20,7 +20,12 @@ const TOO_MANY = "Too many attempts. Please wait 15 minutes and try again.";
 export async function signInWithPassword(formData: FormData): Promise<ActionResult> {
   const parsed = parseForm(loginSchema, formData);
   if (!parsed.success) return { ok: false, error: INVALID, fieldErrors: fieldErrors(parsed.error) };
-  if (!(await rateLimit("login", parsed.data.email))) return { ok: false, error: TOO_MANY };
+  // Both always count: per address, and per account across every address.
+  const [byAddress, byAccount] = await Promise.all([
+    rateLimit("login", parsed.data.email),
+    rateLimitAccount("loginAccount", parsed.data.email),
+  ]);
+  if (!byAddress || !byAccount) return { ok: false, error: TOO_MANY };
 
   const supabase = await createClient();
   const { error } = await supabase.auth.signInWithPassword(parsed.data);
@@ -115,9 +120,18 @@ export async function startMfaEnrolment(): Promise<
 export async function verifyMfa(formData: FormData): Promise<ActionResult> {
   const parsed = parseForm(mfaCodeSchema, formData);
   if (!parsed.success) return { ok: false, error: INVALID, fieldErrors: fieldErrors(parsed.error) };
-  if (!(await rateLimit("mfaVerify"))) return { ok: false, error: TOO_MANY };
 
   const supabase = await createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  if (!user) return { ok: false, error: "Your sign-in has expired. Please sign in again." };
+  const [byAddress, byAccount] = await Promise.all([
+    rateLimit("mfaVerify"),
+    rateLimitAccount("mfaVerifyAccount", user.id),
+  ]);
+  if (!byAddress || !byAccount) return { ok: false, error: TOO_MANY };
+
   const { data: factors } = await supabase.auth.mfa.listFactors();
   const enrolling = formData.get("factorId");
   const factor =

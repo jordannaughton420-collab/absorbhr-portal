@@ -59,3 +59,20 @@ export const supportSessionSchema = z.object({
   reason: z.string().trim().min(10, "Give a reason of at least 10 characters").max(500),
   minutes: z.coerce.number().int().min(5).max(240),
 });
+
+// How long assistant chats are kept. Companies can shorten it; 6 years is the maximum.
+export const ASSISTANT_RETENTION = {
+  "72": "6 years (recommended, matches employment claim time limits)",
+  "36": "3 years",
+  "24": "2 years",
+  "12": "1 year",
+  "6": "6 months",
+} as const;
+
+export const assistantSettingsSchema = z.object({
+  assistant_enabled: checkbox,
+  assistant_chat_retention_months: z.coerce
+    .number()
+    .int()
+    .refine((n) => String(n) in ASSISTANT_RETENTION, "Choose one of the options"),
+});

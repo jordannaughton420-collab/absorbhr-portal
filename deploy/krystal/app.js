@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-require-imports -- Passenger loads this start file as CommonJS */
 // Start file for Krystal's cPanel "Setup Node.js App" (CloudLinux + Phusion Passenger).
 // cPanel reserves the app folder's node_modules for its own use, so the self-contained
 // Next.js build lives in ./build with its own node_modules, and this file starts it.

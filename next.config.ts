@@ -17,6 +17,9 @@ const nextConfig: NextConfig = {
   // A self-contained build (server + only the packages it needs) for hosting on Krystal.
   // Vercel ignores this setting.
   output: "standalone",
+  // The end-to-end tests run their own server beside a normal `npm run dev`; a separate
+  // build folder stops the two from overwriting each other's files.
+  distDir: process.env.NEXT_DIST_DIR || ".next",
   async headers() {
     return [{ source: "/:path*", headers: securityHeaders }];
   },

@@ -13,8 +13,10 @@ business or legal decision; items marked **[LEGAL]** need review by a qualified 
 | Each client company (tenant) | **Controller** for its employees' data | Decides why and how employee data is used. |
 | AbsorbHR (Absorb Employment Law Consultants Ltd) | **Processor** providing the platform | Needs a written processing agreement (Art. 28) with every client. **[LEGAL]** |
 | Supabase Inc. | Sub-processor: database, authentication, file storage | Project hosted in **AWS eu-west-2 (London)**. Sign Supabase's DPA. **[DECISION]** |
-| Vercel Inc. | Sub-processor: website hosting | Functions pinned to **lhr1 (London)** in `vercel.json`. Sign Vercel's DPA. |
+| Krystal Hosting Ltd | Sub-processor: live website hosting, outgoing email (SMTP mailbox), encrypted nightly backups | UK data centres. Hosts absorbhr-portal.co.uk. Check Krystal's DPA. |
+| Vercel Inc. | Sub-processor: website hosting (test site, fake data only) | Functions pinned to **lhr1 (London)** in `vercel.json`. Sign Vercel's DPA. |
 | Resend | Sub-processor: email delivery | Built (Phase 5); switched on when the API key is added. Emails contain only the recipient's address, a one-line notice and a link — never names, dates or health details. Sign Resend's DPA and choose its EU region if offered. **[DECISION]** |
+| Anthropic PBC | Sub-processor: AI assistant (Phase 6) | Only when a company's Client Admin switches the assistant on. Receives what a person types plus names, job titles, departments and dates the assistant looks up for them. Never receives health, sickness reasons, diversity, case, pay or home details (the assistant has no tool that reads them). Sign Anthropic's DPA (commercial terms), check data retention and transfer terms, and add to the sub-processor list and privacy notice before switching on. **[DECISION]** |
 
 AbsorbHR acting as an HR consultancy for a client (giving advice) may make it a controller for that advice work —
 the platform role and the consultancy role should be separated in contracts. **[LEGAL]**
@@ -193,9 +195,23 @@ later phases. **[DECISION]** if clients need any of them.
   old email records.
 - 47 automated tests cover Phase 5 (238 in total).
 
+### AI assistant (Phase 6)
+- Off for every company until its own Client Admin switches it on (database-enforced; AbsorbHR support cannot switch it on).
+- The assistant never changes records. It records a *suggested* change; the person who asked must tap Confirm within 24 hours, once. The change then runs with that person's own permissions through the same database functions and Row Level Security as the normal forms. The confirm card's wording is built from the database, not from the AI's text.
+- Every suggestion, confirmation, cancellation and outcome is written to the append-only audit log by trigger, and outlives the chat.
+- Chats are private to the person (not visible to HR, admins or AbsorbHR). Kept for the company's chosen period after the last message (default and maximum 6 years), then deleted nightly.
+- Company notes ("remember this") are saved only on Confirm, readable by the company, removable by their author or a Client Admin; notes that look like personal information are refused.
+- Subject access exports include the person's own chats and the suggestions made about them (flagged for HR review, as chats can mention colleagues). Anonymising an employee clears the details of suggestions about them; deleting their login deletes their chats.
+- Voice input uses the browser's own speech recognition (in Chrome, processed by Google); typing always works.
+- Limits: 40 messages per person per hour.
+- Tests: `supabase/tests/08_assistant.sql` (45), `tests/assistant.test.ts` (18).
+
 ### Encryption
 - **In transit:** HTTPS only; `Strict-Transport-Security` header with preload.
 - **At rest:** Supabase encrypts all database storage (AES-256) and backups.
+- **Off-site backup:** a nightly GitHub Actions job copies the database, Vault secrets and uploaded files, encrypts
+  them with a passphrase (AES-256, `gpg`) before they leave the job, and stores them in a private folder on Krystal
+  (UK); 30 nights kept. The passphrase is held only in AbsorbHR's password manager and as a GitHub secret.
 - **Column-level:** special-category data (diversity answers, sickness reasons, return-to-work notes) is encrypted with AES-256 (`pgcrypto`) using a key generated inside the
   database and stored in **Supabase Vault**. The key never appears in code, configuration or the browser. Decryption
   only happens inside a database function that checks permission and writes an audit entry in the same step.
@@ -261,7 +277,7 @@ lawyer to confirm, and record the reasoning in your DPIA and retention policy.
 ## 7. Organisational measures (for AbsorbHR to complete)
 
 - [ ] Art. 28 processing agreement template for clients **[LEGAL]**
-- [ ] Sub-processor list published to clients (Supabase, Vercel, Resend)
+- [ ] Sub-processor list published to clients (Supabase, Krystal, Vercel, Resend, and Anthropic if the assistant is used)
 - [ ] Sign Supabase and Vercel DPAs
 - [ ] Staff confidentiality and data protection training for anyone with platform admin access
 - [ ] Quarterly review of who holds AbsorbHR platform admin access

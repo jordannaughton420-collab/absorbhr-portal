@@ -19,6 +19,7 @@ Each client company's data is completely separated from every other client's, an
 | 3 | Documents & policies | ✅ Approved 26 Oct 2026 |
 | 4 | Onboarding, reviews, cases, self-service | ✅ Approved 26 Oct 2026 |
 | 5 | Reports, emails, GDPR tools | ✅ Approved 26 Oct 2026 |
+| 6 | AI assistant (suggest, then a person confirms) | 🧪 Built 18 Nov 2026, on the test database; not live |
 
 Test site: <https://absorbhr-portal.vercel.app>
 
@@ -32,7 +33,10 @@ Test site: <https://absorbhr-portal.vercel.app>
 | `brightwater.admin@example.com` | Client Admin | Everything at Brightwater, plus roles, security settings and the audit log |
 | `northgate.admin@example.com` | Client Admin | Only Northgate Logistics — never Brightwater |
 | `absorb.admin@example.com` | AbsorbHR admin | Client list; nothing else until a support session is opened |
-| `qa.admin@example.com` | Client Admin (no employee record) | Used by Claude's automated browser tests — its two-step code is held by the test scripts, so you won't be able to sign in with it |
+
+The end-to-end tests (`npm run test:e2e`) sign in as these accounts. They set up the two-step codes for
+the Brightwater admin, Brightwater HR and Northgate admin themselves, so if you add one of those to your own
+authenticator app, the next test run replaces it.
 
 The demo password is set when the demo data is loaded (`SEED_PASSWORD`) and is never stored in this repository.
 Accounts that need MFA ask you to scan a QR code with an authenticator app (Microsoft Authenticator, Google
@@ -70,11 +74,17 @@ These talk to the Supabase project through its Management API, using `SUPABASE_A
 | `npm run test:rls` | Run the 238 database tests (tenant isolation, roles, MFA, encryption, audit log, holiday maths, sickness, documents, policies, checklists, reviews, notes, cases, subject access, retention, breach log, email queue) |
 | `npm run db:types` | Regenerate TypeScript types from the database |
 | `npm test` | Run validation unit tests |
+| `npm run test:e2e:reset` | Reset the **test** database to the demo data, using `SEED_PASSWORD` from `.env.local`, and clear sign-in rate limits (refuses to run against production) |
+| `npm run test:e2e` | End-to-end tests: Chrome clicks through the portal on this computer (port 3100) as each demo user — sign-in and 2-step, walls between companies and roles, holiday booking and approval, the assistant being off, and WCAG 2.1 AA accessibility checks. Test database only. Builds the portal first; about 20 minutes in all |
+| `npm run test:e2e:report` | Open the report of the last end-to-end run, with screenshots of any failures |
+| `npm run test:live` | Read-only check of the live portal: login page loads, signed-out visitors are blocked, security headers are set. Never signs in |
 | `npm run lint` / `npm run typecheck` | Code quality checks |
 
 ## Branding
 
-- Logo: replace `public/brand/absorbhr-logo.svg` with the real logo (keep the same filename).
+- Logo: `public/brand/absorbhr-logo.png` (all purple exactly `#570080`, transparent background). If you replace it,
+  update `LOGO_WIDTH`/`LOGO_HEIGHT` in `components/brand/logo.tsx`.
+- Browser and phone icons: `app/favicon.ico`, `app/icon.png`, `app/apple-icon.png`.
 - Colours: defined once at the top of `app/globals.css` (`--brand-*` variables).
 
 ## Security notes

@@ -16,6 +16,8 @@ function navFor(ctx: SessionContext, pendingApprovals: number): NavItem[] {
   const isManager = ctx.role === "line_manager";
   const ownRecord = Boolean(ctx.employeeId) && !ctx.supportSession;
   const items: NavItem[] = [{ href: "/dashboard", label: "Dashboard", icon: "dashboard" }];
+  if (ctx.tenantId && !ctx.supportSession && ctx.settings?.assistant_enabled)
+    items.push({ href: "/assistant", label: "Assistant", icon: "assistant" });
   if (ownRecord)
     items.push({ href: `/employees/${ctx.employeeId}`, label: "My profile", icon: "profile" });
   if (ownRecord) items.push({ href: "/leave", label: "My leave", icon: "leave" });
@@ -108,7 +110,7 @@ export default async function AppLayout({ children }: { children: React.ReactNod
       {/* Desktop sidebar */}
       <aside className="hidden w-64 shrink-0 border-r bg-card p-5 lg:block">
         <Link href="/dashboard" aria-label="AbsorbHR Portal home">
-          <Logo height={36} />
+          <Logo height={34} />
         </Link>
         <div className="mt-8">{sidebar}</div>
       </aside>

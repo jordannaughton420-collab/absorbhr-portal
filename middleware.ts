@@ -1,5 +1,6 @@
 import { createServerClient } from "@supabase/ssr";
 import { NextResponse, type NextRequest } from "next/server";
+import { siteOrigin } from "@/lib/site-origin";
 
 // /api/cron is protected by its own secret instead of a sign-in.
 const PUBLIC_PATHS = ["/login", "/forgot-password", "/auth/", "/api/cron/"];
@@ -34,18 +35,9 @@ export async function middleware(request: NextRequest) {
   const path = request.nextUrl.pathname;
   const isPublic = PUBLIC_PATHS.some((p) => path.startsWith(p));
 
-  if (!user && !isPublic) {
-    const url = request.nextUrl.clone();
-    url.pathname = "/login";
-    url.search = "";
-    return NextResponse.redirect(url);
-  }
-  if (user && (path === "/" || path === "/login")) {
-    const url = request.nextUrl.clone();
-    url.pathname = "/dashboard";
-    url.search = "";
-    return NextResponse.redirect(url);
-  }
+  if (!user && !isPublic) return NextResponse.redirect(`${siteOrigin(request)}/login`);
+  if (user && (path === "/" || path === "/login"))
+    return NextResponse.redirect(`${siteOrigin(request)}/dashboard`);
 
   // Pages show personal data: never let browsers or proxies cache them.
   response.headers.set("Cache-Control", "private, no-store");

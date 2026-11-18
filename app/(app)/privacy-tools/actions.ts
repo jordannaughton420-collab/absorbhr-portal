@@ -54,13 +54,24 @@ export async function createSarExport(formData: FormData): Promise<ActionResult>
   const supabase = await createClient();
 
   // 1. The database checks permission, decrypts and records the export in the audit log.
-  const { data, error } = await supabase.rpc("sar_data", { p_employee: employee_id });
-  if (error || !data) return safeError(error, "sar.data");
+  const { data: core, error } = await supabase.rpc("sar_data", { p_employee: employee_id });
+  if (error || !core) return safeError(error, "sar.data");
+  // Assistant chats and the suggestions made about this person (same HR-only permission).
+  const { data: assistant, error: assistantError } = await supabase.rpc("assistant_sar_data", {
+    p_employee: employee_id,
+  });
+  if (assistantError) return safeError(assistantError, "sar.assistant");
+  const data = {
+    ...(core as Record<string, unknown>),
+    ...((assistant ?? {}) as Record<string, unknown>),
+  };
   const sar = data as SarJson;
   const needsReview =
     (sar.cases?.length ?? 0) > 0 ||
     (sar.one_to_one_notes ?? []).some((n) => n.private) ||
-    (sar.documents ?? []).some((d) => d.case_document);
+    (sar.documents ?? []).some((d) => d.case_document) ||
+    // Assistant chats can mention colleagues, so HR checks them before release.
+    ((data.assistant_chats as unknown[] | undefined)?.length ?? 0) > 0;
 
   // 2. Record the export (RLS re-checks access).
   const { data: row, error: insErr } = await supabase

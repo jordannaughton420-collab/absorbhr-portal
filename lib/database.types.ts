@@ -8,6 +8,204 @@ export type Database = {
   };
   public: {
     Tables: {
+      assistant_actions: {
+        Row: {
+          conversation_id: string;
+          created_at: string;
+          decided_at: string | null;
+          id: string;
+          kind: string;
+          payload: Json;
+          result_entity_id: string | null;
+          result_message: string | null;
+          status: string;
+          subject_employee_id: string | null;
+          summary: string;
+          tenant_id: string;
+          tool_use_id: string;
+          user_id: string;
+        };
+        Insert: {
+          conversation_id: string;
+          created_at?: string;
+          decided_at?: string | null;
+          id?: string;
+          kind: string;
+          payload: Json;
+          result_entity_id?: string | null;
+          result_message?: string | null;
+          status?: string;
+          subject_employee_id?: string | null;
+          summary: string;
+          tenant_id: string;
+          tool_use_id: string;
+          user_id: string;
+        };
+        Update: {
+          conversation_id?: string;
+          created_at?: string;
+          decided_at?: string | null;
+          id?: string;
+          kind?: string;
+          payload?: Json;
+          result_entity_id?: string | null;
+          result_message?: string | null;
+          status?: string;
+          subject_employee_id?: string | null;
+          summary?: string;
+          tenant_id?: string;
+          tool_use_id?: string;
+          user_id?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "assistant_actions_conversation_id_fkey";
+            columns: ["conversation_id"];
+            isOneToOne: false;
+            referencedRelation: "assistant_conversations";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "assistant_actions_subject_employee_id_fkey";
+            columns: ["subject_employee_id"];
+            isOneToOne: false;
+            referencedRelation: "employee_directory";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "assistant_actions_subject_employee_id_fkey";
+            columns: ["subject_employee_id"];
+            isOneToOne: false;
+            referencedRelation: "employees";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "assistant_actions_tenant_id_fkey";
+            columns: ["tenant_id"];
+            isOneToOne: false;
+            referencedRelation: "tenants";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
+      assistant_conversations: {
+        Row: {
+          created_at: string;
+          id: string;
+          tenant_id: string;
+          title: string;
+          updated_at: string;
+          user_id: string;
+        };
+        Insert: {
+          created_at?: string;
+          id?: string;
+          tenant_id: string;
+          title?: string;
+          updated_at?: string;
+          user_id: string;
+        };
+        Update: {
+          created_at?: string;
+          id?: string;
+          tenant_id?: string;
+          title?: string;
+          updated_at?: string;
+          user_id?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "assistant_conversations_tenant_id_fkey";
+            columns: ["tenant_id"];
+            isOneToOne: false;
+            referencedRelation: "tenants";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
+      assistant_memories: {
+        Row: {
+          created_at: string;
+          created_by: string | null;
+          id: string;
+          note: string;
+          tenant_id: string;
+          updated_at: string;
+        };
+        Insert: {
+          created_at?: string;
+          created_by?: string | null;
+          id?: string;
+          note: string;
+          tenant_id: string;
+          updated_at?: string;
+        };
+        Update: {
+          created_at?: string;
+          created_by?: string | null;
+          id?: string;
+          note?: string;
+          tenant_id?: string;
+          updated_at?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "assistant_memories_tenant_id_fkey";
+            columns: ["tenant_id"];
+            isOneToOne: false;
+            referencedRelation: "tenants";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
+      assistant_messages: {
+        Row: {
+          content: Json;
+          conversation_id: string;
+          created_at: string;
+          display_text: string | null;
+          id: string;
+          role: string;
+          seq: number;
+          tenant_id: string;
+        };
+        Insert: {
+          content: Json;
+          conversation_id: string;
+          created_at?: string;
+          display_text?: string | null;
+          id?: string;
+          role: string;
+          seq?: never;
+          tenant_id: string;
+        };
+        Update: {
+          content?: Json;
+          conversation_id?: string;
+          created_at?: string;
+          display_text?: string | null;
+          id?: string;
+          role?: string;
+          seq?: never;
+          tenant_id?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "assistant_messages_conversation_id_fkey";
+            columns: ["conversation_id"];
+            isOneToOne: false;
+            referencedRelation: "assistant_conversations";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "assistant_messages_tenant_id_fkey";
+            columns: ["tenant_id"];
+            isOneToOne: false;
+            referencedRelation: "tenants";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
       audit_log: {
         Row: {
           action: string;
@@ -2297,6 +2495,8 @@ export type Database = {
       };
       tenant_settings: {
         Row: {
+          assistant_chat_retention_months: number;
+          assistant_enabled: boolean;
           diversity_monitoring_enabled: boolean;
           employees_can_view_own_salary: boolean;
           leave_year_start_day: number;
@@ -2311,6 +2511,8 @@ export type Database = {
           updated_by: string | null;
         };
         Insert: {
+          assistant_chat_retention_months?: number;
+          assistant_enabled?: boolean;
           diversity_monitoring_enabled?: boolean;
           employees_can_view_own_salary?: boolean;
           leave_year_start_day?: number;
@@ -2325,6 +2527,8 @@ export type Database = {
           updated_by?: string | null;
         };
         Update: {
+          assistant_chat_retention_months?: number;
+          assistant_enabled?: boolean;
           diversity_monitoring_enabled?: boolean;
           employees_can_view_own_salary?: boolean;
           leave_year_start_day?: number;
@@ -2473,6 +2677,45 @@ export type Database = {
         Args: { p_early?: boolean; p_employee: string; p_reason?: string };
         Returns: undefined;
       };
+      assistant_cancel_action: {
+        Args: { p_action: string };
+        Returns: undefined;
+      };
+      assistant_claim_action: {
+        Args: { p_action: string };
+        Returns: {
+          conversation_id: string;
+          created_at: string;
+          decided_at: string | null;
+          id: string;
+          kind: string;
+          payload: Json;
+          result_entity_id: string | null;
+          result_message: string | null;
+          status: string;
+          subject_employee_id: string | null;
+          summary: string;
+          tenant_id: string;
+          tool_use_id: string;
+          user_id: string;
+        };
+        SetofOptions: {
+          from: "*";
+          to: "assistant_actions";
+          isOneToOne: true;
+          isSetofReturn: false;
+        };
+      };
+      assistant_finish_action: {
+        Args: {
+          p_action: string;
+          p_entity?: string;
+          p_message?: string;
+          p_ok: boolean;
+        };
+        Returns: undefined;
+      };
+      assistant_sar_data: { Args: { p_employee: string }; Returns: Json };
       bradford_scores: {
         Args: never;
         Returns: {
