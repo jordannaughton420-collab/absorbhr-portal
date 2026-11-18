@@ -25,6 +25,9 @@ const SECTION_TITLES: Record<string, string> = {
   one_to_one_notes: "1-to-1 notes",
   cases: "Disciplinary and grievance cases",
   correction_requests: "Correction requests",
+  shifts: "Shifts",
+  open_shifts_offered: "Open shifts offered",
+  shift_groups: "Open shift groups",
   who_accessed_this_record: "Who has accessed or changed this record",
 };
 

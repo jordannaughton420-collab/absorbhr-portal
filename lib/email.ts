@@ -8,6 +8,21 @@ type OutboxUpdate = Database["public"]["Tables"]["email_outbox"]["Update"];
 // Emails never contain personal or sensitive detail: just what kind of thing is waiting and a link.
 // The person signs in to see the detail.
 const TEMPLATES: Record<string, { subject: string; body: string; button: string }> = {
+  open_shift_offered: {
+    subject: "A shift is available to pick up",
+    body: "An open shift has been posted that you can pick up. The first person to accept it gets it.",
+    button: "See open shifts",
+  },
+  open_shift_filled: {
+    subject: "Your open shift has been filled",
+    body: "Someone has accepted the open shift you posted. It's now on the rota.",
+    button: "View the rota",
+  },
+  shift_cancelled: {
+    subject: "One of your shifts was cancelled",
+    body: "A shift you were down to work has been cancelled.",
+    button: "View my shifts",
+  },
   leave_requested: {
     subject: "A holiday request is waiting for you",
     body: "Someone in your team has asked for time off.",

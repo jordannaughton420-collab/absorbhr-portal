@@ -3,8 +3,10 @@ import type Anthropic from "@anthropic-ai/sdk";
 import type { SupabaseClient } from "@supabase/supabase-js";
 import type { Database } from "@/lib/database.types";
 import { CONTRACT_TYPES } from "@/lib/validation/employee";
+import { LEFT_OUT, addDays, londonMidnightIso, shiftWhen, shiftWhenFromParts } from "@/lib/shifts";
 import {
   ACTION_SCHEMAS,
+  WHO_CAN,
   allowedFor,
   dateRange,
   isActionKind,
@@ -22,6 +24,8 @@ export type ToolContext = {
   employeeId: string | null;
   isHr: boolean;
   isManager: boolean;
+  /** HR, or a line manager whose company lets managers plan shifts. */
+  canPlanShifts: boolean;
   conversationId: string;
 };
 
@@ -39,6 +43,19 @@ const obj = (properties: Record<string, unknown>, required: string[] = []) => ({
   required,
   additionalProperties: false,
 });
+
+const hhmm = (description: string) => ({
+  type: "string",
+  pattern: "^([01][0-9]|2[0-3]):[0-5][0-9]$",
+  description,
+});
+const SHIFT_TIMES = {
+  date: day("The day the shift starts (UK date). 'Tonight' means today."),
+  start_time: hhmm("Start, 24-hour UK time, e.g. 20:00."),
+  end_time: hhmm(
+    "End, 24-hour UK time, e.g. 05:00. An end earlier than the start means the next morning.",
+  ),
+};
 
 const SUGGEST =
   " This does NOT make the change: it shows the person a card with Confirm and Cancel buttons, and only their Confirm carries it out.";
@@ -101,6 +118,42 @@ export const TOOLS: Anthropic.Beta.BetaTool[] = [
     description:
       "The company's leave types, departments, locations and checklist templates, with their ids.",
     input_schema: obj({}),
+  },
+  {
+    name: "list_shifts",
+    description:
+      "Shifts on the rota between two dates that the user can see, including open shifts still waiting for someone (with who they were offered to) and who picked up an open shift.",
+    input_schema: obj(
+      {
+        from: day("First day."),
+        to: day("Last day (at most 31 days after from)."),
+        employee_id: uuid("Only this person. Optional."),
+      },
+      ["from", "to"],
+    ),
+  },
+  {
+    name: "list_shift_groups",
+    description:
+      "The company's open shift groups (people happy to be offered extra shifts) with their ids and who is in each.",
+    input_schema: obj({}),
+  },
+  {
+    name: "check_open_shift",
+    description:
+      "Before posting an open shift: who it would go to and who would be left out and why (on holiday, off sick, already working, under 11 hours' rest, no login, not in the manager's team). Give a group, named people, or both. HR and managers who plan shifts only.",
+    input_schema: obj(
+      {
+        ...SHIFT_TIMES,
+        group_id: uuid("Send to everyone free in this group, from list_shift_groups. Optional."),
+        employee_ids: {
+          type: "array",
+          items: { type: "string", format: "uuid" },
+          description: "Named people, from find_people. Optional.",
+        },
+      },
+      ["date", "start_time", "end_time"],
+    ),
   },
   {
     name: "suggest_request_leave",
@@ -213,6 +266,69 @@ export const TOOLS: Anthropic.Beta.BetaTool[] = [
       SUGGEST,
     input_schema: obj({ note: str("The note, one sentence, under 500 characters.") }, ["note"]),
   },
+  {
+    name: "suggest_create_shift",
+    description:
+      "Suggest putting a named person straight onto the rota for a shift (HR, or managers who plan shifts, for their own team). The portal refuses it if they are on holiday, off sick, already working, or would get under 11 hours' rest, unless allow_short_rest is true; only set that if the user explicitly says the shorter rest is agreed." +
+      SUGGEST,
+    input_schema: obj(
+      {
+        employee_id: uuid("Who."),
+        ...SHIFT_TIMES,
+        role_label: str("Role or area, e.g. Bar or Night cover. Optional."),
+        location_id: uuid("Optional, from list_options."),
+        notes: str("Optional note about the shift itself. Never personal details."),
+        allow_short_rest: bool("True only if the user says a rest break under 11 hours is agreed."),
+      },
+      ["employee_id", "date", "start_time", "end_time"],
+    ),
+  },
+  {
+    name: "suggest_cancel_shift",
+    description:
+      "Suggest cancelling a shift or an open shift that hasn't started. The person on it is emailed." +
+      SUGGEST,
+    input_schema: obj({ shift_id: uuid("From list_shifts.") }, ["shift_id"]),
+  },
+  {
+    name: "suggest_post_open_shift",
+    description:
+      "Suggest posting an open shift: everyone free in the group and/or the named people gets an email, and the first to accept it in the portal gets it; nobody else can after that. Use check_open_shift first so you can tell the user who it will go to. You can never accept a shift for anyone: only the employee can, on their My shifts page." +
+      SUGGEST,
+    input_schema: obj(
+      {
+        ...SHIFT_TIMES,
+        role_label: str("Role or area, e.g. Night cover. Optional."),
+        location_id: uuid("Optional, from list_options."),
+        notes: str("Optional note about the shift itself. Never personal details."),
+        group_id: uuid("From list_shift_groups. Optional if employee_ids is given."),
+        employee_ids: {
+          type: "array",
+          items: { type: "string", format: "uuid" },
+          description: "Named people, from find_people. Optional if group_id is given.",
+        },
+      },
+      ["date", "start_time", "end_time"],
+    ),
+  },
+  {
+    name: "suggest_add_to_shift_group",
+    description:
+      "Suggest adding a person to an open shift group, e.g. when told 'Jamie is on open shifts'. Use the existing group's exact name from list_shift_groups; if there is none, use 'Open shifts'. HR only." +
+      SUGGEST,
+    input_schema: obj({ employee_id: uuid("Who."), group_name: str("The group's name.") }, [
+      "employee_id",
+      "group_name",
+    ]),
+  },
+  {
+    name: "suggest_remove_from_shift_group",
+    description: "Suggest taking a person out of an open shift group (HR only)." + SUGGEST,
+    input_schema: obj({ employee_id: uuid("Who."), group_id: uuid("From list_shift_groups.") }, [
+      "employee_id",
+      "group_id",
+    ]),
+  },
 ];
 
 const SUGGEST_TOOLS: Record<string, ActionKind> = {
@@ -224,6 +340,11 @@ const SUGGEST_TOOLS: Record<string, ActionKind> = {
   suggest_update_employee: "update_employee",
   suggest_start_checklist: "start_checklist",
   suggest_remember: "remember",
+  suggest_create_shift: "create_shift",
+  suggest_cancel_shift: "cancel_shift",
+  suggest_post_open_shift: "post_open_shift",
+  suggest_add_to_shift_group: "add_to_shift_group",
+  suggest_remove_from_shift_group: "remove_from_shift_group",
 };
 
 export type ToolOutcome = { content: string; isError?: boolean; actionId?: string };
@@ -486,7 +607,142 @@ async function listOptions(ctx: ToolContext) {
   };
 }
 
+// ---------------------------------------------------------------- shifts
+
+async function listShifts(
+  ctx: ToolContext,
+  input: { from: string; to: string; employee_id?: string },
+) {
+  const span = (Date.parse(input.to) - Date.parse(input.from)) / 86_400_000;
+  if (!(span >= 0 && span <= 31)) return fail("Use a range of up to 31 days, from before to.");
+  let q = ctx.supabase
+    .from("shifts")
+    .select(
+      "id, employee_id, starts_at, ends_at, role_label, status, claimed_at, shift_groups(name)",
+    )
+    .neq("status", "cancelled")
+    .gte("starts_at", londonMidnightIso(input.from))
+    .lt("starts_at", londonMidnightIso(addDays(input.to, 1)))
+    .order("starts_at")
+    .limit(100);
+  if (input.employee_id) q = q.eq("employee_id", input.employee_id);
+  const { data, error } = await q;
+  if (error) return fail("Could not read the rota.");
+  const openIds = (data ?? []).filter((s) => s.status === "open").map((s) => s.id);
+  const { data: offers } = openIds.length
+    ? await ctx.supabase
+        .from("shift_offers")
+        .select("shift_id, employee_id, response")
+        .in("shift_id", openIds)
+    : { data: [] };
+  const names = await namesFor(ctx, [
+    ...(data ?? []).flatMap((s) => (s.employee_id ? [s.employee_id] : [])),
+    ...(offers ?? []).map((o) => o.employee_id),
+  ]);
+  return {
+    content: JSON.stringify(
+      (data ?? []).map((s) => ({
+        id: s.id,
+        when: shiftWhen(s.starts_at, s.ends_at),
+        role: s.role_label,
+        status: s.status === "open" ? "open, waiting for someone to accept" : "on the rota",
+        person: s.employee_id ? (names.get(s.employee_id) ?? "Someone") : null,
+        picked_up_as_open_shift: Boolean(s.claimed_at),
+        group: s.shift_groups?.name ?? null,
+        offered_to:
+          s.status === "open"
+            ? (offers ?? [])
+                .filter((o) => o.shift_id === s.id)
+                .map((o) => ({
+                  person: names.get(o.employee_id) ?? "Someone",
+                  said_no: o.response === "declined",
+                }))
+            : undefined,
+      })),
+    ),
+  };
+}
+
+async function listShiftGroups(ctx: ToolContext) {
+  const [{ data: groups, error }, { data: members }] = await Promise.all([
+    ctx.supabase.from("shift_groups").select("id, name").order("name"),
+    ctx.supabase.from("shift_group_members").select("group_id, employee_id"),
+  ]);
+  if (error) return fail("Could not read the open shift groups.");
+  const names = await namesFor(
+    ctx,
+    (members ?? []).map((m) => m.employee_id),
+  );
+  return {
+    content: JSON.stringify(
+      (groups ?? []).map((g) => ({
+        id: g.id,
+        name: g.name,
+        members: (members ?? [])
+          .filter((m) => m.group_id === g.id)
+          .map((m) => ({ id: m.employee_id, name: names.get(m.employee_id) ?? "Someone" })),
+      })),
+    ),
+  };
+}
+
+type Candidate = { employee_id: string; name: string; available: boolean; reason: string | null };
+
+async function openShiftCandidates(
+  ctx: ToolContext,
+  p: {
+    date: string;
+    start_time: string;
+    end_time: string;
+    group_id?: string;
+    employee_ids?: string[];
+  },
+): Promise<Candidate[] | null> {
+  const { data, error } = await ctx.supabase.rpc("open_shift_candidates", {
+    p_date: p.date,
+    p_start: p.start_time,
+    p_end: p.end_time,
+    p_group: p.group_id,
+    p_employees: p.employee_ids?.length ? p.employee_ids : undefined,
+  });
+  if (error) return null;
+  return (data ?? []) as Candidate[];
+}
+
+function candidateText(list: Candidate[]) {
+  const free = list.filter((c) => c.available).map((c) => c.name);
+  const out = list
+    .filter((c) => !c.available)
+    .map((c) => `${c.name} (${LEFT_OUT[c.reason ?? ""] ?? "not available"})`);
+  return { free, out };
+}
+
+async function checkOpenShift(ctx: ToolContext, input: Record<string, unknown>) {
+  if (!ctx.canPlanShifts)
+    return fail(
+      "This person can't plan shifts. HR can, and line managers can if the company's Client Admin switches it on in Company settings.",
+    );
+  const parsed = ACTION_SCHEMAS.post_open_shift.safeParse(input);
+  if (!parsed.success)
+    return fail(
+      `The details don't look right: ${parsed.error.issues.map((i) => i.message).join("; ")}.`,
+    );
+  const list = await openShiftCandidates(ctx, parsed.data);
+  if (!list) return fail("Couldn't check that. The group id may be wrong: use list_shift_groups.");
+  const { free, out } = candidateText(list);
+  return {
+    content: JSON.stringify({
+      shift: shiftWhenFromParts(parsed.data.date, parsed.data.start_time, parsed.data.end_time),
+      would_go_to: free,
+      left_out: out,
+    }),
+  };
+}
+
 // ---------------------------------------------------------------- suggestions
+
+/** A reason the suggestion can't be made, worded for the assistant to pass on. */
+class Explain extends Error {}
 
 /** Builds the confirm card's wording from the database, not from the assistant's own words. */
 async function describe(ctx: ToolContext, kind: ActionKind, p: Record<string, unknown>) {
@@ -573,6 +829,78 @@ async function describe(ctx: ToolContext, kind: ActionKind, p: Record<string, un
     }
     case "remember":
       return { subject: null, text: `Remember for everyone in the company: "${p.note}"` };
+    case "create_shift": {
+      const person = await who(p.employee_id);
+      const loc = await nameOf(ctx, "locations", p.location_id as string | undefined);
+      const extra = [p.role_label as string | undefined, loc].filter(Boolean).join(", ");
+      return {
+        subject: person.id,
+        text: `Put ${person.name} on the rota: ${shiftWhenFromParts(p.date as string, p.start_time as string, p.end_time as string)}${extra ? `, ${extra}` : ""}.${p.allow_short_rest ? " Allows a rest break shorter than 11 hours." : ""}`,
+      };
+    }
+    case "cancel_shift": {
+      const { data: s } = await ctx.supabase
+        .from("shifts")
+        .select("employee_id, starts_at, ends_at, status")
+        .eq("id", p.shift_id as string)
+        .maybeSingle();
+      if (!s) throw new Error("shift");
+      if (s.status === "cancelled") throw new Explain("That shift is already cancelled.");
+      const when = shiftWhen(s.starts_at, s.ends_at);
+      if (!s.employee_id) return { subject: null, text: `Cancel the open shift: ${when}.` };
+      const person = await who(s.employee_id);
+      return {
+        subject: person.id,
+        text: `Cancel ${person.name}'s shift: ${when}. They'll get an email.`,
+      };
+    }
+    case "post_open_shift": {
+      const list = await openShiftCandidates(ctx, p as never);
+      if (!list) throw new Error("group");
+      const { free, out } = candidateText(list);
+      if (!free.length)
+        throw new Explain(
+          `Nobody chosen is free for that shift, so it can't be posted.${out.length ? ` Left out: ${out.join("; ")}.` : ""} Suggest other people or another time.`,
+        );
+      const group = p.group_id
+        ? (
+            await ctx.supabase
+              .from("shift_groups")
+              .select("name")
+              .eq("id", p.group_id as string)
+              .maybeSingle()
+          ).data?.name
+        : null;
+      const loc = await nameOf(ctx, "locations", p.location_id as string | undefined);
+      const extra = [p.role_label as string | undefined, loc].filter(Boolean).join(", ");
+      return {
+        subject: null,
+        text:
+          `Post an open shift: ${shiftWhenFromParts(p.date as string, p.start_time as string, p.end_time as string)}${extra ? `, ${extra}` : ""}. ` +
+          `Emailed to ${free.join(", ")}${group ? ` (free people in the "${group}" group${(p.employee_ids as string[]).length ? " and those named" : ""})` : ""}. The first to accept gets it.` +
+          (out.length ? ` Not sent to ${out.join(", ")}.` : ""),
+      };
+    }
+    case "add_to_shift_group": {
+      const person = await who(p.employee_id);
+      return {
+        subject: person.id,
+        text: `Add ${person.name} to the "${p.group_name}" open shift group, so they can be offered open shifts.`,
+      };
+    }
+    case "remove_from_shift_group": {
+      const person = await who(p.employee_id);
+      const { data: g } = await ctx.supabase
+        .from("shift_groups")
+        .select("name")
+        .eq("id", p.group_id as string)
+        .maybeSingle();
+      if (!g) throw new Error("group");
+      return {
+        subject: person.id,
+        text: `Take ${person.name} out of the "${g.name}" open shift group.`,
+      };
+    }
   }
 }
 
@@ -584,7 +912,9 @@ async function suggest(
 ): Promise<ToolOutcome> {
   if (!allowedFor(kind, ctx))
     return fail(
-      "This person's role does not allow that change. Tell them who can do it (their manager or HR) instead.",
+      WHO_CAN[kind] === "planner" && ctx.isManager
+        ? "Line managers can only plan shifts if the company's Client Admin switches it on in Company settings. Until then HR plans shifts."
+        : "This person's role does not allow that change. Tell them who can do it (their manager or HR) instead.",
     );
   const parsed = ACTION_SCHEMAS[kind].safeParse(input);
   if (!parsed.success)
@@ -600,9 +930,10 @@ async function suggest(
   let described: { subject: string | null; text: string };
   try {
     described = await describe(ctx, kind, payload);
-  } catch {
+  } catch (e) {
+    if (e instanceof Explain) return fail(e.message);
     return fail(
-      "One of the ids doesn't match anything this person can see. Look it up again with find_people, list_leave_requests or list_options.",
+      "One of the ids doesn't match anything this person can see. Look it up again with find_people, list_leave_requests, list_shifts, list_shift_groups or list_options.",
     );
   }
 
@@ -654,6 +985,13 @@ export async function runTool(
         return await bankHolidays(ctx, args as { from: string; to: string; employee_id?: string });
       case "list_options":
         return await listOptions(ctx);
+      case "list_shifts":
+        if (!args.from || !args.to) return fail("Give both from and to dates.");
+        return await listShifts(ctx, args as { from: string; to: string; employee_id?: string });
+      case "list_shift_groups":
+        return await listShiftGroups(ctx);
+      case "check_open_shift":
+        return await checkOpenShift(ctx, input as Record<string, unknown>);
     }
     const kind = SUGGEST_TOOLS[name];
     if (kind && isActionKind(kind)) return await suggest(ctx, kind, toolUseId, input);

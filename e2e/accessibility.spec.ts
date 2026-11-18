@@ -15,8 +15,9 @@ const PAGES: Record<Exclude<Role, "ngEmployee" | "ngAdmin">, string[]> = {
     "/requests",
     "/privacy",
     "/assistant",
+    "/shifts",
   ],
-  bwManager: ["/leave/approvals", "/employees"],
+  bwManager: ["/leave/approvals", "/employees", "/rota"],
   bwHr: [
     "/employees",
     "/employees/new",
@@ -26,6 +27,7 @@ const PAGES: Record<Exclude<Role, "ngEmployee" | "ngAdmin">, string[]> = {
     "/settings",
     "/checklists/templates",
     "/policies/new",
+    "/rota",
   ],
   bwAdmin: ["/breaches", "/audit-log"],
 };

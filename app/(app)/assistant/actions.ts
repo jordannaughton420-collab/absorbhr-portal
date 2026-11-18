@@ -85,6 +85,9 @@ export async function sendMessage(input: {
       employeeId: ctx.employeeId,
       isHr: ctx.isHr,
       isManager: ctx.role === "line_manager",
+      canPlanShifts:
+        ctx.isHr ||
+        (ctx.role === "line_manager" && Boolean(ctx.settings?.managers_can_plan_shifts)),
       conversationId,
     },
     {
