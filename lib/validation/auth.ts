@@ -33,9 +33,18 @@ export const resetPasswordSchema = z
     path: ["confirm"],
   });
 
-export const mfaCodeSchema = z.object({
-  code: z
-    .string()
-    .trim()
-    .regex(/^\d{6}$/, "Enter the 6-digit code from your authenticator app"),
-});
+const totpCode = z
+  .string()
+  .trim()
+  .regex(/^\d{6}$/, "Enter the 6-digit code from your authenticator app");
+
+export const mfaCodeSchema = z.object({ code: totpCode });
+
+// For accounts with two-step verification: the sign-in service only lets a password change
+// through once the 6-digit code has been checked in the same session.
+export const resetPasswordWithCodeSchema = z
+  .object({ password: newPasswordSchema, confirm: z.string(), code: totpCode })
+  .refine((v) => v.password === v.confirm, {
+    message: "Passwords do not match",
+    path: ["confirm"],
+  });

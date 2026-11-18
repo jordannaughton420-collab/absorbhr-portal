@@ -18,6 +18,8 @@ test("HR posts an open shift, the first person to accept gets it, nobody else ca
   browser,
 }) => {
   const day = pickDay();
+  // A unique label, so shifts left by earlier runs never match.
+  const label = `Night cover ${Date.now().toString(36)}`;
 
   // Harper (HR) posts a night shift to Jamie and Morgan.
   const hrCtx = await browser.newContext(as("bwHr"));
@@ -31,7 +33,7 @@ test("HR posts an open shift, the first person to accept gets it, nobody else ca
   await post.getByLabel("Date").fill(day);
   await post.getByLabel("Starts").fill("20:00");
   await post.getByLabel("Ends").fill("05:00");
-  await post.getByLabel("Role or area").fill("Night cover e2e");
+  await post.getByLabel("Role or area").fill(label);
   await post.getByLabel("Send to a group").selectOption("");
   await post.getByLabel("Jamie Crumb").check();
   await post.getByLabel("Morgan Bakewell").check();
@@ -42,7 +44,7 @@ test("HR posts an open shift, the first person to accept gets it, nobody else ca
   const empCtx = await browser.newContext(as("bwEmployee"));
   const emp = await empCtx.newPage();
   await emp.goto("/shifts");
-  const offer = emp.getByRole("listitem").filter({ hasText: "Night cover e2e" });
+  const offer = emp.getByRole("listitem").filter({ hasText: label });
   await expect(offer).toBeVisible();
   await offer.getByRole("button", { name: "Accept shift" }).click();
   await expect(emp.getByText("It's yours.")).toBeVisible();
@@ -50,7 +52,7 @@ test("HR posts an open shift, the first person to accept gets it, nobody else ca
   await expect(
     emp
       .getByRole("listitem")
-      .filter({ hasText: "Night cover e2e" })
+      .filter({ hasText: label })
       .filter({ hasText: "Open shift you picked up" }),
   ).toBeVisible();
   await empCtx.close();
@@ -59,7 +61,7 @@ test("HR posts an open shift, the first person to accept gets it, nobody else ca
   const mgrCtx = await browser.newContext(as("bwManager"));
   const mgr = await mgrCtx.newPage();
   await mgr.goto("/shifts");
-  const gone = mgr.getByRole("listitem").filter({ hasText: "Night cover e2e" });
+  const gone = mgr.getByRole("listitem").filter({ hasText: label });
   await expect(gone).toContainText("Already taken");
   await expect(gone.getByRole("button", { name: "Accept shift" })).toHaveCount(0);
   await mgrCtx.close();
@@ -71,7 +73,7 @@ test("HR posts an open shift, the first person to accept gets it, nobody else ca
   const mine = hr
     .getByRole("listitem")
     .filter({ hasText: "Jamie Crumb" })
-    .filter({ hasText: "Night cover e2e" });
+    .filter({ hasText: label });
   await mine.getByRole("button", { name: "Cancel" }).click();
   await expect(hr.getByText("Shift cancelled.")).toBeVisible();
   await hrCtx.close();

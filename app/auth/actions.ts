@@ -11,6 +11,7 @@ import {
   magicLinkSchema,
   mfaCodeSchema,
   resetPasswordSchema,
+  resetPasswordWithCodeSchema,
 } from "@/lib/validation/auth";
 
 const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL ?? "http://localhost:3000";
@@ -69,12 +70,53 @@ export async function sendPasswordReset(formData: FormData): Promise<ActionResul
 }
 
 export async function updatePassword(formData: FormData): Promise<ActionResult> {
-  const parsed = parseForm(resetPasswordSchema, formData);
+  const withCode = formData.has("code");
+  const parsed = withCode
+    ? parseForm(resetPasswordWithCodeSchema, formData)
+    : parseForm(resetPasswordSchema, formData);
   if (!parsed.success) return { ok: false, error: INVALID, fieldErrors: fieldErrors(parsed.error) };
 
   const supabase = await createClient();
+
+  // Accounts with two-step verification must pass it before the password can change.
+  const code = "code" in parsed.data ? String(parsed.data.code) : null;
+  if (code) {
+    const {
+      data: { user },
+    } = await supabase.auth.getUser();
+    if (!user)
+      return { ok: false, error: "Your reset link has expired. Please ask for a new one." };
+    const [byAddress, byAccount] = await Promise.all([
+      rateLimit("mfaVerify"),
+      rateLimitAccount("mfaVerifyAccount", user.id),
+    ]);
+    if (!byAddress || !byAccount) return { ok: false, error: TOO_MANY };
+    const { data: factors } = await supabase.auth.mfa.listFactors();
+    const factor = factors?.totp.find((f) => f.status === "verified");
+    if (factor) {
+      const { error: codeError } = await supabase.auth.mfa.challengeAndVerify({
+        factorId: factor.id,
+        code,
+      });
+      if (codeError)
+        return {
+          ok: false,
+          error: "That code didn't work. Codes change every 30 seconds — try the latest one.",
+          fieldErrors: { code: "Incorrect code" },
+        };
+      await logEvent("mfa_verified", "auth");
+    }
+  }
+
   const { error } = await supabase.auth.updateUser({ password: parsed.data.password });
   if (error) {
+    if (error.code === "insufficient_aal") {
+      return {
+        ok: false,
+        error:
+          "Your account uses two-step verification, so enter the 6-digit code from your authenticator app as well. Please reload this page to show the code box.",
+      };
+    }
     if (error.code === "weak_password" || error.code === "same_password") {
       return {
         ok: false,
