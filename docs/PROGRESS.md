@@ -125,28 +125,54 @@ All environment variables verified correct on 26 Oct 2026 (rate limiting and inv
 - AbsorbHR will supply its own template policy library later (bulk import; see below).
 - Template management screens were only tested at database level (AbsorbHR admin's 2FA is on the user's phone).
 - Irregular-hours/part-year 12.07% accrual (deferred by AbsorbHR); first-year monthly accrual rule (decision needed).
-- Convert the Playwright walkthrough / accessibility / idle-timeout scripts into a committed `npm run test:e2e` suite
-  (needs a test-only seed password + TOTP handling).
+- ~~Convert the Playwright walkthrough / accessibility / idle-timeout scripts into a committed `npm run test:e2e`
+  suite~~ — done 18 Nov 2026, see "End-to-end tests" below.
+- Next end-to-end batch: documents (upload/download), policies (publish → acknowledge), checklists, reviews,
+  1-to-1 note privacy, cases, SAR export download, breach log entry, reports CSV.
 - Audit log viewer: add filters and paging (currently latest 300 entries).
 - Email reminders for overdue checklist tasks and review deadlines; policy-published emails (dashboard covers these now).
 - Retention review for old records of *current* employees (decision needed).
 - In-app notification centre (the dashboard to-do list covers this for now).
 - Invitations need Resend SMTP configured in Supabase for reliable delivery (docs/GO-LIVE.md step 3).
 
-## Rate-limit address fix — 18 Nov 2026 (deployed on its own, on top of a35bb63)
+## End-to-end tests (Playwright) — added 18 Nov 2026 on this computer
+- `npm run test:e2e` runs Playwright in the installed Google Chrome against its own production build (`next build` + `next start`) on port 3100
+  (`NEXT_DIST_DIR=.next-e2e`, so it can run beside `npm run dev`; dev mode was flaky because pages rebuilt mid-test), **test database only**: `e2e/guard.mjs`
+  stops the run unless the settings point at `djdjrrziukllerhhnrix`, and every page blocks requests to the live site.
+- `npm run test:e2e:reset` reseeds the test database with `SEED_PASSWORD` from `.env.local` and clears
+  `app.rate_limits`. Sign-ins are saved in `e2e/.auth/` (git-ignored) and reused for 40 minutes, because login and
+  MFA are rate limited (10 per 15 min). The setup enrols TOTP through the real /auth/mfa page and keeps the key there.
+- 45 tests, all passing 18 Nov 2026. Covered: sign-in, wrong password, sign-out, admin blocked until 2-step, idle warning + timeout (fake clock);
+  Northgate can't open or list Brightwater staff; employee/manager kept out of HR pages; employee can't open a
+  colleague; manager sees own team only; holiday request → manager approval → cancel; unconfigured company can't
+  book holiday; assistant off by default; axe WCAG 2.1 AA on 23 pages across 4 roles; phone width on 2 pages.
+- `npm run test:live`: read-only check of absorbhr-portal.co.uk (login page, signed-out redirect, security headers).
+- Fixed on the way: screen-reader-only table labels made pages 1px too wide on phones (`components/ui/table.tsx`
+  wrapper is now `relative`).
+- ~~Found, not fixed: `lib/rate-limit.ts` trusts the first `X-Forwarded-For` value~~ — fixed 18 Nov 2026, see below.
+
+## Rate-limit address fix — 18 Nov 2026 (LIVE: commit c55be3d, deployed 18 Nov 16:13 on its own, on top of a35bb63)
 - Problem: `clientIp()` took the **first** `X-Forwarded-For` value (then `X-Real-IP`). Visitors write those
   themselves, so a password guesser could send a new made-up address on each try and never hit the login or 2-step
-  limits. `ipHash()` had the same weakness (not called anywhere yet).
-- Fix: `lib/client-ip.ts` takes the entry added by our own proxy, counted `TRUSTED_PROXY_HOPS` in from the **right**
-  (default 1 = Krystal's LiteSpeed; set 2 if a CDN is ever put in front). `X-Real-IP` is no longer read. Next.js fills
-  `X-Forwarded-For` from the connection only when it is missing, so local runs still get the real address. Still
-  hashed with `IP_HASH_SECRET`; no raw addresses stored.
-- New per-account buckets that ignore the address: `loginAccount` (30 per 15 min per email) and `mfaVerifyAccount`
-  (10 per 15 min per signed-in user). `verifyMfa` now gets the user first and refuses if signed out.
-- Tests: `tests/client-ip.test.ts`. Lint, typecheck, unit tests and the production build pass; the end-to-end suite
-  (on the working copy, test database) passed with the same change.
-- The live site answers as `server: LiteSpeed`, not Apache. **To ask Krystal support:** (1) when LiteSpeed passes a
-  request to our cPanel Node.js app, does it add the visitor's real IP to the end of `X-Forwarded-For` (or replace
-  the header), or pass on what the visitor sent? (2) is "Use Client IP in Header" set to No or Trusted IP Only (not
-  Yes)? (3) is any proxy or CDN in front of LiteSpeed? If it passes the header on unchanged, ask which header LiteSpeed
-  sets instead; the per-account limits still protect each login meanwhile.
+  limits. `ipHash()` had the same weakness (it is not called anywhere yet).
+- Fix: `lib/client-ip.ts` takes the entry added by our own proxy — counted `TRUSTED_PROXY_HOPS` in from the
+  **right** (default 1 = LiteSpeed only; set 2 if a CDN is ever put in front). `X-Real-IP` is no longer read. Next.js
+  fills `X-Forwarded-For` from the connection only when it is missing (`base-server.js`, `??=`), so local runs still
+  get the real address. Still hashed with `IP_HASH_SECRET`; no raw addresses stored.
+- Added per-account buckets that ignore the address entirely: `loginAccount` (30 per 15 min per email, from all
+  addresses together) and `mfaVerifyAccount` (10 per 15 min per signed-in user). These hold even if the address is
+  ever wrong. `verifyMfa` now gets the user first and refuses if signed out.
+- Tests: `tests/client-ip.test.ts` (forged left-hand entries ignored, hop counting, ports/IPv6, junk → `unknown`,
+  setting parsing).
+- Live server check (read-only headers, 18 Nov): the live site answers as `server: LiteSpeed`, not Apache as
+  assumed, so LiteSpeed is the web server in front of the Node app. Whether LiteSpeed
+  **adds** the visitor's real address to the end of `X-Forwarded-For` for Node apps can't be seen from outside (no
+  route echoes headers, and signing in to test was off limits).
+  If LiteSpeed does **not** add it, the per-account limits above still stop guessing one account's password.
+- **To ask Krystal support:** (1) when LiteSpeed passes a request to our cPanel Node.js app, does it add the visitor's
+  real IP to the end of `X-Forwarded-For` (or replace the header), or pass on what the visitor sent? (2) is "Use
+  Client IP in Header" set to No or Trusted IP Only (not Yes)? (3) is any proxy or CDN in front of LiteSpeed?
+  Adds/replaces + not Yes + no CDN = fix is right as is. CDN that adds an entry = set `TRUSTED_PROXY_HOPS=2` in
+  cPanel's Node.js app settings. Passes it through unchanged, or Yes = the address can still be faked; ask which
+  header LiteSpeed sets instead and change `lib/client-ip.ts`.
+- Checked 18 Nov: lint, typecheck, 45 unit tests and 45 end-to-end tests pass (fresh sign-ins including 2-step).

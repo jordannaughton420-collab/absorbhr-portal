@@ -44,3 +44,9 @@ next-env.d.ts
 # supabase local
 supabase/.branches
 supabase/.temp
+
+# end-to-end tests (Playwright): saved test sign-ins, results and the tests' own build folder
+/e2e/.auth/
+/test-results/
+/playwright-report/
+/.next-e2e/
