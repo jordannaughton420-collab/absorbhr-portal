@@ -187,3 +187,14 @@ All environment variables verified correct on 26 Oct 2026 (rate limiting and inv
   the subject access export break (they use the new columns and tables).
 - The nightly backup job is now on main but stays off until `BACKUP_ENABLED` and its secrets are set (Part 7 of
   docs/GO-LIVE-KRYSTAL.md).
+
+## Live database: migration 0015 applied — 18 Nov 2026
+- Applied to production (`gnvmakhtgnswlmsdquai`) through the Supabase connector at the owner's request, in one
+  transaction with guards (0014 present, 0015 absent). Recorded in `supabase_migrations.schema_migrations`.
+- Result: 4 assistant tables, 0 companies with the assistant on, `assistant-housekeeping` cron scheduled.
+- Checked against the test database object by object (functions, columns, constraints, policies, triggers,
+  indexes, grants, RLS, cron): all 41 match. The one difference is a code comment left out of
+  `app.assistant_housekeeping`, and it matches once that comment is ignored.
+- Deployed 18 Nov 2026: "Deploy to Krystal" run on `main` (`17cbefb`, run 44355314681), all steps passed. Live now has
+  the rate-limit fix, the assistant (off for every company) and the end-to-end tests. `npm run test:live` passes;
+  no database errors in the live logs afterwards.
