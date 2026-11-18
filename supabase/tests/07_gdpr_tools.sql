@@ -48,8 +48,12 @@ insert into tests.results (line) select unnest(array[
   is(tests.exec_as(tests.id('a_hr'), 'aal2', pg_temp.breach('a_hr')), 'error:42501', 'HR managers cannot log breaches (Client Admin only)'),
   is(tests.count_as(tests.id('a_hr'), 'aal2', 'select 1 from data_breaches'), 0::bigint, 'HR managers cannot read the breach log'),
   is(tests.count_as(tests.id('a_emp1'), 'aal1', 'select 1 from data_breaches'), 0::bigint, 'Employees cannot read the breach log'),
-  is(tests.count_as(tests.id('b_admin'), 'aal2', 'select 1 from data_breaches'), 0::bigint, 'Another company cannot read it'),
-  is(tests.count_as(tests.id('p_admin'), 'aal2', 'select 1 from data_breaches'), 1::bigint, 'AbsorbHR admins can read every company''s breach log'),
+  is(tests.count_as(tests.id('b_admin'), 'aal2', 'select 1 from data_breaches'), 0::bigint, 'Another company cannot read it')
+]);
+-- A new statement, so the expected total below includes the breach logged above
+-- as well as any already in the database (such as the demo company's sample breach).
+insert into tests.results (line) select unnest(array[
+  is(tests.count_as(tests.id('p_admin'), 'aal2', 'select 1 from data_breaches'), (select count(*) from public.data_breaches), 'AbsorbHR admins can read every company''s breach log'),
   is(tests.count_as(tests.id('p_admin'), 'aal1', 'select 1 from data_breaches'), 0::bigint, '…but only with MFA'),
   is(tests.exec_as(tests.id('a_admin'), 'aal2', 'update data_breaches set ico_reportable = false, decision_reason = ''Low risk, contained same day'''), 'rows:1', 'Client Admin records the ICO decision'),
   is(tests.exec_as(tests.id('a_admin'), 'aal2', 'delete from data_breaches'), 'error:42501', 'Breach records cannot be deleted')

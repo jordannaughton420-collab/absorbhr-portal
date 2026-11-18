@@ -10,6 +10,8 @@ import {
   nameSchema,
   roleSchema,
   securitySettingsSchema,
+  assistantSettingsSchema,
+  ASSISTANT_RETENTION,
 } from "@/lib/validation/settings";
 import {
   addDepartment,
@@ -17,6 +19,7 @@ import {
   updateCompany,
   updateRole,
   updateSecuritySettings,
+  updateAssistantSettings,
 } from "./actions";
 
 function RegionSelect(props: React.ComponentProps<typeof Select> & { allowNone?: boolean }) {
@@ -226,6 +229,53 @@ export function RoleForm({
             Can sign in
           </label>
         </div>
+      )}
+    </ZodForm>
+  );
+}
+
+export function AssistantSettingsForm({
+  values,
+}: {
+  values: { assistant_enabled: boolean; assistant_chat_retention_months: number };
+}) {
+  return (
+    <ZodForm
+      schema={assistantSettingsSchema}
+      action={updateAssistantSettings}
+      submitLabel="Save assistant settings"
+    >
+      {({ errors }) => (
+        <>
+          <Toggle
+            name="assistant_enabled"
+            label="Switch on the AI assistant for everyone in the company"
+            hint="People can ask it questions and it suggests changes, which only happen when the person taps Confirm. Staff names and dates are sent to the AI provider (Anthropic) to understand requests, so add it to your privacy notice first. Health, case, diversity and pay details are never sent."
+            defaultChecked={values.assistant_enabled}
+          />
+          <Field
+            name="assistant_chat_retention_months"
+            label="Keep assistant chats for"
+            error={errors.assistant_chat_retention_months}
+            className="max-w-sm"
+          >
+            {(p) => (
+              <Select {...p} defaultValue={String(values.assistant_chat_retention_months)}>
+                {Object.entries(ASSISTANT_RETENTION)
+                  .sort(([a], [b]) => Number(b) - Number(a))
+                  .map(([value, label]) => (
+                    <option key={value} value={value}>
+                      {label}
+                    </option>
+                  ))}
+              </Select>
+            )}
+          </Field>
+          <p className="text-xs text-muted-foreground">
+            Counted from a chat&apos;s last message. The audit log keeps a permanent record of every
+            change people confirmed, whatever you choose here.
+          </p>
+        </>
       )}
     </ZodForm>
   );

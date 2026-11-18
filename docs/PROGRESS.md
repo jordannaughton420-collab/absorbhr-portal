@@ -106,6 +106,20 @@ All environment variables verified correct on 26 Oct 2026 (rate limiting and inv
   - Demo: `supabase/seed_gdpr.sql` (3 leavers: one due, one due in 30 days, one recent; 1 breach)
   - Libraries added: fflate (ZIP), pdf-lib (PDF summary)
 
+- [ ] Phase 6 — AI assistant: **built 18 Nov 2026 on this computer (Denise/absorbhr-portal), not yet live**
+  - Decisions (owner, 17–18 Nov): one assistant per company, off until the Client Admin switches it on; it only
+    *suggests* changes and the person who asked must tap Confirm (accountability stays with a person); company
+    notes saved only on Confirm; chats kept 6 years by default (company may shorten), private to the person;
+    confirmed changes recorded permanently in the audit log; model Claude Opus 5.5 (`ASSISTANT_MODEL` to change)
+  - Migration 0015 (`assistant_*` tables, settings columns, claim/finish/cancel functions, SAR function,
+    anonymise trigger, `assistant-housekeeping` cron 02:53); 08_assistant.sql 45 pgTAP tests; 283 total pass on
+    the test database. Unit tests: tests/assistant.test.ts
+  - Code: lib/assistant/ (schemas, tools, run loop, execute), app/(app)/assistant (chat, confirm cards, notes),
+    Company settings "AI assistant" card, nav link, SAR export includes assistant data
+  - Needs `ANTHROPIC_API_KEY` on the server (and the test computer); without it the page says it isn't connected
+  - Fixed on the way: 07_gdpr_tools breach-log test assumed an empty breach log
+  - Before live: Anthropic DPA + sub-processor list/privacy notice (docs/GDPR.md), try it end to end, then deploy
+
 ## Follow-ups noted for later phases
 - Virus scanning for uploads: deferred by AbsorbHR (26 Oct); revisit before go-live.
 - AbsorbHR will supply its own template policy library later (bulk import; see below).

@@ -20,6 +20,7 @@ import {
   LayoutDashboard,
   Network,
   Settings,
+  Sparkles,
   ShieldCheck,
   User,
   Users,
@@ -47,6 +48,7 @@ const ICONS = {
   reports: BarChart3,
   dataProtection: DatabaseZap,
   breaches: ShieldAlert,
+  assistant: Sparkles,
 };
 
 export type NavItem = { href: string; label: string; icon: keyof typeof ICONS };

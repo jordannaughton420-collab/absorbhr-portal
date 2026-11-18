@@ -12,6 +12,7 @@ import {
   nameSchema,
   roleSchema,
   securitySettingsSchema,
+  assistantSettingsSchema,
 } from "@/lib/validation/settings";
 
 const INVALID = "Please check the highlighted fields.";
@@ -112,4 +113,23 @@ export async function updateRole(formData: FormData): Promise<ActionResult> {
     return { ok: false, error: "You can't change this account (you can't change your own role)." };
   revalidatePath("/settings");
   return { ok: true, message: "Access updated." };
+}
+
+// Switching the assistant on sends staff names and dates to the AI provider, so only the
+// company's own Client Admin may do it (the database enforces the same, not AbsorbHR support).
+export async function updateAssistantSettings(formData: FormData): Promise<ActionResult> {
+  const parsed = parseForm(assistantSettingsSchema, formData);
+  if (!parsed.success) return { ok: false, error: INVALID, fieldErrors: fieldErrors(parsed.error) };
+  const ctx = await getContext();
+  if (!ctx?.tenantId || !ctx.isClientAdmin || ctx.supportSession) return DENIED;
+  const supabase = await createClient();
+  const { data, error } = await supabase
+    .from("tenant_settings")
+    .update(parsed.data)
+    .eq("tenant_id", ctx.tenantId)
+    .select("tenant_id");
+  if (error) return safeError(error, "settings.assistant");
+  if (!data?.length) return DENIED;
+  revalidatePath("/", "layout");
+  return { ok: true, message: "Assistant settings saved." };
 }

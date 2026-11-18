@@ -16,6 +16,8 @@ function navFor(ctx: SessionContext, pendingApprovals: number): NavItem[] {
   const isManager = ctx.role === "line_manager";
   const ownRecord = Boolean(ctx.employeeId) && !ctx.supportSession;
   const items: NavItem[] = [{ href: "/dashboard", label: "Dashboard", icon: "dashboard" }];
+  if (ctx.tenantId && !ctx.supportSession && ctx.settings?.assistant_enabled)
+    items.push({ href: "/assistant", label: "Assistant", icon: "assistant" });
   if (ownRecord)
     items.push({ href: `/employees/${ctx.employeeId}`, label: "My profile", icon: "profile" });
   if (ownRecord) items.push({ href: "/leave", label: "My leave", icon: "leave" });

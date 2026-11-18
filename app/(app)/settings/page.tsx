@@ -16,6 +16,7 @@ import { ReviewSettingsForm } from "@/app/(app)/reviews/review-forms";
 import {
   AddDepartmentForm,
   AddLocationForm,
+  AssistantSettingsForm,
   CompanyForm,
   RoleForm,
   SecurityForm,
@@ -136,6 +137,20 @@ export default async function SettingsPage() {
               <SecurityForm values={settings} />
             </CardContent>
           </Card>
+          {!ctx.supportSession && (
+            <Card className="lg:col-span-2">
+              <CardHeader>
+                <CardTitle>AI assistant</CardTitle>
+                <CardDescription>
+                  A chat assistant that answers questions and suggests changes. Nothing changes
+                  until the person who asked taps Confirm.
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                <AssistantSettingsForm values={settings} />
+              </CardContent>
+            </Card>
+          )}
         </div>
       )}
 

@@ -19,6 +19,7 @@ Each client company's data is completely separated from every other client's, an
 | 3 | Documents & policies | ✅ Approved 26 Oct 2026 |
 | 4 | Onboarding, reviews, cases, self-service | ✅ Approved 26 Oct 2026 |
 | 5 | Reports, emails, GDPR tools | ✅ Approved 26 Oct 2026 |
+| 6 | AI assistant (suggest, then a person confirms) | 🧪 Built 18 Nov 2026, on the test database; not live |
 
 Test site: <https://absorbhr-portal.vercel.app>
 

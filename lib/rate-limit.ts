@@ -33,6 +33,8 @@ export const LIMITS = {
   // Per signed-in user: a guesser here already has the password, so lock-out is fine.
   mfaVerifyAccount: { max: 10, windowSeconds: 15 * 60 },
   api: { max: 120, windowSeconds: 60 },
+  // Each assistant message is a paid AI call: caps cost if a login is misused.
+  assistant: { max: 40, windowSeconds: 60 * 60 },
 } as const;
 
 type Action = keyof typeof LIMITS;
