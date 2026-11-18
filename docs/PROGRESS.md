@@ -247,3 +247,11 @@ All environment variables verified correct on 26 Oct 2026 (rate limiting and inv
   the password. If the code box is missing for any reason, a clear message says to enter the code.
 - Test: e2e/password-reset.spec.ts (Northgate admin, signed in but not past two-step, sets a new password with the
   code; password put back afterwards). open-shifts.spec.ts now uses a unique shift label per run.
+
+## Fix: assistant microphone stopped straight away — 18 Nov 2026
+- Cause: the site-wide `Permissions-Policy: microphone=()` blocked the microphone for the portal itself, so the
+  browser's speech-to-text failed at once ("not-allowed") and the button flicked back off.
+- Fix: `next.config.ts` allows `microphone=(self)` on `/assistant/*` only; every other page still blocks it. The chat
+  box now explains voice errors (blocked microphone, no microphone, no speech heard, network) instead of failing
+  silently. docs/GDPR.md notes that Chrome/Edge speech-to-text sends audio to the browser maker's service.
+- Test: e2e/microphone.spec.ts checks the header and the browser's own permission on /assistant and /dashboard.

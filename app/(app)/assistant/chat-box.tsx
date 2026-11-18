@@ -17,7 +17,19 @@ type Recognition = {
   stop: () => void;
   onresult: ((e: { results: ArrayLike<ArrayLike<{ transcript: string }>> }) => void) | null;
   onend: (() => void) | null;
-  onerror: (() => void) | null;
+  onerror: ((e: { error?: string }) => void) | null;
+};
+
+// What to tell the person when the browser's speech-to-text stops with an error.
+const VOICE_ERRORS: Record<string, string> = {
+  "not-allowed":
+    "Your browser blocked the microphone. Click the padlock or settings icon next to the web address, allow the microphone for this site, then try again.",
+  "service-not-allowed":
+    "Your browser's speech-to-text isn't available here. Try Chrome or Edge, or type your message instead.",
+  "audio-capture": "No microphone was found. Check one is plugged in and switched on.",
+  network:
+    "Speech-to-text needs an internet connection to your browser's speech service. Please try again, or type instead.",
+  "no-speech": "I didn't hear anything. Press the microphone and start speaking straight away.",
 };
 
 function getRecognition(): Recognition | null {
@@ -81,10 +93,22 @@ export function ChatBox({
       if (heard) setText((t) => (t ? `${t} ${heard}` : heard));
     };
     r.onend = () => setListening(false);
-    r.onerror = () => setListening(false);
+    r.onerror = (e) => {
+      setListening(false);
+      if (e?.error && e.error !== "aborted")
+        setError(
+          VOICE_ERRORS[e.error] ?? "Speech-to-text stopped. Please try again, or type instead.",
+        );
+    };
     recognition.current = r;
+    setError(null);
     setListening(true);
-    r.start();
+    try {
+      r.start();
+    } catch {
+      setListening(false);
+      setError("Speech-to-text couldn't start. Please try again, or type instead.");
+    }
   }
 
   return (
