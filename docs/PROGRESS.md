@@ -118,3 +118,21 @@ All environment variables verified correct on 26 Oct 2026 (rate limiting and inv
 - Retention review for old records of *current* employees (decision needed).
 - In-app notification centre (the dashboard to-do list covers this for now).
 - Invitations need Resend SMTP configured in Supabase for reliable delivery (docs/GO-LIVE.md step 3).
+
+## Rate-limit address fix — 18 Nov 2026 (deployed on its own, on top of a35bb63)
+- Problem: `clientIp()` took the **first** `X-Forwarded-For` value (then `X-Real-IP`). Visitors write those
+  themselves, so a password guesser could send a new made-up address on each try and never hit the login or 2-step
+  limits. `ipHash()` had the same weakness (not called anywhere yet).
+- Fix: `lib/client-ip.ts` takes the entry added by our own proxy, counted `TRUSTED_PROXY_HOPS` in from the **right**
+  (default 1 = Krystal's LiteSpeed; set 2 if a CDN is ever put in front). `X-Real-IP` is no longer read. Next.js fills
+  `X-Forwarded-For` from the connection only when it is missing, so local runs still get the real address. Still
+  hashed with `IP_HASH_SECRET`; no raw addresses stored.
+- New per-account buckets that ignore the address: `loginAccount` (30 per 15 min per email) and `mfaVerifyAccount`
+  (10 per 15 min per signed-in user). `verifyMfa` now gets the user first and refuses if signed out.
+- Tests: `tests/client-ip.test.ts`. Lint, typecheck, unit tests and the production build pass; the end-to-end suite
+  (on the working copy, test database) passed with the same change.
+- The live site answers as `server: LiteSpeed`, not Apache. **To ask Krystal support:** (1) when LiteSpeed passes a
+  request to our cPanel Node.js app, does it add the visitor's real IP to the end of `X-Forwarded-For` (or replace
+  the header), or pass on what the visitor sent? (2) is "Use Client IP in Header" set to No or Trusted IP Only (not
+  Yes)? (3) is any proxy or CDN in front of LiteSpeed? If it passes the header on unchanged, ask which header LiteSpeed
+  sets instead; the per-account limits still protect each login meanwhile.
