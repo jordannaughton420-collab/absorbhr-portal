@@ -11,7 +11,7 @@ import { signOut } from "@/app/auth/actions";
 import { endSupportSession } from "@/app/(app)/admin/actions";
 import { PrivacyGate } from "./privacy/privacy-gate";
 
-function navFor(ctx: SessionContext, pendingApprovals: number): NavItem[] {
+function navFor(ctx: SessionContext, pendingApprovals: number, openShifts: number): NavItem[] {
   const inTenant = Boolean(ctx.tenantId || ctx.supportSession);
   const isManager = ctx.role === "line_manager";
   const ownRecord = Boolean(ctx.employeeId) && !ctx.supportSession;
@@ -28,6 +28,13 @@ function navFor(ctx: SessionContext, pendingApprovals: number): NavItem[] {
       icon: "approvals",
     });
   if (inTenant) items.push({ href: "/calendar", label: "Team calendar", icon: "calendar" });
+  if (ownRecord)
+    items.push({
+      href: "/shifts",
+      label: openShifts ? `My shifts (${openShifts} open)` : "My shifts",
+      icon: "shifts",
+    });
+  if (ctx.isHr || isManager) items.push({ href: "/rota", label: "Rota", icon: "rota" });
   if (ownRecord || ((ctx.isHr || isManager) && !ctx.supportSession))
     items.push({ href: "/sickness", label: "Sickness", icon: "sickness" });
   if (inTenant) items.push({ href: "/checklists", label: "Checklists", icon: "checklists" });
@@ -71,7 +78,29 @@ export default async function AppLayout({ children }: { children: React.ReactNod
       .neq("employee_id", ctx.employeeId ?? "00000000-0000-0000-0000-000000000000");
     pendingApprovals = count ?? 0;
   }
-  const items = navFor(ctx, pendingApprovals);
+  // Open shifts this person can still pick up.
+  let openShifts = 0;
+  if (ctx.employeeId && !ctx.supportSession) {
+    const { data: offers } = await supabase
+      .from("shift_offers")
+      .select("shift_id")
+      .eq("employee_id", ctx.employeeId)
+      .is("response", null)
+      .limit(50);
+    if (offers?.length) {
+      const { count } = await supabase
+        .from("shifts")
+        .select("id", { count: "exact", head: true })
+        .in(
+          "id",
+          offers.map((o) => o.shift_id),
+        )
+        .eq("status", "open")
+        .gt("starts_at", new Date().toISOString());
+      openShifts = count ?? 0;
+    }
+  }
+  const items = navFor(ctx, pendingApprovals, openShifts);
 
   // Employees must read and acknowledge the current privacy notice before using the portal.
   let gate: React.ReactNode = null;

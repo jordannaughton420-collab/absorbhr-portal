@@ -1,5 +1,6 @@
 import { z } from "zod";
 import { CONTRACT_TYPES } from "@/lib/validation/employee";
+import { shiftTime } from "@/lib/validation/shifts";
 
 // What the assistant may suggest. Each suggestion is checked against these rules twice:
 // when the assistant makes it, and again just before it is carried out on Confirm.
@@ -60,6 +61,36 @@ export const ACTION_SCHEMAS = {
     .refine((v) => v.manager_id !== v.employee_id, { message: "Someone can't manage themselves" }),
   start_checklist: z.object({ employee_id: id, template_id: id, anchor_date: date }),
   remember: z.object({ note: z.string().trim().min(3).max(500) }),
+  create_shift: z
+    .object({
+      employee_id: id,
+      date,
+      start_time: shiftTime,
+      end_time: shiftTime,
+      role_label: z.string().trim().min(1).max(80).optional(),
+      location_id: id.optional(),
+      notes: note.optional(),
+      allow_short_rest: z.boolean().default(false),
+    })
+    .refine((v) => v.start_time !== v.end_time, { message: "Start and end times are the same" }),
+  cancel_shift: z.object({ shift_id: id }),
+  post_open_shift: z
+    .object({
+      date,
+      start_time: shiftTime,
+      end_time: shiftTime,
+      role_label: z.string().trim().min(1).max(80).optional(),
+      location_id: id.optional(),
+      notes: note.optional(),
+      group_id: id.optional(),
+      employee_ids: z.array(id).max(200).default([]),
+    })
+    .refine((v) => v.start_time !== v.end_time, { message: "Start and end times are the same" })
+    .refine((v) => v.group_id || v.employee_ids.length > 0, {
+      message: "Choose a group or at least one person",
+    }),
+  add_to_shift_group: z.object({ employee_id: id, group_name: z.string().trim().min(1).max(60) }),
+  remove_from_shift_group: z.object({ employee_id: id, group_id: id }),
 } as const;
 
 export type ActionKind = keyof typeof ACTION_SCHEMAS;
@@ -81,12 +112,22 @@ export const WHO_CAN = {
   update_employee: "hr",
   start_checklist: "hr",
   remember: "anyone",
-} as const satisfies Record<ActionKind, "anyone" | "manager" | "hr">;
+  // Planning shifts: HR, or line managers when the company has switched that on.
+  create_shift: "planner",
+  cancel_shift: "planner",
+  post_open_shift: "planner",
+  add_to_shift_group: "hr",
+  remove_from_shift_group: "hr",
+} as const satisfies Record<ActionKind, "anyone" | "manager" | "planner" | "hr">;
 
-export function allowedFor(kind: ActionKind, who: { isHr: boolean; isManager: boolean }): boolean {
+export function allowedFor(
+  kind: ActionKind,
+  who: { isHr: boolean; isManager: boolean; canPlanShifts?: boolean },
+): boolean {
   const need = WHO_CAN[kind];
   if (need === "anyone") return true;
   if (need === "manager") return who.isHr || who.isManager;
+  if (need === "planner") return who.isHr || (who.isManager && Boolean(who.canPlanShifts));
   return who.isHr;
 }
 

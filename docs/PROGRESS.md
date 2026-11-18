@@ -198,3 +198,42 @@ All environment variables verified correct on 26 Oct 2026 (rate limiting and inv
 - Deployed 18 Nov 2026: "Deploy to Krystal" run on `main` (`17cbefb`, run 44355314681), all steps passed. Live now has
   the rate-limit fix, the assistant (off for every company) and the end-to-end tests. `npm run test:live` passes;
   no database errors in the live logs afterwards.
+
+## Shifts, rota and open shifts — built 18 Nov 2026 on this computer (test database only, NOT live)
+- Owner's request (18 Nov): admin, HR and (if allowed) managers can mark staff as open-shift workers, post a shift
+  (e.g. tonight 8pm to 5am), it goes to those people, the first to accept gets it and nobody else can; the
+  assistant can do the posting. Design and competitor research: side-session notes
+  `open-shifts-and-competitor-features-2026-11-18.md`.
+- Decisions: first to accept wins (no approval step yet); email alert only (no SMS or push); open-shift groups
+  managed by HR; line managers plan shifts for their own direct reports only when the Client Admin switches on
+  "Let line managers plan shifts" (off by default); only the employee can accept, never the assistant.
+- Migration 0016 (`shifts`, `shift_groups`, `shift_group_members`, `shift_offers`,
+  `tenant_settings.managers_can_plan_shifts`; functions `create_shift`, `cancel_shift`, `add_to_shift_group`,
+  `remove_from_shift_group`, `open_shift_candidates`, `post_open_shift`, `claim_open_shift`, `decline_open_shift`,
+  `shifts_sar_data`; anonymise trigger; assistant kinds widened). No direct writes: everything through functions.
+  - Who is left out of an open shift: approved leave, sickness, overlapping shift, under 11 hours' rest either side
+    (Working Time Regulations), no portal login, not the manager's team. Planners can override the rest check
+    for a directly assigned shift ("Allow a shorter rest break"); open shifts never break it.
+  - First-to-accept: `claim_open_shift` locks the shift row (`for update`), so a second accept waits, then sees
+    "already taken". Times are stored as UTC and entered as UK time (an end before the start = next day).
+  - Emails (no shift details, per the email rule): `open_shift_offered` → each person offered, `open_shift_filled`
+    → whoever posted it, `shift_cancelled` → the person whose shift was cancelled. Ordinary assigned shifts send
+    no email yet (follow-up: "publish rota" notifications).
+- 09_shifts.sql: 61 pgTAP tests; all 344 database tests pass on the test database. tests/shifts.test.ts: unit tests
+  for UK times, form rules and who may plan. e2e/open-shifts.spec.ts: HR posts to two people, Jamie accepts,
+  Morgan sees "Already taken", HR cancels; /rota and /shifts added to the accessibility checks.
+- Pages: /rota (HR and line managers: week grid with holiday/sickness shown automatically, open shifts waiting,
+  post an open shift, add a shift, cancel, open shift groups), /shifts "My shifts" (accept / not for me, nav shows
+  how many are open), Company settings "Shifts and rota" card, shifts on the Team calendar (◷), subject access
+  export includes shifts, offers and groups.
+- Assistant: `list_shifts`, `list_shift_groups`, `check_open_shift`, `suggest_create_shift`,
+  `suggest_cancel_shift`, `suggest_post_open_shift`, `suggest_add_to_shift_group`,
+  `suggest_remove_from_shift_group` (all still need the person's Confirm).
+- Going live (owner said "Yes, make it live", 18 Nov 2026): migration 0016 applied to production first, through
+  the Supabase connector in one guarded transaction (0015 present, 0016 absent), recorded in
+  `supabase_migrations.schema_migrations`. Checked against the test database object by object (functions, grants,
+  columns, constraints, policies, triggers, indexes, RLS): all 42 match. Then this commit was pushed, merged into
+  `main` and deployed with the Deploy to Krystal workflow. (Code before migration would break the Rota, My
+  shifts, Company settings and the subject access export.)
+- Follow-ups: optional "approval needed" mode, shift swaps, offer expiry, rota templates/copy week, notify staff
+  when the rota is published, shift costs, clock in/out.

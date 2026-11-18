@@ -6,6 +6,7 @@ import { createClient } from "@/lib/supabase/server";
 import { buttonVariants } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { cn } from "@/lib/utils";
+import { londonDay, londonMidnightIso, londonTime } from "@/lib/shifts";
 
 export const metadata: Metadata = { title: "Team calendar · AbsorbHR Portal" };
 
@@ -71,6 +72,20 @@ export default async function CalendarPage({
     .gte("date", iso(first))
     .lte("date", iso(last));
   const bh = new Map((bankHolidays ?? []).map((b) => [b.date, b.title]));
+  // Shifts on the rota (each person sees only the shifts they are allowed to).
+  const { data: shifts } = await supabase
+    .from("shifts")
+    .select("employee_id, starts_at, ends_at, role_label")
+    .eq("status", "scheduled")
+    .gte("starts_at", londonMidnightIso(iso(first)))
+    .lt("starts_at", londonMidnightIso(next + "-01"))
+    .limit(2000);
+  const shiftsOn = new Map<string, string[]>();
+  for (const s of shifts ?? []) {
+    const key = `${s.employee_id}|${londonDay(s.starts_at)}`;
+    const text = `${londonTime(s.starts_at)}–${londonTime(s.ends_at)}${s.role_label ? ` ${s.role_label}` : ""}`;
+    shiftsOn.set(key, [...(shiftsOn.get(key) ?? []), text]);
+  }
 
   // Rows: HR/support see everyone (optionally by department); others see themself, their reports and teammates.
   const all = directory ?? [];
@@ -178,6 +193,15 @@ export default async function CalendarPage({
         </li>
         <li className="flex items-center gap-2">
           <span
+            className="flex size-4 items-center justify-center rounded border border-primary text-[10px] text-primary"
+            aria-hidden="true"
+          >
+            ◷
+          </span>{" "}
+          On shift
+        </li>
+        <li className="flex items-center gap-2">
+          <span
             className="size-4 rounded border-2 border-dashed border-primary"
             aria-hidden="true"
           />{" "}
@@ -279,6 +303,17 @@ export default async function CalendarPage({
                                 : ({ holiday: "H", leave: "L", sickness: "S", away: "–" }[e.kind] ??
                                   "–")}
                             </span>
+                          </span>
+                        )}
+                        {!e && shiftsOn.has(`${p.id}|${key}`) && (
+                          <span
+                            title={`${name}: shift ${shiftsOn.get(`${p.id}|${key}`)!.join(", ")}`}
+                            className="flex h-6 items-center justify-center rounded border border-primary text-primary"
+                          >
+                            <span className="sr-only">
+                              Shift {shiftsOn.get(`${p.id}|${key}`)!.join(", ")}
+                            </span>
+                            <span aria-hidden="true">◷</span>
                           </span>
                         )}
                       </td>

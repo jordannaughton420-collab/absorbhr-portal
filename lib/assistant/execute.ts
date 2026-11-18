@@ -3,6 +3,7 @@ import type { SupabaseClient } from "@supabase/supabase-js";
 import type { Database } from "@/lib/database.types";
 import { ACTION_SCHEMAS, isActionKind, type ActionPayload } from "@/lib/assistant/schemas";
 import { leaveError } from "@/lib/leave-errors";
+import { shiftError } from "@/lib/shift-errors";
 
 type Db = SupabaseClient<Database>;
 
@@ -16,6 +17,12 @@ function dbMessage(error: { code?: string } | null, context: string) {
   if (!error) return "Something went wrong.";
   if (error.code === "42501") return DENIED;
   return leaveError(error, `assistant.${context}`).error;
+}
+
+function shiftMessage(error: { code?: string } | null, context: string) {
+  if (!error) return "Something went wrong.";
+  if (error.code === "42501") return DENIED;
+  return shiftError(error, `assistant.${context}`).error;
 }
 
 /**
@@ -152,6 +159,75 @@ export async function executeAction(
         entityId: data.id,
         link: "/assistant/notes",
       };
+    }
+    case "create_shift": {
+      const p = parsed.data as ActionPayload<"create_shift">;
+      const { data, error } = await supabase.rpc("create_shift", {
+        p_employee: p.employee_id,
+        p_date: p.date,
+        p_start: p.start_time,
+        p_end: p.end_time,
+        p_role: p.role_label,
+        p_location: p.location_id,
+        p_notes: p.notes,
+        p_allow_short_rest: p.allow_short_rest,
+      });
+      if (error) return { ok: false, message: shiftMessage(error, "create_shift") };
+      return {
+        ok: true,
+        message: "Shift added to the rota.",
+        entityId: data ?? undefined,
+        link: "/rota",
+      };
+    }
+    case "cancel_shift": {
+      const p = parsed.data as ActionPayload<"cancel_shift">;
+      const { error } = await supabase.rpc("cancel_shift", { p_shift: p.shift_id });
+      if (error) return { ok: false, message: shiftMessage(error, "cancel_shift") };
+      return { ok: true, message: "Shift cancelled.", entityId: p.shift_id, link: "/rota" };
+    }
+    case "post_open_shift": {
+      const p = parsed.data as ActionPayload<"post_open_shift">;
+      const { data, error } = await supabase.rpc("post_open_shift", {
+        p_date: p.date,
+        p_start: p.start_time,
+        p_end: p.end_time,
+        p_role: p.role_label,
+        p_location: p.location_id,
+        p_notes: p.notes,
+        p_group: p.group_id,
+        p_employees: p.employee_ids.length ? p.employee_ids : undefined,
+      });
+      if (error) return { ok: false, message: shiftMessage(error, "post_open_shift") };
+      return {
+        ok: true,
+        message: "Open shift posted. Everyone free has been emailed; the first to accept gets it.",
+        entityId: data ?? undefined,
+        link: "/rota",
+      };
+    }
+    case "add_to_shift_group": {
+      const p = parsed.data as ActionPayload<"add_to_shift_group">;
+      const { data, error } = await supabase.rpc("add_to_shift_group", {
+        p_employee: p.employee_id,
+        p_group_name: p.group_name,
+      });
+      if (error) return { ok: false, message: shiftMessage(error, "add_to_shift_group") };
+      return {
+        ok: true,
+        message: "Added to the group.",
+        entityId: data ?? undefined,
+        link: "/rota",
+      };
+    }
+    case "remove_from_shift_group": {
+      const p = parsed.data as ActionPayload<"remove_from_shift_group">;
+      const { error } = await supabase.rpc("remove_from_shift_group", {
+        p_employee: p.employee_id,
+        p_group: p.group_id,
+      });
+      if (error) return { ok: false, message: shiftMessage(error, "remove_from_shift_group") };
+      return { ok: true, message: "Removed from the group.", entityId: p.group_id, link: "/rota" };
     }
   }
 }

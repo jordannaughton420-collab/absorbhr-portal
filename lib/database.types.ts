@@ -2357,6 +2357,232 @@ export type Database = {
           },
         ];
       };
+      shift_group_members: {
+        Row: {
+          added_by: string | null;
+          created_at: string;
+          employee_id: string;
+          group_id: string;
+          tenant_id: string;
+        };
+        Insert: {
+          added_by?: string | null;
+          created_at?: string;
+          employee_id: string;
+          group_id: string;
+          tenant_id: string;
+        };
+        Update: {
+          added_by?: string | null;
+          created_at?: string;
+          employee_id?: string;
+          group_id?: string;
+          tenant_id?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "shift_group_members_group_id_fkey";
+            columns: ["group_id"];
+            isOneToOne: false;
+            referencedRelation: "shift_groups";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "shift_group_members_tenant_id_employee_id_fkey";
+            columns: ["tenant_id", "employee_id"];
+            isOneToOne: false;
+            referencedRelation: "employee_directory";
+            referencedColumns: ["tenant_id", "id"];
+          },
+          {
+            foreignKeyName: "shift_group_members_tenant_id_employee_id_fkey";
+            columns: ["tenant_id", "employee_id"];
+            isOneToOne: false;
+            referencedRelation: "employees";
+            referencedColumns: ["tenant_id", "id"];
+          },
+        ];
+      };
+      shift_groups: {
+        Row: {
+          created_at: string;
+          id: string;
+          name: string;
+          tenant_id: string;
+          updated_at: string;
+          updated_by: string | null;
+        };
+        Insert: {
+          created_at?: string;
+          id?: string;
+          name: string;
+          tenant_id: string;
+          updated_at?: string;
+          updated_by?: string | null;
+        };
+        Update: {
+          created_at?: string;
+          id?: string;
+          name?: string;
+          tenant_id?: string;
+          updated_at?: string;
+          updated_by?: string | null;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "shift_groups_tenant_id_fkey";
+            columns: ["tenant_id"];
+            isOneToOne: false;
+            referencedRelation: "tenants";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
+      shift_offers: {
+        Row: {
+          employee_id: string;
+          offered_at: string;
+          responded_at: string | null;
+          response: string | null;
+          shift_id: string;
+          tenant_id: string;
+        };
+        Insert: {
+          employee_id: string;
+          offered_at?: string;
+          responded_at?: string | null;
+          response?: string | null;
+          shift_id: string;
+          tenant_id: string;
+        };
+        Update: {
+          employee_id?: string;
+          offered_at?: string;
+          responded_at?: string | null;
+          response?: string | null;
+          shift_id?: string;
+          tenant_id?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "shift_offers_shift_id_fkey";
+            columns: ["shift_id"];
+            isOneToOne: false;
+            referencedRelation: "shifts";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "shift_offers_tenant_id_employee_id_fkey";
+            columns: ["tenant_id", "employee_id"];
+            isOneToOne: false;
+            referencedRelation: "employee_directory";
+            referencedColumns: ["tenant_id", "id"];
+          },
+          {
+            foreignKeyName: "shift_offers_tenant_id_employee_id_fkey";
+            columns: ["tenant_id", "employee_id"];
+            isOneToOne: false;
+            referencedRelation: "employees";
+            referencedColumns: ["tenant_id", "id"];
+          },
+        ];
+      };
+      shifts: {
+        Row: {
+          cancelled_at: string | null;
+          cancelled_by: string | null;
+          claimed_at: string | null;
+          created_at: string;
+          created_by: string | null;
+          employee_id: string | null;
+          ends_at: string;
+          group_id: string | null;
+          id: string;
+          location_id: string | null;
+          notes: string | null;
+          role_label: string | null;
+          starts_at: string;
+          status: string;
+          tenant_id: string;
+          updated_at: string;
+          updated_by: string | null;
+        };
+        Insert: {
+          cancelled_at?: string | null;
+          cancelled_by?: string | null;
+          claimed_at?: string | null;
+          created_at?: string;
+          created_by?: string | null;
+          employee_id?: string | null;
+          ends_at: string;
+          group_id?: string | null;
+          id?: string;
+          location_id?: string | null;
+          notes?: string | null;
+          role_label?: string | null;
+          starts_at: string;
+          status: string;
+          tenant_id: string;
+          updated_at?: string;
+          updated_by?: string | null;
+        };
+        Update: {
+          cancelled_at?: string | null;
+          cancelled_by?: string | null;
+          claimed_at?: string | null;
+          created_at?: string;
+          created_by?: string | null;
+          employee_id?: string | null;
+          ends_at?: string;
+          group_id?: string | null;
+          id?: string;
+          location_id?: string | null;
+          notes?: string | null;
+          role_label?: string | null;
+          starts_at?: string;
+          status?: string;
+          tenant_id?: string;
+          updated_at?: string;
+          updated_by?: string | null;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "shifts_group_id_fkey";
+            columns: ["group_id"];
+            isOneToOne: false;
+            referencedRelation: "shift_groups";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "shifts_location_id_fkey";
+            columns: ["location_id"];
+            isOneToOne: false;
+            referencedRelation: "locations";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "shifts_tenant_id_employee_id_fkey";
+            columns: ["tenant_id", "employee_id"];
+            isOneToOne: false;
+            referencedRelation: "employee_directory";
+            referencedColumns: ["tenant_id", "id"];
+          },
+          {
+            foreignKeyName: "shifts_tenant_id_employee_id_fkey";
+            columns: ["tenant_id", "employee_id"];
+            isOneToOne: false;
+            referencedRelation: "employees";
+            referencedColumns: ["tenant_id", "id"];
+          },
+          {
+            foreignKeyName: "shifts_tenant_id_fkey";
+            columns: ["tenant_id"];
+            isOneToOne: false;
+            referencedRelation: "tenants";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
       sickness_absences: {
         Row: {
           created_at: string;
@@ -2501,6 +2727,7 @@ export type Database = {
           employees_can_view_own_salary: boolean;
           leave_year_start_day: number;
           leave_year_start_month: number;
+          managers_can_plan_shifts: boolean;
           require_mfa_for_all: boolean;
           retention_years: number;
           review_rating_labels: string[];
@@ -2517,6 +2744,7 @@ export type Database = {
           employees_can_view_own_salary?: boolean;
           leave_year_start_day?: number;
           leave_year_start_month?: number;
+          managers_can_plan_shifts?: boolean;
           require_mfa_for_all?: boolean;
           retention_years?: number;
           review_rating_labels?: string[];
@@ -2533,6 +2761,7 @@ export type Database = {
           employees_can_view_own_salary?: boolean;
           leave_year_start_day?: number;
           leave_year_start_month?: number;
+          managers_can_plan_shifts?: boolean;
           require_mfa_for_all?: boolean;
           retention_years?: number;
           review_rating_labels?: string[];
@@ -2673,6 +2902,10 @@ export type Database = {
         };
         Returns: string;
       };
+      add_to_shift_group: {
+        Args: { p_employee: string; p_group_name: string };
+        Returns: string;
+      };
       anonymise_employee: {
         Args: { p_early?: boolean; p_employee: string; p_reason?: string };
         Returns: undefined;
@@ -2726,6 +2959,8 @@ export type Database = {
         }[];
       };
       cancel_leave: { Args: { p_request: string }; Returns: undefined };
+      cancel_shift: { Args: { p_shift: string }; Returns: undefined };
+      claim_open_shift: { Args: { p_shift: string }; Returns: undefined };
       copy_policy_template: { Args: { p_template: string }; Returns: string };
       count_leave_days: {
         Args: {
@@ -2736,6 +2971,19 @@ export type Database = {
           p_start: string;
         };
         Returns: number;
+      };
+      create_shift: {
+        Args: {
+          p_allow_short_rest?: boolean;
+          p_date: string;
+          p_employee: string;
+          p_end: string;
+          p_location?: string;
+          p_notes?: string;
+          p_role?: string;
+          p_start: string;
+        };
+        Returns: string;
       };
       create_tenant: {
         Args: {
@@ -2759,6 +3007,7 @@ export type Database = {
         Args: { p_approve: boolean; p_note?: string; p_request: string };
         Returns: undefined;
       };
+      decline_open_shift: { Args: { p_shift: string }; Returns: undefined };
       end_sickness: {
         Args: { p_absence: string; p_end: string; p_half_end?: boolean };
         Returns: undefined;
@@ -2826,6 +3075,21 @@ export type Database = {
         };
         Returns: string;
       };
+      open_shift_candidates: {
+        Args: {
+          p_date: string;
+          p_employees?: string[];
+          p_end: string;
+          p_group?: string;
+          p_start: string;
+        };
+        Returns: {
+          available: boolean;
+          employee_id: string;
+          name: string;
+          reason: string;
+        }[];
+      };
       policy_acknowledgement_status: {
         Args: { p_policy: string };
         Returns: {
@@ -2834,6 +3098,19 @@ export type Database = {
           acknowledged_version: number;
           employee_id: string;
         }[];
+      };
+      post_open_shift: {
+        Args: {
+          p_date: string;
+          p_employees?: string[];
+          p_end: string;
+          p_group?: string;
+          p_location?: string;
+          p_notes?: string;
+          p_role?: string;
+          p_start: string;
+        };
+        Returns: string;
       };
       process_carry_over: { Args: { p_year_start: string }; Returns: number };
       publish_policy_version: {
@@ -2855,6 +3132,10 @@ export type Database = {
           p_start: string;
         };
         Returns: string;
+      };
+      remove_from_shift_group: {
+        Args: { p_employee: string; p_group: string };
+        Returns: undefined;
       };
       request_leave: {
         Args: {
@@ -2915,6 +3196,7 @@ export type Database = {
         Args: { p_absence: string; p_basis: string };
         Returns: undefined;
       };
+      shifts_sar_data: { Args: { p_employee: string }; Returns: Json };
       sign_review: {
         Args: { p_comments?: string; p_review: string };
         Returns: undefined;

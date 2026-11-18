@@ -9,6 +9,8 @@ import {
   ShieldAlert,
   Building2,
   CalendarDays,
+  CalendarClock,
+  Clock,
   ClipboardCheck,
   Plane,
   Thermometer,
@@ -49,6 +51,8 @@ const ICONS = {
   dataProtection: DatabaseZap,
   breaches: ShieldAlert,
   assistant: Sparkles,
+  rota: CalendarClock,
+  shifts: Clock,
 };
 
 export type NavItem = { href: string; label: string; icon: keyof typeof ICONS };

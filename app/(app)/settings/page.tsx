@@ -13,6 +13,7 @@ import { getHolidayPolicy } from "@/lib/data/leave";
 import { Alert } from "@/components/ui/feedback";
 import { CarryOverForm, HolidayPolicyForm } from "./holiday-forms";
 import { ReviewSettingsForm } from "@/app/(app)/reviews/review-forms";
+import { ShiftSettingsForm } from "@/app/(app)/rota/rota-forms";
 import {
   AddDepartmentForm,
   AddLocationForm,
@@ -148,6 +149,20 @@ export default async function SettingsPage() {
               </CardHeader>
               <CardContent>
                 <AssistantSettingsForm values={settings} />
+              </CardContent>
+            </Card>
+          )}
+          {!ctx.supportSession && (
+            <Card className="lg:col-span-2">
+              <CardHeader>
+                <CardTitle>Shifts and rota</CardTitle>
+                <CardDescription>
+                  Who can plan shifts and post open shifts. Groups of people for open shifts are
+                  managed on the Rota page.
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                <ShiftSettingsForm value={settings.managers_can_plan_shifts} />
               </CardContent>
             </Card>
           )}
