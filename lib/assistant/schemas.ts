@@ -1,6 +1,7 @@
 import { z } from "zod";
 import { CONTRACT_TYPES } from "@/lib/validation/employee";
 import { shiftTime } from "@/lib/validation/shifts";
+import { ROLES } from "@/lib/validation/settings";
 
 // What the assistant may suggest. Each suggestion is checked against these rules twice:
 // when the assistant makes it, and again just before it is carried out on Confirm.
@@ -91,6 +92,36 @@ export const ACTION_SCHEMAS = {
     }),
   add_to_shift_group: z.object({ employee_id: id, group_name: z.string().trim().min(1).max(60) }),
   remove_from_shift_group: z.object({ employee_id: id, group_id: id }),
+  end_sickness: z.object({
+    absence_id: id,
+    end_date: date,
+    half_day_end: z.boolean().default(false),
+  }),
+  complete_checklist_task: z.object({ item_id: id, done: z.boolean().default(true) }),
+  adjust_holiday: z.object({
+    employee_id: id,
+    days: z
+      .number()
+      .min(-100)
+      .max(100)
+      .refine((n) => n !== 0, { message: "Give a number of days (minus to take days away)" })
+      .refine((n) => Number.isInteger(n * 2), { message: "Use whole or half days" }),
+    reason: z.string().trim().min(3).max(300),
+  }),
+  invite_to_portal: z.object({ employee_id: id }),
+  mark_leaver: z.object({ employee_id: id, end_date: date }),
+  change_role: z.object({
+    employee_id: id,
+    role: z.enum(Object.keys(ROLES) as [keyof typeof ROLES]),
+    active: z.boolean().default(true),
+  }),
+  add_department: z.object({ name: z.string().trim().min(1).max(120) }),
+  add_location: z.object({
+    name: z.string().trim().min(1).max(120),
+    address: z.string().trim().max(500).optional(),
+  }),
+  start_review: z.object({ employee_id: id, title: z.string().trim().min(1).max(160) }),
+  publish_policy: z.object({ version_id: id, require_reack: z.boolean().default(true) }),
 } as const;
 
 export type ActionKind = keyof typeof ACTION_SCHEMAS;
@@ -118,16 +149,28 @@ export const WHO_CAN = {
   post_open_shift: "planner",
   add_to_shift_group: "hr",
   remove_from_shift_group: "hr",
-} as const satisfies Record<ActionKind, "anyone" | "manager" | "planner" | "hr">;
+  // Everyday admin jobs. The database checks each one again for the person who confirms it.
+  end_sickness: "manager",
+  complete_checklist_task: "anyone",
+  adjust_holiday: "hr",
+  invite_to_portal: "admin",
+  mark_leaver: "hr",
+  change_role: "admin",
+  add_department: "admin",
+  add_location: "admin",
+  start_review: "manager",
+  publish_policy: "hr",
+} as const satisfies Record<ActionKind, "anyone" | "manager" | "planner" | "hr" | "admin">;
 
 export function allowedFor(
   kind: ActionKind,
-  who: { isHr: boolean; isManager: boolean; canPlanShifts?: boolean },
+  who: { isHr: boolean; isManager: boolean; canPlanShifts?: boolean; isClientAdmin?: boolean },
 ): boolean {
   const need = WHO_CAN[kind];
   if (need === "anyone") return true;
   if (need === "manager") return who.isHr || who.isManager;
   if (need === "planner") return who.isHr || (who.isManager && Boolean(who.canPlanShifts));
+  if (need === "admin") return Boolean(who.isClientAdmin);
   return who.isHr;
 }
 
