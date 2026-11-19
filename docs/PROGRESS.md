@@ -273,3 +273,7 @@ All environment variables verified correct on 26 Oct 2026 (rate limiting and inv
 - Going live (owner said "Yes, make it live", 19 Nov 2026): 0017 applied to production first through the Supabase
   connector (guarded, recorded); the new `assistant_actions_kind_check` matches the test database exactly. Then
   merged into `main` and deployed.
+- Follow-up fix (19 Nov 2026): opening the assistant from the menu still said the browser blocked the microphone. The
+  browser keeps the Permissions-Policy of the first page loaded, and Next.js swaps pages without reloading, so the
+  `/assistant`-only rule never applied. `microphone=(self)` is now site-wide (camera and location still blocked,
+  nothing for embedded or outside sites). e2e/microphone.spec.ts now opens the assistant from the dashboard menu.

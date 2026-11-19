@@ -229,8 +229,8 @@ later phases. **[DECISION]** if clients need any of them.
 
 ### Other safeguards
 - Security headers: HSTS, `X-Frame-Options: DENY`, `X-Content-Type-Options`, `Referrer-Policy: no-referrer`,
-  `Permissions-Policy` (no camera/microphone/location; the microphone is allowed on the assistant pages only, for its
-  speak button). Speech-to-text is the browser's own: in Chrome and Edge the browser sends the audio to its maker's
+  `Permissions-Policy` (no camera or location; the microphone is allowed for the portal's own pages only, for the
+  assistant's speak button, and never for embedded or outside sites). Speech-to-text is the browser's own: in Chrome and Edge the browser sends the audio to its maker's
   speech service (Google, Microsoft), not to AbsorbHR or Anthropic, and only while the button shows "listening".
 - Input validation with the same Zod rules in the browser and on the server, plus database constraints.
 - The service-role ("master") key is used only on the server, only for inviting users and rate limiting, and only after
