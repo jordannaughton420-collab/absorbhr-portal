@@ -1,5 +1,7 @@
 "use client";
 
+import type { ChatCard } from "@/lib/assistant/history";
+
 import { useState, useTransition } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
@@ -9,13 +11,7 @@ import { Badge } from "@/components/ui/feedback";
 import { cn } from "@/lib/utils";
 import { cancelAction, confirmAction } from "./actions";
 
-export type ActionCardData = {
-  id: string;
-  summary: string;
-  status: "pending" | "running" | "done" | "failed" | "cancelled" | "expired";
-  resultMessage: string | null;
-  expired: boolean;
-};
+export type ActionCardData = ChatCard;
 
 const STATUS = {
   pending: { label: "Waiting for you", variant: "warning" },
@@ -26,7 +22,14 @@ const STATUS = {
   expired: { label: "Expired", variant: "muted" },
 } as const;
 
-export function ActionCard({ action }: { action: ActionCardData }) {
+export function ActionCard({
+  action,
+  onChange,
+}: {
+  action: ActionCardData;
+  /** Called after Confirm or Cancel, e.g. so the corner panel can reload. */
+  onChange?: () => void;
+}) {
   const router = useRouter();
   const [pending, startTransition] = useTransition();
   const [outcome, setOutcome] = useState<{ ok: boolean; text: string; link?: string } | null>(null);
@@ -43,6 +46,7 @@ export function ActionCard({ action }: { action: ActionCardData }) {
           : { ok: false, text: r.error },
       );
       router.refresh();
+      onChange?.();
     });
   }
 
@@ -51,6 +55,7 @@ export function ActionCard({ action }: { action: ActionCardData }) {
       const r = await cancelAction(action.id);
       setOutcome({ ok: r.ok, text: r.ok ? (r.message ?? "Cancelled.") : r.error });
       router.refresh();
+      onChange?.();
     });
   }
 

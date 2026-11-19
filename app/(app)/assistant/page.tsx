@@ -9,14 +9,11 @@ import { Alert } from "@/components/ui/feedback";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { ChatBox } from "./chat-box";
-import { ActionCard, type ActionCardData } from "./action-card";
+import { ActionCard } from "./action-card";
+import { loadChat, type ChatEntry } from "@/lib/assistant/history";
 import { deleteConversation } from "./actions";
 
 export const metadata: Metadata = { title: "Assistant · AbsorbHR Portal" };
-
-type Entry =
-  | { type: "message"; at: string; role: "user" | "assistant"; text: string; key: string }
-  | { type: "action"; at: string; action: ActionCardData; key: string };
 
 export default async function AssistantPage({
   searchParams,
@@ -38,45 +35,7 @@ export default async function AssistantPage({
     .limit(50);
   const current = conversations?.find((x) => x.id === c) ?? null;
 
-  let entries: Entry[] = [];
-  if (current) {
-    const [{ data: messages }, { data: actions }] = await Promise.all([
-      supabase
-        .from("assistant_messages")
-        .select("id, role, display_text, created_at")
-        .eq("conversation_id", current.id)
-        .not("display_text", "is", null)
-        .order("seq"),
-      supabase
-        .from("assistant_actions")
-        .select("id, summary, status, result_message, created_at, result_entity_id, kind")
-        .eq("conversation_id", current.id)
-        .order("created_at"),
-    ]);
-    entries = [
-      ...(messages ?? []).map((m): Entry => ({
-        type: "message",
-        at: m.created_at,
-        role: m.role as "user" | "assistant",
-        text: m.display_text ?? "",
-        key: m.id,
-      })),
-      ...(actions ?? []).map((a): Entry => ({
-        type: "action",
-        at: a.created_at,
-        key: a.id,
-        action: {
-          id: a.id,
-          summary: a.summary,
-          status: a.status as ActionCardData["status"],
-          resultMessage: a.result_message,
-          expired:
-            a.status === "pending" && Date.parse(a.created_at) < Date.now() - 24 * 3600 * 1000,
-        },
-      })),
-    ].sort((x, y) => x.at.localeCompare(y.at));
-    entries = cardsAfterReply(entries);
-  }
+  const entries: ChatEntry[] = current ? await loadChat(supabase, current.id) : [];
 
   return (
     <div className="space-y-6">
@@ -206,26 +165,4 @@ export default async function AssistantPage({
 function retentionText(months: number) {
   if (months % 12 === 0) return `${months / 12} year${months === 12 ? "" : "s"}`;
   return `${months} month${months === 1 ? "" : "s"}`;
-}
-
-// A suggestion is saved a moment before the assistant writes its reply about it, so by time
-// it would sit above that reply. Show each card under the reply from the same turn instead.
-function cardsAfterReply(entries: Entry[]): Entry[] {
-  const out: Entry[] = [];
-  let waiting: Entry[] = [];
-  for (const e of entries) {
-    if (e.type === "action") {
-      waiting.push(e);
-      continue;
-    }
-    if (e.role === "user") {
-      out.push(...waiting);
-      waiting = [];
-      out.push(e);
-    } else {
-      out.push(e, ...waiting);
-      waiting = [];
-    }
-  }
-  return [...out, ...waiting];
 }
