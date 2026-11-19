@@ -3,6 +3,7 @@ import { Menu } from "lucide-react";
 import { Logo } from "@/components/brand/logo";
 import { Nav, type NavItem } from "@/components/app/nav";
 import { IdleTimer } from "@/components/app/idle-timer";
+import { NativeLock } from "@/components/app/native-lock";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -212,6 +213,7 @@ export default async function AppLayout({ children }: { children: React.ReactNod
 
       {showPanel && <AssistantPanel isHr={ctx.isHr} />}
       <IdleTimer idleMinutes={ctx.settings?.session_idle_minutes ?? 30} />
+      <NativeLock />
     </div>
   );
 }

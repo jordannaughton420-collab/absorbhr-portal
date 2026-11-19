@@ -1,0 +1,23 @@
+{
+  "name": "absorbhr-portal-app",
+  "version": "1.0.0",
+  "private": true,
+  "description": "The AbsorbHR Portal as an iPhone and Android app (Capacitor). It opens the live portal and adds phone features.",
+  "scripts": {
+    "sync": "cap sync",
+    "assets": "capacitor-assets generate --iconBackgroundColor '#570080' --iconBackgroundColorDark '#3b0057' --splashBackgroundColor '#570080' --splashBackgroundColorDark '#3b0057'"
+  },
+  "dependencies": {
+    "@aparajita/capacitor-biometric-auth": "10.0.0",
+    "@capacitor/android": "8.6.0",
+    "@capacitor/app": "8.1.2",
+    "@capacitor/core": "8.6.0",
+    "@capacitor/ios": "8.6.0",
+    "@capacitor/splash-screen": "8.0.2",
+    "@capacitor/status-bar": "8.0.4"
+  },
+  "devDependencies": {
+    "@capacitor/assets": "4.0.0",
+    "@capacitor/cli": "8.6.0"
+  }
+}

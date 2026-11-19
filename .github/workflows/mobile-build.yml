@@ -1,0 +1,69 @@
+# Test builds of the phone app (mobile/, Capacitor), made in the cloud so no Mac is needed.
+# Runs only when started by hand: GitHub -> Actions -> Build phone app -> Run workflow.
+# Produces an Android test app (.apk, installable on an Android phone) and an iPhone build for
+# the iOS Simulator. Neither is signed for the stores yet: that needs the Apple Developer and
+# Google Play accounts (see mobile/README.md).
+name: Build phone app
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  android:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: mobile
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: mobile/package-lock.json
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: 21
+      - run: npm ci
+      - run: npx cap sync android
+      - name: Build test app
+        working-directory: mobile/android
+        run: ./gradlew assembleDebug --no-daemon
+      - uses: actions/upload-artifact@v4
+        with:
+          name: absorbhr-android-test
+          path: mobile/android/app/build/outputs/apk/debug/app-debug.apk
+          retention-days: 14
+
+  ios:
+    runs-on: macos-latest
+    defaults:
+      run:
+        working-directory: mobile
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: mobile/package-lock.json
+      - run: npm ci
+      - run: npx cap sync ios
+      - name: Build for the iOS Simulator (unsigned)
+        working-directory: mobile/ios/App
+        run: |
+          xcodebuild -project App.xcodeproj -scheme App -configuration Debug \
+            -sdk iphonesimulator -destination 'generic/platform=iOS Simulator' \
+            -derivedDataPath build CODE_SIGNING_ALLOWED=NO build
+      - name: Zip the app
+        working-directory: mobile/ios/App/build/Build/Products/Debug-iphonesimulator
+        run: ditto -c -k --keepParent App.app AbsorbHR-simulator.zip
+      - uses: actions/upload-artifact@v4
+        with:
+          name: absorbhr-ios-simulator
+          path: mobile/ios/App/build/Build/Products/Debug-iphonesimulator/AbsorbHR-simulator.zip
+          retention-days: 14
