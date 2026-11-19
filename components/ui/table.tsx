@@ -16,7 +16,7 @@ export function Th({ className, ...props }: React.ThHTMLAttributes<HTMLTableCell
     <th
       scope="col"
       className={cn(
-        "h-10 border-b px-3 text-left align-middle font-medium text-muted-foreground",
+        "h-10 border-b px-3 text-left align-middle text-xs font-semibold uppercase tracking-wider text-muted-foreground",
         className,
       )}
       {...props}

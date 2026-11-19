@@ -49,7 +49,7 @@ export default async function CasesPage({
   return (
     <div className="space-y-6">
       <div>
-        <h1 className="text-2xl font-semibold tracking-tight">Disciplinary and grievance cases</h1>
+        <h1 className="text-2xl font-extrabold tracking-tight sm:text-3xl">Disciplinary and grievance cases</h1>
         <p className="text-sm text-muted-foreground">
           HR only. Line managers, the employee and AbsorbHR support can&apos;t see these, and you
           never see a case about yourself. Every visit is recorded in the audit log.

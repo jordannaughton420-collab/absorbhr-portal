@@ -123,9 +123,9 @@ export default async function AppLayout({ children }: { children: React.ReactNod
   const sidebar = (
     <>
       <Nav items={items} />
-      <div className="mt-6 border-t pt-4 text-sm">
-        <p className="font-medium">{ctx.displayName}</p>
-        <p className="text-muted-foreground">
+      <div className="mt-6 border-t border-white/15 pt-4 text-sm">
+        <p className="font-semibold text-white">{ctx.displayName}</p>
+        <p className="text-white/70">
           {ctx.supportSession?.tenantName ?? ctx.tenantName ?? "AbsorbHR"}
         </p>
         <form
@@ -135,7 +135,7 @@ export default async function AppLayout({ children }: { children: React.ReactNod
           }}
           className="mt-3"
         >
-          <Button type="submit" variant="outline" size="sm" className="w-full">
+          <Button type="submit" variant="onBrand" size="sm" className="w-full">
             Sign out
           </Button>
         </form>
@@ -144,21 +144,21 @@ export default async function AppLayout({ children }: { children: React.ReactNod
   );
 
   return (
-    <div className="min-h-screen bg-accent lg:flex">
-      {/* Desktop sidebar */}
-      <aside className="hidden w-64 shrink-0 border-r bg-card p-5 lg:block">
-        <Link href="/dashboard" aria-label="AbsorbHR Portal home">
-          <Logo height={34} />
+    <div className="min-h-screen bg-page lg:flex">
+      {/* Desktop sidebar: the website's purple panel */}
+      <aside className="brand-surface on-brand sticky top-0 hidden h-screen w-64 shrink-0 overflow-y-auto p-5 lg:block">
+        <Link href="/dashboard" aria-label="AbsorbHR Portal home" className="inline-block">
+          <Logo variant="white" height={28} />
         </Link>
         <div className="mt-8">{sidebar}</div>
       </aside>
 
       <div className="min-w-0 flex-1">
         {/* Mobile header with disclosure menu (works without JavaScript) */}
-        <details className="border-b bg-card lg:hidden">
+        <details className="brand-surface on-brand lg:hidden">
           <summary className="flex cursor-pointer list-none items-center justify-between px-4 py-3">
-            <Logo height={32} />
-            <span className="inline-flex items-center gap-2 rounded-md border px-3 py-1.5 text-sm font-medium">
+            <Logo variant="white" height={26} />
+            <span className="inline-flex items-center gap-2 rounded-full border-[1.5px] border-white/45 bg-white/5 px-3.5 py-1.5 text-sm font-semibold text-white">
               <Menu className="size-4" aria-hidden="true" /> Menu
             </span>
           </summary>

@@ -134,7 +134,7 @@ export default async function EmployeePage({ params }: { params: Promise<{ id: s
     <div className="space-y-6">
       <div className="flex flex-wrap items-start justify-between gap-4">
         <div>
-          <h1 className="text-2xl font-semibold tracking-tight">{isSelf ? "My profile" : name}</h1>
+          <h1 className="text-2xl font-extrabold tracking-tight sm:text-3xl">{isSelf ? "My profile" : name}</h1>
           <p className="text-muted-foreground">
             {[emp.job_title, emp.departments?.name].filter(Boolean).join(" · ") ||
               "No job title recorded"}

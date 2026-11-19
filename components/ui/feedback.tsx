@@ -2,10 +2,10 @@ import * as React from "react";
 import { cva, type VariantProps } from "class-variance-authority";
 import { cn } from "@/lib/utils";
 
-const alertVariants = cva("rounded-lg border px-4 py-3 text-sm", {
+const alertVariants = cva("rounded-xl border px-4 py-3 text-sm", {
   variants: {
     variant: {
-      info: "border-primary/30 bg-primary/5",
+      info: "border-primary/20 bg-brand-soft",
       success: "border-success/40 bg-success/5 text-success",
       error: "border-destructive/40 bg-destructive/5 text-destructive",
       warning: "border-warning/40 bg-warning/5 text-warning",
@@ -29,11 +29,11 @@ export function Alert({
 }
 
 const badgeVariants = cva(
-  "inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium",
+  "inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-semibold",
   {
     variants: {
       variant: {
-        default: "bg-primary/10 text-primary",
+        default: "bg-brand-soft text-primary",
         muted: "bg-muted text-muted-foreground",
         success: "bg-success/10 text-success",
         warning: "bg-warning/10 text-warning",

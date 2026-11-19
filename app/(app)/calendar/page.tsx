@@ -120,7 +120,7 @@ export default async function CalendarPage({
     <div className="space-y-6">
       <div className="flex flex-wrap items-center justify-between gap-3">
         <div>
-          <h1 className="text-2xl font-semibold tracking-tight">Team calendar</h1>
+          <h1 className="text-2xl font-extrabold tracking-tight sm:text-3xl">Team calendar</h1>
           <p className="text-sm text-muted-foreground">
             {wide ? "Everyone in the company." : "You, your team and anyone who reports to you."}{" "}
             Details you aren&apos;t allowed to see show as “Away”.

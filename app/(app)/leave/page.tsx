@@ -42,7 +42,7 @@ export default async function LeavePage() {
 
   return (
     <div className="space-y-6">
-      <h1 className="text-2xl font-semibold tracking-tight">My leave</h1>
+      <h1 className="text-2xl font-extrabold tracking-tight sm:text-3xl">My leave</h1>
 
       <div className="grid gap-6 lg:grid-cols-[1fr_1.4fr]">
         <Card>

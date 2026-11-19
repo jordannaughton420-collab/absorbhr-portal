@@ -2,10 +2,10 @@ import * as React from "react";
 import { cn } from "@/lib/utils";
 
 const control =
-  "w-full rounded-md border border-input bg-card px-3 text-sm placeholder:text-muted-foreground disabled:opacity-60 aria-[invalid=true]:border-destructive";
+  "w-full rounded-lg border-[1.5px] border-input bg-card px-3.5 text-sm transition-[border-color,box-shadow] placeholder:text-muted-foreground focus-visible:border-brand-light focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-brand-glow/25 disabled:opacity-60 aria-[invalid=true]:border-destructive";
 
 export function Input({ className, ...props }: React.InputHTMLAttributes<HTMLInputElement>) {
-  return <input className={cn(control, "h-10", className)} {...props} />;
+  return <input className={cn(control, "h-11", className)} {...props} />;
 }
 
 export function Textarea({
@@ -16,11 +16,11 @@ export function Textarea({
 }
 
 export function Select({ className, ...props }: React.SelectHTMLAttributes<HTMLSelectElement>) {
-  return <select className={cn(control, "h-10", className)} {...props} />;
+  return <select className={cn(control, "h-11", className)} {...props} />;
 }
 
 export function Label({ className, ...props }: React.LabelHTMLAttributes<HTMLLabelElement>) {
-  return <label className={cn("text-sm font-medium", className)} {...props} />;
+  return <label className={cn("text-sm font-semibold", className)} {...props} />;
 }
 
 type FieldProps = {

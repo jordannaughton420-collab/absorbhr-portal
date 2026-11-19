@@ -95,7 +95,7 @@ export default async function OrgChartPage() {
   return (
     <div className="space-y-6">
       <div>
-        <h1 className="text-2xl font-semibold tracking-tight">Org chart</h1>
+        <h1 className="text-2xl font-extrabold tracking-tight sm:text-3xl">Org chart</h1>
         <p className="text-sm text-muted-foreground">
           {people.length} people in {ctx.supportSession?.tenantName ?? ctx.tenantName}. Use “direct
           reports” under a name to show or hide their team.

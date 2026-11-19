@@ -22,7 +22,7 @@ export default async function BreachesPage() {
   return (
     <div className="space-y-6">
       <div>
-        <h1 className="text-2xl font-semibold tracking-tight">Personal data breach log</h1>
+        <h1 className="text-2xl font-extrabold tracking-tight sm:text-3xl">Personal data breach log</h1>
         <p className="text-sm text-muted-foreground">
           {isAbsorb
             ? "Every client company's breach log. Read only."

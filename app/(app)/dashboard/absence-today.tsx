@@ -43,9 +43,9 @@ export async function AbsenceToday({ ctx }: { ctx: SessionContext }) {
     <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
       {ownRecord && (
         <Link href="/leave" className="rounded-xl">
-          <Card className="h-full p-5 hover:border-primary">
+          <Card className="h-full p-5 transition-[border-color,box-shadow,transform] hover:-translate-y-0.5 hover:border-brand-light/40 hover:shadow-lift">
             <p className="text-sm text-muted-foreground">My holiday left</p>
-            <p className="mt-1 text-3xl font-semibold text-primary">
+            <p className="mt-1 text-3xl font-extrabold tracking-tight text-primary">
               {balance && policy?.configured_at ? Number(balance.remaining) : "—"}
             </p>
             <p className="text-xs text-muted-foreground">
@@ -56,24 +56,26 @@ export async function AbsenceToday({ ctx }: { ctx: SessionContext }) {
       )}
       {canApprove && (
         <Link href="/leave/approvals" className="rounded-xl">
-          <Card className="h-full p-5 hover:border-primary">
+          <Card className="h-full p-5 transition-[border-color,box-shadow,transform] hover:-translate-y-0.5 hover:border-brand-light/40 hover:shadow-lift">
             <p className="text-sm text-muted-foreground">Requests waiting for you</p>
-            <p className="mt-1 text-3xl font-semibold text-primary">{pending ?? 0}</p>
+            <p className="mt-1 text-3xl font-extrabold tracking-tight text-primary">
+              {pending ?? 0}
+            </p>
             <p className="text-xs text-muted-foreground">leave requests to approve</p>
           </Card>
         </Link>
       )}
       {ownRecord && toRead > 0 && (
         <Link href="/policies" className="rounded-xl">
-          <Card className="h-full border-warning/50 p-5 hover:border-primary">
+          <Card className="h-full border-warning/50 p-5 transition-[border-color,box-shadow,transform] hover:-translate-y-0.5 hover:border-brand-light/40 hover:shadow-lift">
             <p className="text-sm text-muted-foreground">Policies to read</p>
-            <p className="mt-1 text-3xl font-semibold text-warning">{toRead}</p>
+            <p className="mt-1 text-3xl font-extrabold tracking-tight text-warning">{toRead}</p>
             <p className="text-xs text-muted-foreground">please read and confirm</p>
           </Card>
         </Link>
       )}
       <Link href="/calendar" className="rounded-xl">
-        <Card className="h-full p-5 hover:border-primary">
+        <Card className="h-full p-5 transition-[border-color,box-shadow,transform] hover:-translate-y-0.5 hover:border-brand-light/40 hover:shadow-lift">
           <p className="text-sm text-muted-foreground">Away today</p>
           {offToday.length ? (
             <ul className="mt-2 space-y-1 text-sm">

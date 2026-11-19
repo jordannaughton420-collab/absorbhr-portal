@@ -43,7 +43,9 @@ export function LeaveBalance({
         Leave year {formatDate(balance.leave_year_start)} – {formatDate(balance.leave_year_end)}
       </p>
       <p className="mt-2 flex items-baseline gap-2">
-        <span className="text-4xl font-semibold text-primary">{fmt(balance.remaining)}</span>
+        <span className="text-4xl font-extrabold tracking-tight text-primary">
+          {fmt(balance.remaining)}
+        </span>
         <span className="text-muted-foreground">days left to book</span>
       </p>
       {Number(balance.pending) > 0 && (

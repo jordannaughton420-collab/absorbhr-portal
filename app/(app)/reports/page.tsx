@@ -30,7 +30,7 @@ export default async function ReportsPage({
   return (
     <div className="space-y-6">
       <div>
-        <h1 className="text-2xl font-semibold tracking-tight">Reports</h1>
+        <h1 className="text-2xl font-extrabold tracking-tight sm:text-3xl">Reports</h1>
         <p className="text-sm text-muted-foreground">
           Downloads are recorded in the audit log. Store exported files securely.
         </p>
@@ -54,7 +54,7 @@ export default async function ReportsPage({
         {report.summary.map((s) => (
           <Card key={s.label} className="p-5">
             <p className="text-sm text-muted-foreground">{s.label}</p>
-            <p className="mt-1 text-3xl font-semibold text-primary">{s.value}</p>
+            <p className="mt-1 text-3xl font-extrabold tracking-tight text-primary">{s.value}</p>
           </Card>
         ))}
       </div>

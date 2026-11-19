@@ -205,7 +205,7 @@ export async function MyWork({ ctx }: { ctx: SessionContext }) {
             {balance?.policy_configured ? (
               <>
                 <p>
-                  <span className="text-3xl font-semibold text-primary">
+                  <span className="text-3xl font-extrabold tracking-tight text-primary">
                     {fmt(balance.remaining)}
                   </span>{" "}
                   <span className="text-sm text-muted-foreground">days left</span>

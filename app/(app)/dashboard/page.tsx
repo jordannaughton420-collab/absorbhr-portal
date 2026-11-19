@@ -4,7 +4,6 @@ import { requireContext } from "@/lib/auth/context";
 import { createClient } from "@/lib/supabase/server";
 import { daysUntil, formatDate } from "@/lib/format";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { DoodleSquiggle } from "@/components/brand/doodle";
 import { AbsenceToday } from "./absence-today";
 import { MyWork } from "./my-work";
 
@@ -12,9 +11,9 @@ export const metadata: Metadata = { title: "Dashboard · AbsorbHR Portal" };
 
 function Stat({ label, value, href }: { label: string; value: number; href?: string }) {
   const body = (
-    <Card className="p-5 transition-colors hover:border-primary">
+    <Card className="p-5 transition-[border-color,box-shadow,transform] hover:-translate-y-0.5 hover:border-brand-light/40 hover:shadow-lift">
       <p className="text-sm text-muted-foreground">{label}</p>
-      <p className="mt-1 text-3xl font-semibold text-primary">{value}</p>
+      <p className="mt-1 text-3xl font-extrabold tracking-tight text-primary">{value}</p>
     </Card>
   );
   return href ? (
@@ -81,11 +80,20 @@ export default async function DashboardPage() {
 
   return (
     <div className="space-y-6">
-      <div>
-        <h1 className="text-2xl font-semibold tracking-tight">Hello, {firstName}</h1>
-        <DoodleSquiggle className="mt-1 h-4 w-20 text-primary" />
-        <p className="mt-2 text-muted-foreground">
+      <div className="brand-surface on-brand rounded-[24px] px-6 py-7 shadow-float sm:px-8 sm:py-9">
+        <p className="eyebrow">
           {ctx.supportSession?.tenantName ?? ctx.tenantName ?? "AbsorbHR platform administration"}
+        </p>
+        <h1 className="mt-3 text-3xl font-extrabold tracking-tight sm:text-4xl">
+          Hello, {firstName}
+        </h1>
+        <p className="mt-2 text-white/80">
+          {new Date().toLocaleDateString("en-GB", {
+            weekday: "long",
+            day: "numeric",
+            month: "long",
+            timeZone: "Europe/London",
+          })}
         </p>
       </div>
 
@@ -171,7 +179,7 @@ export default async function DashboardPage() {
         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
           {ctx.employeeId && (
             <Link href={`/employees/${ctx.employeeId}`} className="rounded-xl">
-              <Card className="h-full p-5 hover:border-primary">
+              <Card className="h-full p-5 transition-[border-color,box-shadow,transform] hover:-translate-y-0.5 hover:border-brand-light/40 hover:shadow-lift">
                 <h2 className="font-semibold">My profile</h2>
                 <p className="mt-1 text-sm text-muted-foreground">
                   Check and update your personal details and emergency contacts.
@@ -181,7 +189,7 @@ export default async function DashboardPage() {
           )}
           {ctx.role === "line_manager" && (
             <Link href="/employees" className="rounded-xl">
-              <Card className="h-full p-5 hover:border-primary">
+              <Card className="h-full p-5 transition-[border-color,box-shadow,transform] hover:-translate-y-0.5 hover:border-brand-light/40 hover:shadow-lift">
                 <h2 className="font-semibold">My team</h2>
                 <p className="mt-1 text-sm text-muted-foreground">See your direct reports.</p>
               </Card>
@@ -189,7 +197,7 @@ export default async function DashboardPage() {
           )}
           {ctx.tenantId && (
             <Link href="/org-chart" className="rounded-xl">
-              <Card className="h-full p-5 hover:border-primary">
+              <Card className="h-full p-5 transition-[border-color,box-shadow,transform] hover:-translate-y-0.5 hover:border-brand-light/40 hover:shadow-lift">
                 <h2 className="font-semibold">Org chart</h2>
                 <p className="mt-1 text-sm text-muted-foreground">Who&apos;s who in the company.</p>
               </Card>
@@ -197,7 +205,7 @@ export default async function DashboardPage() {
           )}
           {ctx.isPlatformAdmin && (
             <Link href="/admin" className="rounded-xl">
-              <Card className="h-full p-5 hover:border-primary">
+              <Card className="h-full p-5 transition-[border-color,box-shadow,transform] hover:-translate-y-0.5 hover:border-brand-light/40 hover:shadow-lift">
                 <h2 className="font-semibold">Client companies</h2>
                 <p className="mt-1 text-sm text-muted-foreground">
                   Onboard clients and open support sessions.

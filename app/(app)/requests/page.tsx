@@ -72,7 +72,7 @@ export default async function RequestsPage() {
   return (
     <div className="space-y-6">
       <div>
-        <h1 className="text-2xl font-semibold tracking-tight">Correction requests</h1>
+        <h1 className="text-2xl font-extrabold tracking-tight sm:text-3xl">Correction requests</h1>
         <p className="text-sm text-muted-foreground">
           You have the right to have inaccurate personal data corrected (UK GDPR Article 16).
         </p>

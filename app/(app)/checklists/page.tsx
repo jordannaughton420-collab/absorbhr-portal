@@ -51,7 +51,7 @@ export default async function ChecklistsPage() {
     <div className="space-y-6">
       <div className="flex flex-wrap items-center justify-between gap-3">
         <div>
-          <h1 className="text-2xl font-semibold tracking-tight">Onboarding and offboarding</h1>
+          <h1 className="text-2xl font-extrabold tracking-tight sm:text-3xl">Onboarding and offboarding</h1>
           <p className="text-sm text-muted-foreground">
             Checklists of tasks for HR, line managers and the person joining or leaving.
           </p>

@@ -32,7 +32,7 @@ export default async function TemplatesPage() {
         >
           ← Checklists
         </Link>
-        <h1 className="mt-2 text-2xl font-semibold tracking-tight">Checklist templates</h1>
+        <h1 className="mt-2 text-2xl font-extrabold tracking-tight sm:text-3xl">Checklist templates</h1>
         <p className="text-sm text-muted-foreground">
           Changes apply to checklists started from now on.
         </p>

@@ -76,7 +76,7 @@ export default async function PrivacyToolsPage() {
   return (
     <div className="space-y-6">
       <div>
-        <h1 className="text-2xl font-semibold tracking-tight">Data protection</h1>
+        <h1 className="text-2xl font-extrabold tracking-tight sm:text-3xl">Data protection</h1>
         <p className="text-sm text-muted-foreground">
           Subject access requests, retention and erasure. HR only. Everything here is recorded in
           the audit log.

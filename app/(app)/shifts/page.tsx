@@ -52,7 +52,7 @@ export default async function MyShiftsPage() {
   return (
     <div className="space-y-6">
       <div>
-        <h1 className="text-2xl font-semibold tracking-tight">My shifts</h1>
+        <h1 className="text-2xl font-extrabold tracking-tight sm:text-3xl">My shifts</h1>
         <p className="text-sm text-muted-foreground">
           Your upcoming shifts, and any open shifts you can pick up. Times are UK time.
         </p>

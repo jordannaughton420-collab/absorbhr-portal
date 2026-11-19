@@ -49,7 +49,7 @@ export default async function SicknessRecordPage({ params }: { params: Promise<{
         <Link href="/sickness" className="text-sm text-primary underline-offset-4 hover:underline">
           ← Sickness
         </Link>
-        <h1 className="mt-2 text-2xl font-semibold tracking-tight">
+        <h1 className="mt-2 text-2xl font-extrabold tracking-tight sm:text-3xl">
           {isSelf ? "My sickness record" : `Sickness: ${name}`}
         </h1>
         <div className="mt-2 flex flex-wrap gap-2">
