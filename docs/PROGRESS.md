@@ -255,3 +255,21 @@ All environment variables verified correct on 26 Oct 2026 (rate limiting and inv
   box now explains voice errors (blocked microphone, no microphone, no speech heard, network) instead of failing
   silently. docs/GDPR.md notes that Chrome/Edge speech-to-text sends audio to the browser maker's service.
 - Test: e2e/microphone.spec.ts checks the header and the browser's own permission on /assistant and /dashboard.
+
+## Assistant: everyday admin jobs — built 18 Nov 2026 (test database only, NOT live)
+- Owner (18 Nov): the assistant should act like an admin in the system, but keep to each user's own permissions.
+- It already runs every confirmed card as the person who confirms it (their own Supabase session and RLS), so
+  roles are enforced by the database, not by the assistant. This adds ten more jobs:
+  `end_sickness` (return date, manager/HR), `complete_checklist_task` (anyone, database checks the task is theirs),
+  `adjust_holiday` (HR), `invite_to_portal` (Client Admin, reuses the portal's own invite), `mark_leaver` (HR; login
+  stays on until access is switched off), `change_role` incl. switching access off (Client Admin, never own),
+  `add_department`, `add_location` (Client Admin), `start_review` (HR or line manager), `publish_policy` (HR).
+  New lookups: `list_sickness` (dates only), `list_checklist_tasks`, `list_portal_access`, `list_policies`.
+- Still kept out on purpose: sickness reasons and return-to-work forms, cases, pay, right-to-work, diversity,
+  subject access/anonymising/retention, breach log, security and assistant settings, deleting documents.
+- Migration 0017 only widens `assistant_actions.kind`. tests/assistant-admin.test.ts (who may confirm, detail
+  checks); e2e/assistant-admin-jobs.spec.ts confirms real cards: Client Admin adds a department, HR adjusts holiday,
+  HR is refused a role change, a line manager is refused a holiday adjustment (the database says no).
+- Going live (owner said "Yes, make it live", 19 Nov 2026): 0017 applied to production first through the Supabase
+  connector (guarded, recorded); the new `assistant_actions_kind_check` matches the test database exactly. Then
+  merged into `main` and deployed.

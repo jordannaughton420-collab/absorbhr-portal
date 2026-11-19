@@ -4,6 +4,7 @@ import type { Database } from "@/lib/database.types";
 import { ACTION_SCHEMAS, isActionKind, type ActionPayload } from "@/lib/assistant/schemas";
 import { leaveError } from "@/lib/leave-errors";
 import { shiftError } from "@/lib/shift-errors";
+import { inviteToPortal } from "@/app/(app)/employees/actions";
 
 type Db = SupabaseClient<Database>;
 
@@ -228,6 +229,160 @@ export async function executeAction(
       });
       if (error) return { ok: false, message: shiftMessage(error, "remove_from_shift_group") };
       return { ok: true, message: "Removed from the group.", entityId: p.group_id, link: "/rota" };
+    }
+    case "end_sickness": {
+      const p = parsed.data as ActionPayload<"end_sickness">;
+      const { error } = await supabase.rpc("end_sickness", {
+        p_absence: p.absence_id,
+        p_end: p.end_date,
+        p_half_end: p.half_day_end,
+      });
+      if (error) return { ok: false, message: dbMessage(error, "end_sickness") };
+      return {
+        ok: true,
+        message: "Return date saved.",
+        entityId: p.absence_id,
+        link: `/sickness/${p.absence_id}`,
+      };
+    }
+    case "complete_checklist_task": {
+      const p = parsed.data as ActionPayload<"complete_checklist_task">;
+      const { error } = await supabase.rpc("set_checklist_item", {
+        p_item: p.item_id,
+        p_done: p.done,
+      });
+      if (error) return { ok: false, message: dbMessage(error, "complete_checklist_task") };
+      return {
+        ok: true,
+        message: p.done ? "Task ticked off." : "Task marked as not done.",
+        entityId: p.item_id,
+        link: "/checklists",
+      };
+    }
+    case "adjust_holiday": {
+      const p = parsed.data as ActionPayload<"adjust_holiday">;
+      const [{ data: balance }, { data: emp }] = await Promise.all([
+        supabase.rpc("leave_balance", { p_employee: p.employee_id }).maybeSingle(),
+        supabase.from("employees").select("tenant_id").eq("id", p.employee_id).maybeSingle(),
+      ]);
+      if (!balance || !emp) return { ok: false, message: DENIED };
+      const { data, error } = await supabase
+        .from("leave_adjustments")
+        .insert({
+          tenant_id: emp.tenant_id,
+          employee_id: p.employee_id,
+          leave_year_start: balance.leave_year_start,
+          days: p.days,
+          reason: p.reason,
+          kind: "manual",
+        })
+        .select("id")
+        .single();
+      if (error) return { ok: false, message: dbMessage(error, "adjust_holiday") };
+      return {
+        ok: true,
+        message: "Holiday allowance adjusted.",
+        entityId: data.id,
+        link: "/leave",
+      };
+    }
+    case "invite_to_portal": {
+      const p = parsed.data as ActionPayload<"invite_to_portal">;
+      const fd = new FormData();
+      fd.set("employee_id", p.employee_id);
+      const res = await inviteToPortal(fd);
+      return res.ok
+        ? {
+            ok: true,
+            message: res.message ?? "Invitation sent.",
+            entityId: p.employee_id,
+            link: `/employees/${p.employee_id}`,
+          }
+        : { ok: false, message: res.error };
+    }
+    case "mark_leaver": {
+      const p = parsed.data as ActionPayload<"mark_leaver">;
+      const { data, error } = await supabase
+        .from("employees")
+        .update({ status: "leaver", end_date: p.end_date })
+        .eq("id", p.employee_id)
+        .select("id");
+      if (error) return { ok: false, message: dbMessage(error, "mark_leaver") };
+      if (!data?.length) return { ok: false, message: DENIED };
+      return {
+        ok: true,
+        message: "Recorded as a leaver.",
+        entityId: p.employee_id,
+        link: `/employees/${p.employee_id}`,
+      };
+    }
+    case "change_role": {
+      const p = parsed.data as ActionPayload<"change_role">;
+      const { data: emp } = await supabase
+        .from("employees")
+        .select("user_id")
+        .eq("id", p.employee_id)
+        .maybeSingle();
+      if (!emp?.user_id) return { ok: false, message: "This person has no portal login yet." };
+      if (emp.user_id === userId)
+        return { ok: false, message: "Nobody can change their own role." };
+      const { data, error } = await supabase
+        .from("memberships")
+        .update({ role: p.role, is_active: p.active })
+        .eq("user_id", emp.user_id)
+        .eq("tenant_id", tenantId)
+        .select("id");
+      if (error) return { ok: false, message: dbMessage(error, "change_role") };
+      if (!data?.length) return { ok: false, message: DENIED };
+      return {
+        ok: true,
+        message: p.active ? "Role updated." : "Portal access switched off.",
+        entityId: p.employee_id,
+        link: "/settings",
+      };
+    }
+    case "add_department": {
+      const p = parsed.data as ActionPayload<"add_department">;
+      const { data, error } = await supabase
+        .from("departments")
+        .insert({ name: p.name, tenant_id: tenantId })
+        .select("id")
+        .single();
+      if (error) return { ok: false, message: dbMessage(error, "add_department") };
+      return { ok: true, message: "Department added.", entityId: data.id, link: "/settings" };
+    }
+    case "add_location": {
+      const p = parsed.data as ActionPayload<"add_location">;
+      const { data, error } = await supabase
+        .from("locations")
+        .insert({ name: p.name, address: p.address, tenant_id: tenantId })
+        .select("id")
+        .single();
+      if (error) return { ok: false, message: dbMessage(error, "add_location") };
+      return { ok: true, message: "Location added.", entityId: data.id, link: "/settings" };
+    }
+    case "start_review": {
+      const p = parsed.data as ActionPayload<"start_review">;
+      const { data, error } = await supabase.rpc("start_review", {
+        p_employee: p.employee_id,
+        p_title: p.title,
+      });
+      if (error) return { ok: false, message: dbMessage(error, "start_review") };
+      return {
+        ok: true,
+        message: "Review started.",
+        entityId: data ?? undefined,
+        link: data ? `/reviews/${data}` : "/reviews",
+      };
+    }
+    case "publish_policy": {
+      const p = parsed.data as ActionPayload<"publish_policy">;
+      const { error } = await supabase.rpc("publish_policy_version", {
+        p_version: p.version_id,
+        p_require_reack: p.require_reack,
+      });
+      if (error) return { ok: false, message: dbMessage(error, "publish_policy") };
+      return { ok: true, message: "Policy published.", entityId: p.version_id, link: "/policies" };
     }
   }
 }

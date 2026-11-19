@@ -3,6 +3,7 @@ import type Anthropic from "@anthropic-ai/sdk";
 import type { SupabaseClient } from "@supabase/supabase-js";
 import type { Database } from "@/lib/database.types";
 import { CONTRACT_TYPES } from "@/lib/validation/employee";
+import { ROLES } from "@/lib/validation/settings";
 import { LEFT_OUT, addDays, londonMidnightIso, shiftWhen, shiftWhenFromParts } from "@/lib/shifts";
 import {
   ACTION_SCHEMAS,
@@ -24,6 +25,7 @@ export type ToolContext = {
   employeeId: string | null;
   isHr: boolean;
   isManager: boolean;
+  isClientAdmin: boolean;
   /** HR, or a line manager whose company lets managers plan shifts. */
   canPlanShifts: boolean;
   conversationId: string;
@@ -154,6 +156,33 @@ export const TOOLS: Anthropic.Beta.BetaTool[] = [
       },
       ["date", "start_time", "end_time"],
     ),
+  },
+  {
+    name: "list_sickness",
+    description:
+      "Sickness absences the user can see (dates only, never reasons), ongoing ones first. Use it to find an absence's id before suggesting a return date.",
+    input_schema: obj({ employee_id: uuid("Only this person. Optional.") }),
+  },
+  {
+    name: "list_checklist_tasks",
+    description:
+      "Onboarding and offboarding checklist tasks the user can see, with who each is for (HR, manager or the employee), due date and whether it's done. Use it to find a task's id.",
+    input_schema: obj({
+      employee_id: uuid("Only this person's checklists. Optional."),
+      include_done: bool("Also list finished tasks. Optional, default false."),
+    }),
+  },
+  {
+    name: "list_portal_access",
+    description:
+      "HR only: who has a portal login, their role (Client Admin, HR Manager, Line Manager, Employee), whether their access is active, and whether they have a work email (needed for an invitation).",
+    input_schema: obj({ search: str("Part of a name. Optional.") }),
+  },
+  {
+    name: "list_policies",
+    description:
+      "HR only: the company's policies with their status, and for each one any newer version that has been drafted but not yet published (with its version id).",
+    input_schema: obj({}),
   },
   {
     name: "suggest_request_leave",
@@ -329,6 +358,121 @@ export const TOOLS: Anthropic.Beta.BetaTool[] = [
       "group_id",
     ]),
   },
+  {
+    name: "suggest_end_sickness",
+    description:
+      "Suggest recording the date someone came back from sickness (their last day off). Dates only; never ask about the reason." +
+      SUGGEST,
+    input_schema: obj(
+      {
+        absence_id: uuid("From list_sickness."),
+        end_date: day("Their last day off sick."),
+        half_day_end: bool("True if they came back part-way through that day."),
+      },
+      ["absence_id", "end_date", "half_day_end"],
+    ),
+  },
+  {
+    name: "suggest_complete_checklist_task",
+    description:
+      "Suggest ticking off (or un-ticking) an onboarding or offboarding checklist task. People can only tick tasks meant for them; HR can tick any." +
+      SUGGEST,
+    input_schema: obj(
+      {
+        item_id: uuid("From list_checklist_tasks."),
+        done: bool("True to mark done, false to mark not done."),
+      },
+      ["item_id", "done"],
+    ),
+  },
+  {
+    name: "suggest_adjust_holiday",
+    description:
+      "Suggest adding or taking away holiday days for this leave year, e.g. time off in lieu, an agreed extra day, or a correction (HR only). Use a minus number to take days away." +
+      SUGGEST,
+    input_schema: obj(
+      {
+        employee_id: uuid("Whose allowance."),
+        days: { type: "number", description: "Days to add (or minus to remove), whole or half." },
+        reason: str("Short reason, e.g. 'Time off in lieu for working Saturday 14 Nov'."),
+      },
+      ["employee_id", "days", "reason"],
+    ),
+  },
+  {
+    name: "suggest_invite_to_portal",
+    description:
+      "Suggest giving someone a portal login: they get an email to set their password, and start as an Employee (Client Admin only). They need a work email on their record first." +
+      SUGGEST,
+    input_schema: obj({ employee_id: uuid("Who.") }, ["employee_id"]),
+  },
+  {
+    name: "suggest_mark_leaver",
+    description:
+      "Suggest recording that someone is leaving or has left, with their last day of employment (HR only). This doesn't switch off their portal login; suggest_change_role with active false does that." +
+      SUGGEST,
+    input_schema: obj(
+      { employee_id: uuid("Who."), end_date: day("Their last day of employment.") },
+      ["employee_id", "end_date"],
+    ),
+  },
+  {
+    name: "suggest_change_role",
+    description:
+      "Suggest changing someone's portal role or switching their access off or back on (Client Admin only, never their own). Roles: client_admin, hr_manager, line_manager, employee." +
+      SUGGEST,
+    input_schema: obj(
+      {
+        employee_id: uuid("Whose access."),
+        role: {
+          type: "string",
+          enum: Object.keys(ROLES),
+          description: "The role they should have.",
+        },
+        active: bool("False to switch their access off, true to keep or turn it on."),
+      },
+      ["employee_id", "role", "active"],
+    ),
+  },
+  {
+    name: "suggest_add_department",
+    description: "Suggest adding a department to the company (Client Admin only)." + SUGGEST,
+    input_schema: obj({ name: str("Department name.") }, ["name"]),
+  },
+  {
+    name: "suggest_add_location",
+    description: "Suggest adding a work location to the company (Client Admin only)." + SUGGEST,
+    input_schema: obj(
+      { name: str("Location name."), address: str("Business address. Optional.") },
+      ["name"],
+    ),
+  },
+  {
+    name: "suggest_start_review",
+    description:
+      "Suggest starting a performance review for someone (HR, or their line manager). Their line manager becomes the reviewer." +
+      SUGGEST,
+    input_schema: obj(
+      {
+        employee_id: uuid("Who is being reviewed."),
+        title: str("E.g. 'Probation review' or 'Annual review 2026'."),
+      },
+      ["employee_id", "title"],
+    ),
+  },
+  {
+    name: "suggest_publish_policy",
+    description:
+      "Suggest publishing a policy's newest drafted version so staff can see it (HR only). Staff are asked to read and acknowledge it unless require_reack is false (only allowed for later versions with small changes)." +
+      SUGGEST,
+    input_schema: obj(
+      {
+        version_id: uuid("The draft version id, from list_policies."),
+        require_reack: bool("True if staff must read and acknowledge it again."),
+      },
+      ["version_id", "require_reack"],
+    ),
+  },
 ];
 
 const SUGGEST_TOOLS: Record<string, ActionKind> = {
@@ -345,6 +489,16 @@ const SUGGEST_TOOLS: Record<string, ActionKind> = {
   suggest_post_open_shift: "post_open_shift",
   suggest_add_to_shift_group: "add_to_shift_group",
   suggest_remove_from_shift_group: "remove_from_shift_group",
+  suggest_end_sickness: "end_sickness",
+  suggest_complete_checklist_task: "complete_checklist_task",
+  suggest_adjust_holiday: "adjust_holiday",
+  suggest_invite_to_portal: "invite_to_portal",
+  suggest_mark_leaver: "mark_leaver",
+  suggest_change_role: "change_role",
+  suggest_add_department: "add_department",
+  suggest_add_location: "add_location",
+  suggest_start_review: "start_review",
+  suggest_publish_policy: "publish_policy",
 };
 
 export type ToolOutcome = { content: string; isError?: boolean; actionId?: string };
@@ -604,6 +758,144 @@ async function listOptions(ctx: ToolContext) {
       locations: locations.data ?? [],
       checklist_templates: templates.data ?? [],
     }),
+  };
+}
+
+// ---------------------------------------------------------------- everyday admin lookups
+
+async function listSickness(ctx: ToolContext, input: { employee_id?: string }) {
+  const since = new Date(Date.now() - 90 * 86_400_000).toISOString().slice(0, 10);
+  let q = ctx.supabase
+    .from("sickness_absences")
+    .select("id, employee_id, start_date, end_date")
+    .or(`end_date.is.null,end_date.gte.${since}`)
+    .order("start_date", { ascending: false })
+    .limit(50);
+  if (input.employee_id) q = q.eq("employee_id", input.employee_id);
+  const { data, error } = await q;
+  if (error) return fail("Could not read sickness records.");
+  const names = await namesFor(
+    ctx,
+    (data ?? []).map((r) => r.employee_id),
+  );
+  const rows = [...(data ?? [])].sort(
+    (a, b) => Number(Boolean(a.end_date)) - Number(Boolean(b.end_date)),
+  );
+  return {
+    content: JSON.stringify(
+      rows.map((r) => ({
+        id: r.id,
+        person: names.get(r.employee_id) ?? "Someone",
+        dates: dateRange(r.start_date, r.end_date ?? undefined),
+        still_off: !r.end_date,
+      })),
+    ),
+  };
+}
+
+async function listChecklistTasks(
+  ctx: ToolContext,
+  input: { employee_id?: string; include_done?: boolean },
+) {
+  let q = ctx.supabase
+    .from("checklist_items")
+    .select("id, employee_id, title, assignee, due_date, completed_at, checklists(title)")
+    .order("due_date", { ascending: true, nullsFirst: false })
+    .limit(80);
+  if (input.employee_id) q = q.eq("employee_id", input.employee_id);
+  if (!input.include_done) q = q.is("completed_at", null);
+  const { data, error } = await q;
+  if (error) return fail("Could not read checklist tasks.");
+  const names = await namesFor(
+    ctx,
+    (data ?? []).map((r) => r.employee_id),
+  );
+  const forWho: Record<string, string> = {
+    hr: "HR",
+    manager: "their line manager",
+    employee: "the employee",
+  };
+  return {
+    content: JSON.stringify(
+      (data ?? []).map((r) => ({
+        id: r.id,
+        checklist: `${r.checklists?.title ?? "Checklist"} for ${names.get(r.employee_id) ?? "someone"}`,
+        task: r.title,
+        for: forWho[r.assignee] ?? r.assignee,
+        due: r.due_date ? ukDate(r.due_date) : null,
+        done: Boolean(r.completed_at),
+      })),
+    ),
+  };
+}
+
+async function listPortalAccess(ctx: ToolContext, input: { search?: string }) {
+  if (!ctx.isHr) return fail("Only HR and Client Admins can see who has portal access.");
+  let q = ctx.supabase
+    .from("employees")
+    .select("id, first_name, preferred_name, last_name, user_id, work_email, status")
+    .neq("status", "leaver")
+    .order("last_name")
+    .limit(100);
+  const s = input.search
+    ?.trim()
+    .replace(/[%_,()]/g, " ")
+    .slice(0, 60);
+  if (s) q = q.or(`first_name.ilike.%${s}%,preferred_name.ilike.%${s}%,last_name.ilike.%${s}%`);
+  const [{ data: people, error }, { data: members }] = await Promise.all([
+    q,
+    ctx.supabase.from("memberships").select("user_id, role, is_active"),
+  ]);
+  if (error) return fail("Could not read portal access.");
+  const byUser = new Map((members ?? []).map((m) => [m.user_id, m]));
+  return {
+    content: JSON.stringify(
+      (people ?? []).map((p) => {
+        const m = p.user_id ? byUser.get(p.user_id) : undefined;
+        return {
+          id: p.id,
+          name: `${p.preferred_name || p.first_name} ${p.last_name}`,
+          has_login: Boolean(m),
+          role: m ? ROLES[m.role as keyof typeof ROLES] : null,
+          access_active: m ? m.is_active : null,
+          has_work_email: Boolean(p.work_email),
+        };
+      }),
+    ),
+  };
+}
+
+async function listPolicies(ctx: ToolContext) {
+  if (!ctx.isHr) return fail("Only HR can manage policies.");
+  const [{ data: policies, error }, { data: versions }] = await Promise.all([
+    ctx.supabase
+      .from("policies")
+      .select("id, title, status")
+      .eq("tenant_id", ctx.tenantId)
+      .order("title")
+      .limit(100),
+    ctx.supabase
+      .from("policy_versions")
+      .select("id, policy_id, version, published_at, change_summary")
+      .eq("tenant_id", ctx.tenantId)
+      .order("version", { ascending: false })
+      .limit(500),
+  ]);
+  if (error) return fail("Could not read policies.");
+  return {
+    content: JSON.stringify(
+      (policies ?? []).map((p) => {
+        const newest = (versions ?? []).find((v) => v.policy_id === p.id);
+        const draft = newest && !newest.published_at ? newest : null;
+        return {
+          title: p.title,
+          status: p.status,
+          draft_waiting_to_publish: draft
+            ? { version_id: draft.id, version: draft.version, change_summary: draft.change_summary }
+            : null,
+        };
+      }),
+    ),
   };
 }
 
@@ -901,6 +1193,112 @@ async function describe(ctx: ToolContext, kind: ActionKind, p: Record<string, un
         text: `Take ${person.name} out of the "${g.name}" open shift group.`,
       };
     }
+    case "end_sickness": {
+      const { data: a } = await ctx.supabase
+        .from("sickness_absences")
+        .select("employee_id, start_date, end_date")
+        .eq("id", p.absence_id as string)
+        .maybeSingle();
+      if (!a) throw new Error("absence");
+      if ((p.end_date as string) < a.start_date)
+        throw new Explain("The return date can't be before the sickness started.");
+      const person = await who(a.employee_id);
+      return {
+        subject: person.id,
+        text: `Record that ${person.name}'s sickness absence ended: ${dateRange(a.start_date, p.end_date as string, false, Boolean(p.half_day_end))}.`,
+      };
+    }
+    case "complete_checklist_task": {
+      const { data: item } = await ctx.supabase
+        .from("checklist_items")
+        .select("employee_id, title, checklists(title)")
+        .eq("id", p.item_id as string)
+        .maybeSingle();
+      if (!item) throw new Error("item");
+      const person = await who(item.employee_id);
+      return {
+        subject: person.id,
+        text: `Mark "${item.title}" as ${p.done ? "done" : "not done"} on ${person.name}'s ${item.checklists?.title ?? "checklist"}.`,
+      };
+    }
+    case "adjust_holiday": {
+      const person = await who(p.employee_id);
+      const days = p.days as number;
+      const n = Math.abs(days);
+      return {
+        subject: person.id,
+        text: `${days > 0 ? "Add" : "Take away"} ${n} day${n === 1 ? "" : "s"} of holiday ${days > 0 ? "to" : "from"} ${person.name}'s allowance for this leave year. Reason: "${p.reason}"`,
+      };
+    }
+    case "invite_to_portal": {
+      const person = await who(p.employee_id);
+      const { data: e } = await ctx.supabase
+        .from("employees")
+        .select("user_id, work_email")
+        .eq("id", person.id)
+        .maybeSingle();
+      if (e?.user_id) throw new Explain(`${person.name} already has a portal login.`);
+      if (!e?.work_email)
+        throw new Explain(
+          `${person.name} has no work email address on their record, so they can't be invited yet. HR can add one on their profile.`,
+        );
+      return {
+        subject: person.id,
+        text: `Give ${person.name} a portal login: they'll get an email at their work address to set a password, and start as an Employee.`,
+      };
+    }
+    case "mark_leaver": {
+      const person = await who(p.employee_id);
+      return {
+        subject: person.id,
+        text: `Record ${person.name} as a leaver, last day of employment ${ukDate(p.end_date as string)}. Their portal login stays on until their access is switched off.`,
+      };
+    }
+    case "change_role": {
+      const person = await who(p.employee_id);
+      const { data: e } = await ctx.supabase
+        .from("employees")
+        .select("user_id")
+        .eq("id", person.id)
+        .maybeSingle();
+      if (!e?.user_id)
+        throw new Explain(`${person.name} has no portal login yet. Invite them first.`);
+      if (e.user_id === ctx.userId) throw new Explain("Nobody can change their own role.");
+      const role = ROLES[p.role as keyof typeof ROLES];
+      return {
+        subject: person.id,
+        text: p.active
+          ? `Change ${person.name}'s portal role to ${role}.`
+          : `Switch off ${person.name}'s portal access (they won't be able to sign in).`,
+      };
+    }
+    case "add_department":
+      return { subject: null, text: `Add a department called "${p.name}".` };
+    case "add_location":
+      return {
+        subject: null,
+        text: `Add a location called "${p.name}"${p.address ? `, at ${p.address}` : ""}.`,
+      };
+    case "start_review": {
+      const person = await who(p.employee_id);
+      return {
+        subject: person.id,
+        text: `Start a performance review for ${person.name}: "${p.title}". Their line manager will be the reviewer.`,
+      };
+    }
+    case "publish_policy": {
+      const { data: v } = await ctx.supabase
+        .from("policy_versions")
+        .select("version, published_at, policies(title)")
+        .eq("id", p.version_id as string)
+        .maybeSingle();
+      if (!v) throw new Error("version");
+      if (v.published_at) throw new Explain("That version is already published.");
+      return {
+        subject: null,
+        text: `Publish version ${v.version} of "${v.policies?.title ?? "the policy"}" so staff can see it.${p.require_reack || v.version === 1 ? " Staff will be asked to read and acknowledge it." : " Staff won't be asked to acknowledge it again."}`,
+      };
+    }
   }
 }
 
@@ -914,7 +1312,9 @@ async function suggest(
     return fail(
       WHO_CAN[kind] === "planner" && ctx.isManager
         ? "Line managers can only plan shifts if the company's Client Admin switches it on in Company settings. Until then HR plans shifts."
-        : "This person's role does not allow that change. Tell them who can do it (their manager or HR) instead.",
+        : WHO_CAN[kind] === "admin"
+          ? "Only the company's Client Admin can do that. Tell the person to ask them."
+          : "This person's role does not allow that change. Tell them who can do it (their manager or HR) instead.",
     );
   const parsed = ACTION_SCHEMAS[kind].safeParse(input);
   if (!parsed.success)
@@ -992,6 +1392,17 @@ export async function runTool(
         return await listShiftGroups(ctx);
       case "check_open_shift":
         return await checkOpenShift(ctx, input as Record<string, unknown>);
+      case "list_sickness":
+        return await listSickness(ctx, args);
+      case "list_checklist_tasks":
+        return await listChecklistTasks(
+          ctx,
+          input as { employee_id?: string; include_done?: boolean },
+        );
+      case "list_portal_access":
+        return await listPortalAccess(ctx, args);
+      case "list_policies":
+        return await listPolicies(ctx);
     }
     const kind = SUGGEST_TOOLS[name];
     if (kind && isActionKind(kind)) return await suggest(ctx, kind, toolUseId, input);
