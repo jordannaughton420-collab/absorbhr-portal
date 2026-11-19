@@ -302,3 +302,17 @@ All environment variables verified correct on 26 Oct 2026 (rate limiting and inv
 - `components/brand/doodle.tsx` removed. Menu now highlights only the closest match (on /leave/approvals only
   "Approvals" lights up, not "My leave" too).
 - All 58 end-to-end tests pass, including the WCAG 2.1 AA checks.
+
+## Phone app (iPhone and Android) — started 19 Nov 2026
+- `mobile/`: Capacitor 8.6.0 shell that opens https://absorbhr-portal.co.uk, app ID `uk.co.absorbhr.portal`,
+  name "AbsorbHR". Native projects in `mobile/ios` (Swift Package Manager) and `mobile/android` (Java 21, SDK 36).
+  Icon and start-up screen rendered from the website's white logo on the purple gradient (`mobile/assets/`).
+- No-signal page (`mobile/www/offline.html`), purple status bar, only the portal's domain loads in-app on iPhone
+  (`WKAppBoundDomains`), iPhone permission texts for Face ID, camera, microphone and speech.
+- Portal side: `lib/native.ts` finds the app bridge; `components/app/native-lock.tsx` locks the signed-in portal
+  with Face ID / fingerprint / passcode when the app opens and after 2+ minutes away. Normal browsers unchanged.
+  `e2e/app-lock.spec.ts` tests it with a fake bridge.
+- `.github/workflows/mobile-build.yml` (by hand only): unsigned Android test APK and iOS Simulator build.
+- Still to do: owner accounts (D-U-N-S for Absorb HR Ltd, Apple Developer organisation, Google Play organisation,
+  privacy policy page), then signing + TestFlight / Play internal testing, push notifications, store listings.
+  Details in `mobile/README.md`.

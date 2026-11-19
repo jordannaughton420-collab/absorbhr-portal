@@ -37,6 +37,7 @@
   ],
   "exclude": [
     "node_modules",
+    "mobile",
     ".next-e2e",
     "test-results",
     "playwright-report"
