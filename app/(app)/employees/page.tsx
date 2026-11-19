@@ -45,7 +45,7 @@ export default async function EmployeesPage() {
     <div className="space-y-6">
       <div className="flex flex-wrap items-center justify-between gap-3">
         <div>
-          <h1 className="text-2xl font-semibold tracking-tight">
+          <h1 className="text-2xl font-extrabold tracking-tight sm:text-3xl">
             {ctx.isHr ? "Employees" : "My team"}
           </h1>
           <p className="text-sm text-muted-foreground">

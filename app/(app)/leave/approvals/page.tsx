@@ -61,7 +61,7 @@ export default async function ApprovalsPage() {
   return (
     <div className="space-y-6">
       <div>
-        <h1 className="text-2xl font-semibold tracking-tight">Leave approvals</h1>
+        <h1 className="text-2xl font-extrabold tracking-tight sm:text-3xl">Leave approvals</h1>
         <p className="text-sm text-muted-foreground">
           {ctx.isHr ? "Requests across the company." : "Requests from your direct reports."} You
           can&apos;t approve your own requests.

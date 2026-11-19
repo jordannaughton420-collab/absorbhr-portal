@@ -59,22 +59,29 @@ export type NavItem = { href: string; label: string; icon: keyof typeof ICONS };
 
 export function Nav({ items }: { items: NavItem[] }) {
   const pathname = usePathname();
+  // Only the closest match is highlighted, so /leave/approvals lights up "Approvals", not "My leave" too.
+  const matches = (href: string) =>
+    pathname === href || (href !== "/dashboard" && pathname.startsWith(href + "/"));
+  const activeHref = items
+    .map((i) => i.href)
+    .filter(matches)
+    .sort((a, b) => b.length - a.length)[0];
   return (
     <nav aria-label="Main">
       <ul className="space-y-1">
         {items.map((item) => {
           const Icon = ICONS[item.icon];
-          const active =
-            pathname === item.href ||
-            (item.href !== "/dashboard" && pathname.startsWith(item.href + "/"));
+          const active = item.href === activeHref;
           return (
             <li key={item.href}>
               <Link
                 href={item.href}
                 aria-current={active ? "page" : undefined}
                 className={cn(
-                  "flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium",
-                  active ? "bg-primary text-primary-foreground" : "hover:bg-muted",
+                  "flex items-center gap-3 rounded-full px-3.5 py-2 text-sm font-medium transition-colors",
+                  active
+                    ? "bg-white font-semibold text-primary shadow-sm"
+                    : "text-white/85 hover:bg-white/10 hover:text-white",
                 )}
               >
                 <Icon className="size-4 shrink-0" aria-hidden="true" />

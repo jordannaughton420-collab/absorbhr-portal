@@ -91,7 +91,7 @@ export default async function AuditLogPage() {
   return (
     <div className="space-y-6">
       <div>
-        <h1 className="text-2xl font-semibold tracking-tight">Audit log</h1>
+        <h1 className="text-2xl font-extrabold tracking-tight sm:text-3xl">Audit log</h1>
         <p className="text-sm text-muted-foreground">
           Every view, change and export of personal data in your company. Entries can never be
           edited or deleted.

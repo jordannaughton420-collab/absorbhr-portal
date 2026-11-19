@@ -80,7 +80,7 @@ export default async function ReviewPage({ params }: { params: Promise<{ id: str
         <Link href="/reviews" className="text-sm text-primary underline-offset-4 hover:underline">
           ← Reviews
         </Link>
-        <h1 className="mt-2 text-2xl font-semibold tracking-tight">
+        <h1 className="mt-2 text-2xl font-extrabold tracking-tight sm:text-3xl">
           {review.title}
           {asEmployee ? "" : `: ${name}`}
         </h1>

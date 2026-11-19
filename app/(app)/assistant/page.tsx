@@ -41,7 +41,7 @@ export default async function AssistantPage({
     <div className="space-y-6">
       <div className="flex flex-wrap items-center justify-between gap-3">
         <div>
-          <h1 className="text-2xl font-semibold tracking-tight">Assistant</h1>
+          <h1 className="text-2xl font-extrabold tracking-tight sm:text-3xl">Assistant</h1>
           <p className="text-sm text-muted-foreground">
             Ask in plain English. It suggests changes; nothing happens until you tap Confirm.
           </p>

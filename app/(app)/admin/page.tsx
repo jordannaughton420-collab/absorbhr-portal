@@ -21,7 +21,7 @@ export default async function AdminPage() {
   return (
     <div className="space-y-6">
       <div>
-        <h1 className="text-2xl font-semibold tracking-tight">AbsorbHR admin</h1>
+        <h1 className="text-2xl font-extrabold tracking-tight sm:text-3xl">AbsorbHR admin</h1>
         <p className="text-sm text-muted-foreground">
           You have no access to client data by default. Open a support session to help a client — it
           is time-limited, logged, and shown to the client.

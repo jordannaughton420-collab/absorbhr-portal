@@ -69,7 +69,7 @@ export default async function PolicyPage({ params }: { params: Promise<{ id: str
         <Link href="/policies" className="text-sm text-primary underline-offset-4 hover:underline">
           ← Policies
         </Link>
-        <h1 className="mt-2 text-2xl font-semibold tracking-tight">{policy.title}</h1>
+        <h1 className="mt-2 text-2xl font-extrabold tracking-tight sm:text-3xl">{policy.title}</h1>
         <div className="mt-2 flex flex-wrap gap-2">
           <Badge variant="muted">{POLICY_CATEGORIES[policy.category as Category]}</Badge>
           {isTemplate && <Badge>AbsorbHR template</Badge>}

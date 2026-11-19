@@ -291,3 +291,14 @@ All environment variables verified correct on 26 Oct 2026 (rate limiting and inv
   `loadPanelChat` server action, `ChatBox`/`ActionCard` take optional callbacks for the panel.
 - e2e/assistant-panel.spec.ts: employees don't get it; HR opens it, it passes axe, stays open moving to the Rota,
   a card is confirmed inside it, Escape closes it and returns focus; no sideways scrolling on a phone.
+
+## Look matched to the website — 19 Nov 2026
+- Owner asked for the portal to match the rebuilt website (round 19.11 rebuild, `assets/site.css`) and drop the
+  old hand-drawn doodles. Colours, shadows and shapes now come from the website: purple gradient panels with a
+  faint grid and glow (`.brand-surface` in `app/globals.css`), small uppercase `.eyebrow` labels, pill buttons with
+  a purple gradient, softer lilac borders, off-white page background, bold tight headings.
+- Purple sidebar and phone menu with the website's white logo (`public/brand/absorbhr-logo-white.svg`); sign-in,
+  2-step and password pages on the purple background; dashboard opens with a purple welcome banner.
+- `components/brand/doodle.tsx` removed. Menu now highlights only the closest match (on /leave/approvals only
+  "Approvals" lights up, not "My leave" too).
+- All 58 end-to-end tests pass, including the WCAG 2.1 AA checks.

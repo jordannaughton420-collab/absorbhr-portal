@@ -26,7 +26,7 @@ export default async function AssistantNotesPage() {
         <Link href="/assistant" className="text-sm text-primary underline-offset-4 hover:underline">
           ← Back to the assistant
         </Link>
-        <h1 className="mt-2 text-2xl font-semibold tracking-tight">Company notes</h1>
+        <h1 className="mt-2 text-2xl font-extrabold tracking-tight sm:text-3xl">Company notes</h1>
       </div>
       <Card>
         <CardHeader>

@@ -64,7 +64,7 @@ export default async function CasePage({ params }: { params: Promise<{ id: strin
         <Link href="/cases" className="text-sm text-primary underline-offset-4 hover:underline">
           ← Cases
         </Link>
-        <h1 className="mt-2 text-2xl font-semibold tracking-tight">
+        <h1 className="mt-2 text-2xl font-extrabold tracking-tight sm:text-3xl">
           <span className="font-mono">{c.reference}</span> · {name}
         </h1>
         <div className="mt-2 flex flex-wrap gap-2">

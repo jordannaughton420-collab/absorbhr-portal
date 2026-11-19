@@ -103,7 +103,7 @@ export default async function SicknessPage() {
   return (
     <div className="space-y-6">
       <div>
-        <h1 className="text-2xl font-semibold tracking-tight">Sickness</h1>
+        <h1 className="text-2xl font-extrabold tracking-tight sm:text-3xl">Sickness</h1>
         <p className="text-sm text-muted-foreground">
           Sickness details are health information: only you, your line manager and HR can see them.
         </p>

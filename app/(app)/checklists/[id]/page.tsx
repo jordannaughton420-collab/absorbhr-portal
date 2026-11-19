@@ -46,7 +46,7 @@ export default async function ChecklistPage({ params }: { params: Promise<{ id: 
         >
           ← Checklists
         </Link>
-        <h1 className="mt-2 text-2xl font-semibold tracking-tight">
+        <h1 className="mt-2 text-2xl font-extrabold tracking-tight sm:text-3xl">
           {list.title}: {isSelf ? "you" : name}
         </h1>
         <p className="text-muted-foreground">
