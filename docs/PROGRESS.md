@@ -277,3 +277,17 @@ All environment variables verified correct on 26 Oct 2026 (rate limiting and inv
   browser keeps the Permissions-Policy of the first page loaded, and Next.js swaps pages without reloading, so the
   `/assistant`-only rule never applied. `microphone=(self)` is now site-wide (camera and location still blocked,
   nothing for embedded or outside sites). e2e/microphone.spec.ts now opens the assistant from the dashboard menu.
+
+## Assistant in the bottom corner — built 19 Nov 2026 (test database only, NOT live)
+- Owner (19 Nov): the assistant should sit in the bottom corner like a website chat agent, for HR, managers and
+  admins.
+- `app/(app)/assistant/assistant-panel.tsx`: a round "Assistant" button bottom-right on every page (not on the
+  Assistant page itself) opens a panel with the person's most recent chat, its Confirm cards and the message box
+  (voice included). New chat and "open full page" buttons; Escape closes it; it stays open between pages; full
+  width on phones. Shown only when the company has the assistant on, to HR (with MFA), Client Admins and line
+  managers, not in support sessions and not before the privacy notice is acknowledged. Employees keep the
+  Assistant page in the menu.
+- Shared code: `lib/assistant/history.ts` (one chat's messages and cards, used by the page and the panel),
+  `loadPanelChat` server action, `ChatBox`/`ActionCard` take optional callbacks for the panel.
+- e2e/assistant-panel.spec.ts: employees don't get it; HR opens it, it passes axe, stays open moving to the Rota,
+  a card is confirmed inside it, Escape closes it and returns focus; no sideways scrolling on a phone.

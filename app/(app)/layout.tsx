@@ -4,12 +4,14 @@ import { Logo } from "@/components/brand/logo";
 import { Nav, type NavItem } from "@/components/app/nav";
 import { IdleTimer } from "@/components/app/idle-timer";
 import { Button } from "@/components/ui/button";
+import { cn } from "@/lib/utils";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { requireContext, type SessionContext } from "@/lib/auth/context";
 import { createClient } from "@/lib/supabase/server";
 import { signOut } from "@/app/auth/actions";
 import { endSupportSession } from "@/app/(app)/admin/actions";
 import { PrivacyGate } from "./privacy/privacy-gate";
+import { AssistantPanel } from "./assistant/assistant-panel";
 
 function navFor(ctx: SessionContext, pendingApprovals: number, openShifts: number): NavItem[] {
   const inTenant = Boolean(ctx.tenantId || ctx.supportSession);
@@ -110,6 +112,13 @@ export default async function AppLayout({ children }: { children: React.ReactNod
   }
 
   const noAccount = !ctx.tenantId && !ctx.isPlatformAdmin;
+  // The assistant in the corner: for HR, line managers and admins, once the company has switched it on.
+  const showPanel =
+    Boolean(ctx.tenantId) &&
+    !ctx.supportSession &&
+    Boolean(ctx.settings?.assistant_enabled) &&
+    (ctx.isHr || ctx.role === "line_manager") &&
+    !gate;
 
   const sidebar = (
     <>
@@ -179,7 +188,13 @@ export default async function AppLayout({ children }: { children: React.ReactNod
           </div>
         )}
 
-        <main id="main" className="mx-auto max-w-6xl p-4 sm:p-6 lg:p-8">
+        <main
+          id="main"
+          className={cn(
+            "mx-auto max-w-6xl p-4 sm:p-6 lg:p-8",
+            showPanel && "pb-24 sm:pb-24 lg:pb-24",
+          )}
+        >
           {noAccount ? (
             <Card>
               <CardHeader>
@@ -195,6 +210,7 @@ export default async function AppLayout({ children }: { children: React.ReactNod
         </main>
       </div>
 
+      {showPanel && <AssistantPanel isHr={ctx.isHr} />}
       <IdleTimer idleMinutes={ctx.settings?.session_idle_minutes ?? 30} />
     </div>
   );

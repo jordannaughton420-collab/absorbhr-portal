@@ -8,6 +8,7 @@ import { safeError, type ActionResult } from "@/lib/errors";
 import { rateLimit } from "@/lib/rate-limit";
 import { assistantConfigured, runTurn } from "@/lib/assistant/run";
 import { executeAction } from "@/lib/assistant/execute";
+import { loadChat, type ChatEntry } from "@/lib/assistant/history";
 
 const ROLE_NAMES: Record<string, string> = {
   client_admin: "Client Admin",
@@ -170,4 +171,34 @@ export async function deleteNote(formData: FormData) {
   const supabase = await createClient();
   await supabase.from("assistant_memories").delete().eq("id", id.data);
   revalidatePath("/assistant/notes");
+}
+
+/**
+ * For the corner panel: one chat (or the most recent one) with its messages and cards.
+ * Row Level Security keeps it to the person's own chats.
+ */
+export async function loadPanelChat(
+  conversationId?: string | null,
+): Promise<
+  ActionResult<{ conversationId: string | null; entries: ChatEntry[]; connected: boolean }>
+> {
+  const gate = await assistantContext();
+  if (!gate.ok) return gate;
+  const supabase = await createClient();
+  let id: string | null = null;
+  if (conversationId) {
+    const parsed = idSchema.safeParse(conversationId);
+    if (!parsed.success) return { ok: false, error: "That chat no longer exists." };
+    id = parsed.data;
+  } else if (conversationId === undefined) {
+    const { data } = await supabase
+      .from("assistant_conversations")
+      .select("id")
+      .order("updated_at", { ascending: false })
+      .limit(1)
+      .maybeSingle();
+    id = data?.id ?? null;
+  }
+  const entries = id ? await loadChat(supabase, id) : [];
+  return { ok: true, data: { conversationId: id, entries, connected: assistantConfigured() } };
 }

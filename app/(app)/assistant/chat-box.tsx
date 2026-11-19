@@ -42,10 +42,16 @@ function getRecognition(): Recognition | null {
 export function ChatBox({
   conversationId,
   disabled,
+  onSent,
+  compact,
 }: {
   conversationId?: string;
   disabled?: boolean;
+  /** When given (the corner panel), called after each reply instead of changing page. */
+  onSent?: (conversationId: string) => void;
+  compact?: boolean;
 }) {
+  const inputId = compact ? "assistant-panel-message" : "assistant-message";
   const router = useRouter();
   const [text, setText] = useState("");
   const [error, setError] = useState<string | null>(null);
@@ -67,7 +73,9 @@ export function ChatBox({
         return;
       }
       setText("");
-      if (result.data && result.data.conversationId !== conversationId) {
+      if (onSent && result.data) {
+        onSent(result.data.conversationId);
+      } else if (result.data && result.data.conversationId !== conversationId) {
         router.push(`/assistant?c=${result.data.conversationId}`);
       } else {
         router.refresh();
@@ -120,11 +128,11 @@ export function ChatBox({
       }}
     >
       {error && <Alert variant="error">{error}</Alert>}
-      <label htmlFor="assistant-message" className="sr-only">
+      <label htmlFor={inputId} className="sr-only">
         Message the assistant
       </label>
       <Textarea
-        id="assistant-message"
+        id={inputId}
         value={text}
         onChange={(e) => setText(e.target.value)}
         onKeyDown={(e) => {
@@ -133,7 +141,7 @@ export function ChatBox({
             submit();
           }
         }}
-        rows={3}
+        rows={compact ? 2 : 3}
         maxLength={2000}
         placeholder={listening ? "Listening…" : "Ask or tell the assistant what to do…"}
         disabled={disabled || pending}
@@ -142,7 +150,9 @@ export function ChatBox({
         <p className="text-xs text-muted-foreground" aria-live="polite">
           {pending
             ? "The assistant is working on it…"
-            : "Enter to send, Shift+Enter for a new line."}
+            : compact
+              ? "Enter to send"
+              : "Enter to send, Shift+Enter for a new line."}
         </p>
         <div className="flex gap-2">
           {voiceSupported && (
