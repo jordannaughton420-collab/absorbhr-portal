@@ -6,9 +6,12 @@ const securityHeaders = [
   { key: "X-Content-Type-Options", value: "nosniff" },
   { key: "X-Frame-Options", value: "DENY" },
   { key: "Referrer-Policy", value: "no-referrer" },
+  // The portal's own pages may use the microphone (the assistant's speak button); camera and location
+  // stay blocked, and no embedded or outside site gets any of them. It has to be on every page: the
+  // portal swaps pages without a full reload, so the browser keeps the rule of the first page opened.
   {
     key: "Permissions-Policy",
-    value: "camera=(), microphone=(), geolocation=(), interest-cohort=()",
+    value: "camera=(), microphone=(self), geolocation=(), interest-cohort=()",
   },
 ];
 
@@ -21,20 +24,7 @@ const nextConfig: NextConfig = {
   // build folder stops the two from overwriting each other's files.
   distDir: process.env.NEXT_DIST_DIR || ".next",
   async headers() {
-    return [
-      { source: "/:path*", headers: securityHeaders },
-      // The assistant's speak button needs the microphone; every other page keeps it blocked.
-      // (When two rules set the same header, the later one wins.)
-      {
-        source: "/assistant/:path*",
-        headers: [
-          {
-            key: "Permissions-Policy",
-            value: "camera=(), microphone=(self), geolocation=(), interest-cohort=()",
-          },
-        ],
-      },
-    ];
+    return [{ source: "/:path*", headers: securityHeaders }];
   },
 };
 
